@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One2One Pro — Factura sin ser autónomo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET & BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #f8f7f4;
+  color: #111;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ─── VARIABLES ─── */
+:root {
+  --negro: #0f0f0f;
+  --blanco: #f8f7f4;
+  --gris-claro: #f0efec;
+  --gris-medio: #e2e1de;
+  --gris-texto: #6b6a67;
+  --gris-suave: #9b9a97;
+  --acento: #1a1a1a;
+  --linea: #e2e1de;
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(248,247,244,0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--linea);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 6%;
+  justify-content: space-between;
+}
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+  color: var(--negro);
+  text-decoration: none;
+}
+.nav-logo span { font-weight: 400; color: var(--gris-texto); }
+.nav-links {
+  display: flex; gap: 36px; list-style: none;
+}
+.nav-links a {
+  font-size: 13px; font-weight: 400;
+  color: var(--gris-texto); text-decoration: none;
+  letter-spacing: 0.2px;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--negro); }
+.nav-cta {
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--negro); text-decoration: none;
+  border-bottom: 1px solid var(--negro);
+  padding-bottom: 1px;
+  transition: opacity 0.2s;
+}
+.nav-cta:hover { opacity: 0.5; }
+
+/* ─── HERO ─── */
+.hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding-top: 60px;
+}
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 6% 80px 6%;
+  border-right: 1px solid var(--linea);
+}
+.hero-eyebrow {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--gris-suave); margin-bottom: 28px;
+}
+.hero-h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(38px, 4.5vw, 62px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  color: var(--negro);
+  margin-bottom: 28px;
+}
+.hero-h1 em { font-style: italic; color: var(--gris-texto); }
+.hero-desc {
+  font-size: 16px; font-weight: 300;
+  color: var(--gris-texto); line-height: 1.75;
+  max-width: 420px; margin-bottom: 48px;
+}
+.hero-actions { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.btn-primary {
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: #fff; background: var(--negro);
+  padding: 14px 28px; text-decoration: none;
+  transition: opacity 0.2s;
+  display: inline-block;
+}
+.btn-primary:hover { opacity: 0.75; }
+.btn-ghost {
+  font-size: 12px; font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--gris-texto); text-decoration: none;
+  border-bottom: 1px solid var(--gris-medio);
+  padding-bottom: 1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.btn-ghost:hover { color: var(--negro); border-color: var(--negro); }
+
+.hero-stats {
+  display: flex; gap: 40px; margin-top: 64px;
+  padding-top: 40px; border-top: 1px solid var(--linea);
+}
+.stat-item { }
+.stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px; font-weight: 400;
+  letter-spacing: -1px; color: var(--negro);
+  display: block;
+}
+.stat-label { font-size: 12px; color: var(--gris-suave); font-weight: 300; }
+
+.hero-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 6%;
+  background: var(--gris-claro);
+}
+.hero-right-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gris-suave); margin-bottom: 24px;
+}
+.perfil-selector {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  border: 1px solid var(--linea); margin-bottom: 32px;
+}
+.perfil-btn {
+  padding: 18px 20px;
+  background: transparent; border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--gris-suave); cursor: pointer;
+  transition: all 0.2s; text-align: left;
+  border-right: 1px solid var(--linea);
+}
+.perfil-btn:last-child { border-right: none; }
+.perfil-btn.active { background: var(--negro); color: white; }
+.perfil-btn .pb-label { display: block; margin-bottom: 3px; }
+.perfil-btn .pb-sub { font-size: 11px; font-weight: 300; opacity: 0.6; }
+
+/* ─── SIMULADOR ─── */
+.sim-wrap { }
+.sim-progress { display: flex; gap: 3px; margin-bottom: 28px; }
+.sim-p { flex: 1; height: 1px; background: var(--gris-medio); transition: background 0.3s; }
+.sim-p.done { background: var(--negro); }
+.sim-p.active { background: var(--gris-suave); }
+
+.sim-step-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--gris-suave); margin-bottom: 10px;
+}
+.sim-step-q {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 400; line-height: 1.3;
+  color: var(--negro); margin-bottom: 6px;
+}
+.sim-step-hint {
+  font-size: 13px; font-weight: 300; color: var(--gris-texto);
+  margin-bottom: 24px; line-height: 1.5;
+}
+
+.sim-opts { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--linea); }
+.sim-opt {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--linea);
+  cursor: pointer; transition: padding-left 0.2s; background: transparent;
+}
+.sim-opt:hover { padding-left: 6px; }
+.sim-opt.sel { padding-left: 6px; }
+.sim-opt-label {
+  font-size: 14px; font-weight: 400; color: var(--negro);
+  transition: font-weight 0.15s;
+}
+.sim-opt.sel .sim-opt-label { font-weight: 600; }
+.sim-opt-sub { font-size: 11px; color: var(--gris-suave); margin-top: 2px; font-weight: 300; }
+.sim-opt-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: transparent; border: 1px solid var(--gris-medio);
+  flex-shrink: 0; margin-left: 14px; transition: all 0.15s;
+}
+.sim-opt.sel .sim-opt-dot { background: var(--negro); border-color: var(--negro); }
+
+.sim-fields { display: flex; flex-direction: column; gap: 20px; }
+.sim-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.sim-field label {
+  display: block; font-size: 10px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gris-suave); margin-bottom: 10px;
+}
+.sim-field .inp-wrap { position: relative; }
+.sim-field .inp-prefix {
+  position: absolute; left: 0; top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px; color: var(--gris-suave);
+  font-family: 'Playfair Display', serif;
+}
+.sim-field input {
+  width: 100%; padding: 8px 0;
+  border: none; border-bottom: 1px solid var(--gris-medio);
+  background: transparent; outline: none;
+  font-size: 22px; font-family: 'Playfair Display', serif;
+  font-weight: 400; color: var(--negro);
+  transition: border-color 0.2s;
+}
+.sim-field.has-prefix input { padding-left: 18px; }
+.sim-field input:focus { border-bottom-color: var(--negro); }
+.sim-field input::placeholder { color: var(--gris-medio); }
+
+.sim-btn-next {
+  margin-top: 28px; padding: 13px 24px;
+  background: var(--negro); color: white; border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  cursor: pointer; transition: opacity 0.15s; display: block; width: 100%;
+}
+.sim-btn-next:hover { opacity: 0.75; }
+.sim-btn-next:disabled { background: var(--gris-medio); color: var(--gris-suave); cursor: not-allowed; opacity: 1; }
+
+.sim-btn-back {
+  background: none; border: none; padding: 0;
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--gris-suave); cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  margin-bottom: 24px; transition: color 0.15s;
+}
+.sim-btn-back:hover { color: var(--negro); }
+
+/* RESULTADO */
+.res-anim { animation: resUp 0.35s ease; }
+@keyframes resUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+.res-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.res-tag {
+  font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
+  padding: 5px 10px; border: 1px solid var(--linea); color: var(--gris-texto);
+}
+.res-edit { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--gris-suave); cursor: pointer; text-decoration: underline; margin-left: auto; }
+
+.res-total-block { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--linea); }
+.res-total-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gris-suave); margin-bottom: 8px; }
+.res-total-price {
+  font-family: 'Playfair Display', serif;
+  font-size: 48px; font-weight: 400; letter-spacing: -2px;
+  color: var(--negro); line-height: 1;
+}
+.res-total-note { font-size: 12px; color: var(--gris-suave); margin-top: 8px; font-weight: 300; line-height: 1.6; }
+
+.res-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+.res-table tr { border-bottom: 1px solid var(--linea); }
+.res-table td { padding: 10px 0; font-size: 12px; }
+.res-table td:first-child { color: var(--gris-texto); font-weight: 300; }
+.res-table td:last-child { text-align: right; font-weight: 500; }
+.res-table tr.res-total-row td { font-weight: 600; font-size: 13px; border-bottom: none; padding-top: 14px; }
+.res-table tr.res-spacer td { padding: 2px 0; border: none; }
+
+.res-cta {
+  width: 100%; padding: 14px;
+  background: var(--negro); color: white; border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.res-cta:hover { opacity: 0.75; }
+.res-legal { font-size: 10px; color: var(--gris-suave); margin-top: 10px; line-height: 1.7; font-weight: 300; }
+
+/* ─── COMO FUNCIONA ─── */
+.como {
+  padding: 120px 6%;
+  border-top: 1px solid var(--linea);
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 80px;
+  align-items: start;
+}
+.como-left { position: sticky; top: 100px; }
+.como-eyebrow {
+  font-size: 10px; font-weight: 600; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--gris-suave); margin-bottom: 16px;
+}
+.como-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 3vw, 44px); font-weight: 400;
+  letter-spacing: -1px; line-height: 1.15; color: var(--negro);
+}
+.como-title em { font-style: italic; color: var(--gris-texto); }
+.como-right { }
+
+.paso {
+  display: grid; grid-template-columns: 48px 1fr;
+  gap: 24px; padding: 36px 0;
+  border-bottom: 1px solid var(--linea);
+}
+.paso:first-child { padding-top: 0; }
+.paso-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px; font-weight: 400; color: var(--gris-suave);
+  padding-top: 3px;
+}
+.paso-content { }
+.paso-title {
+  font-size: 16px; font-weight: 500; color: var(--negro);
+  margin-bottom: 8px; line-height: 1.3;
+}
+.paso-desc { font-size: 14px; font-weight: 300; color: var(--gris-texto); line-height: 1.7; }
+
+/* ─── DIFERENCIACION ─── */
+.diferencia {
+  background: var(--negro); color: white;
+  padding: 100px 6%;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+  align-items: center;
+}
+.dif-left { }
+.dif-eyebrow {
+  font-size: 10px; font-weight: 600; letter-spacing: 2.5px;
+  text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 20px;
+}
+.dif-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 3vw, 44px); font-weight: 400;
+  letter-spacing: -1px; line-height: 1.15;
+  color: white; margin-bottom: 20px;
+}
+.dif-title em { font-style: italic; color: rgba(255,255,255,0.45); }
+.dif-desc { font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.55); line-height: 1.75; }
+
+.dif-right { display: flex; flex-direction: column; gap: 0; }
+.dif-item {
+  padding: 24px 0; border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: grid; grid-template-columns: 28px 1fr; gap: 16px; align-items: start;
+}
+.dif-item:first-child { padding-top: 0; }
+.dif-item:last-child { border-bottom: none; }
+.dif-dash { font-size: 12px; color: rgba(255,255,255,0.25); padding-top: 2px; }
+.dif-item-title { font-size: 14px; font-weight: 500; color: white; margin-bottom: 4px; }
+.dif-item-desc { font-size: 13px; font-weight: 300; color: rgba(255,255,255,0.45); line-height: 1.6; }
+
+/* ─── SECTORES ─── */
+.sectores { padding: 100px 6%; border-top: 1px solid var(--linea); }
+.sec-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 60px; }
+.sec-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gris-suave); margin-bottom: 12px; }
+.sec-title { font-family: 'Playfair Display', serif; font-size: clamp(24px, 2.5vw, 36px); font-weight: 400; letter-spacing: -0.8px; color: var(--negro); }
+.sec-note { font-size: 13px; color: var(--gris-suave); font-weight: 300; max-width: 240px; text-align: right; }
+
+.sectores-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--linea); }
+.sector-item {
+  padding: 28px 24px;
+  border-right: 1px solid var(--linea);
+  border-bottom: 1px solid var(--linea);
+  transition: background 0.2s;
+}
+.sector-item:hover { background: var(--gris-claro); }
+.sector-item:nth-child(3n) { border-right: none; }
+.sector-item:nth-last-child(-n+3) { border-bottom: none; }
+.sector-name { font-size: 14px; font-weight: 500; color: var(--negro); margin-bottom: 4px; }
+.sector-ejemplos { font-size: 12px; font-weight: 300; color: var(--gris-suave); line-height: 1.5; }
+
+/* ─── FAQ ─── */
+.faq-section { padding: 100px 6%; border-top: 1px solid var(--linea); display: grid; grid-template-columns: 1fr 2fr; gap: 80px; }
+.faq-left { position: sticky; top: 100px; }
+.faq-title { font-family: 'Playfair Display', serif; font-size: clamp(24px, 2.5vw, 36px); font-weight: 400; letter-spacing: -0.8px; color: var(--negro); margin-top: 16px; }
+
+.faqs { display: flex; flex-direction: column; }
+.faq {
+  border-bottom: 1px solid var(--linea);
+  padding: 22px 0; cursor: pointer;
+}
+.faq:first-child { border-top: 1px solid var(--linea); }
+.faq-q {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 14px; font-weight: 500; color: var(--negro); gap: 20px;
+  user-select: none;
+}
+.faq-arrow { font-size: 16px; color: var(--gris-suave); transition: transform 0.25s; flex-shrink: 0; }
+.faq.open .faq-arrow { transform: rotate(180deg); }
+.faq-a {
+  font-size: 13px; font-weight: 300; color: var(--gris-texto);
+  line-height: 1.75; max-height: 0; overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s;
+}
+.faq.open .faq-a { max-height: 300px; padding-top: 14px; }
+
+/* ─── CONTACTO ─── */
+.contacto {
+  padding: 100px 6%; border-top: 1px solid var(--linea);
+  display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+}
+.contacto-left { }
+.contacto-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gris-suave); margin-bottom: 16px; }
+.contacto-title { font-family: 'Playfair Display', serif; font-size: clamp(28px, 3vw, 44px); font-weight: 400; letter-spacing: -1px; line-height: 1.15; color: var(--negro); margin-bottom: 20px; }
+.contacto-desc { font-size: 15px; font-weight: 300; color: var(--gris-texto); line-height: 1.75; margin-bottom: 36px; }
+.contacto-datos { display: flex; flex-direction: column; gap: 16px; }
+.contacto-dato { display: flex; flex-direction: column; gap: 2px; }
+.contacto-dato-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gris-suave); }
+.contacto-dato-val { font-size: 14px; font-weight: 400; color: var(--negro); }
+
+.contacto-form { display: flex; flex-direction: column; gap: 20px; }
+.cf-field label { display: block; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gris-suave); margin-bottom: 10px; }
+.cf-field input, .cf-field textarea, .cf-field select {
+  width: 100%; padding: 10px 0;
+  border: none; border-bottom: 1px solid var(--gris-medio);
+  background: transparent; outline: none;
+  font-size: 15px; font-family: 'DM Sans', sans-serif;
+  font-weight: 400; color: var(--negro);
+  transition: border-color 0.2s; resize: none;
+  appearance: none;
+}
+.cf-field input:focus, .cf-field textarea:focus, .cf-field select:focus { border-bottom-color: var(--negro); }
+.cf-field input::placeholder, .cf-field textarea::placeholder { color: var(--gris-medio); }
+.cf-field textarea { min-height: 80px; }
+.cf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+.btn-enviar {
+  padding: 14px 28px; background: var(--negro); color: white; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer;
+  transition: opacity 0.15s; align-self: flex-start;
+}
+.btn-enviar:hover { opacity: 0.7; }
+
+/* ─── FOOTER ─── */
+footer {
+  background: var(--negro); color: rgba(255,255,255,0.35);
+  padding: 48px 6%;
+  display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.footer-logo { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 400; color: white; margin-bottom: 8px; }
+.footer-copy { font-size: 11px; font-weight: 300; }
+.footer-links { display: flex; gap: 24px; list-style: none; }
+.footer-links a { font-size: 11px; color: rgba(255,255,255,0.3); text-decoration: none; transition: color 0.2s; letter-spacing: 0.3px; }
+.footer-links a:hover { color: rgba(255,255,255,0.7); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-left { border-right: none; border-bottom: 1px solid var(--linea); padding: 60px 6%; }
+  .hero-right { padding: 48px 6%; }
+  .como { grid-template-columns: 1fr; gap: 40px; }
+  .como-left { position: static; }
+  .diferencia { grid-template-columns: 1fr; gap: 48px; }
+  .sectores-grid { grid-template-columns: 1fr 1fr; }
+  .sector-item:nth-child(3n) { border-right: 1px solid var(--linea); }
+  .sector-item:nth-child(2n) { border-right: none; }
+  .faq-section { grid-template-columns: 1fr; gap: 40px; }
+  .faq-left { position: static; }
+  .contacto { grid-template-columns: 1fr; gap: 48px; }
+  .nav-links { display: none; }
+  footer { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .hero-stats { gap: 24px; flex-wrap: wrap; }
+  .sectores-grid { grid-template-columns: 1fr; }
+  .sector-item { border-right: none !important; }
+  .sector-item:nth-last-child(-n+1) { border-bottom: none; }
+  .cf-row { grid-template-columns: 1fr; }
+  .sim-field-row { grid-template-columns: 1fr; }
+  .perfil-selector { grid-template-columns: 1fr; }
+  .perfil-btn { border-right: none !important; border-bottom: 1px solid var(--linea); }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">One2One<span>Pro</span></a>
+  <ul class="nav-links">
+    <li><a href="#como-funciona">Cómo funciona</a></li>
+    <li><a href="#sectores">Sectores</a></li>
+    <li><a href="#faq">Preguntas frecuentes</a></li>
+    <li><a href="#contacto">Contacto</a></li>
+  </ul>
+  <a href="#simulador" class="nav-cta">Solicitar alta</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <p class="hero-eyebrow">Gestión laboral · Facturación legal · España</p>
+    <h1 class="hero-h1">Paga a quien necesitas.<br><em>Sin complicaciones.</em></h1>
+    <p class="hero-desc">¿Necesita contratar a alguien puntualmente y no sabe cómo pagarlo de forma legal? One2One Pro lo gestiona todo: el alta en la Seguridad Social, el contrato y la factura. En cualquier sector.</p>
+    <div class="hero-actions">
+      <a href="#simulador" class="btn-primary">Calcular presupuesto</a>
+      <a href="#como-funciona" class="btn-ghost">Ver cómo funciona</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-num">48h</span>
+        <span class="stat-label">Alta tramitada</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">0€</span>
+        <span class="stat-label">Sin cuotas mensuales</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">100%</span>
+        <span class="stat-label">Legal en España</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIMULADOR -->
+  <div class="hero-right" id="simulador">
+    <p class="hero-right-label">Calcule su presupuesto</p>
+    <div class="perfil-selector" id="perfil-selector">
+      <button class="perfil-btn active" onclick="setPerfil('empresa')" id="btn-empresa">
+        <span class="pb-label">Soy una empresa</span>
+        <span class="pb-sub">Quiero contratar a alguien</span>
+      </button>
+      <button class="perfil-btn" onclick="setPerfil('trabajador')" id="btn-trabajador">
+        <span class="pb-label">Soy trabajador</span>
+        <span class="pb-sub">Quiero emitir una factura</span>
+      </button>
+    </div>
+    <div id="sim-container"></div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section class="como" id="como-funciona">
+  <div class="como-left">
+    <p class="como-eyebrow">Proceso</p>
+    <h2 class="como-title">Así de<br><em>sencillo.</em></h2>
+  </div>
+  <div class="como-right" id="pasos-container"></div>
+</section>
+
+<!-- DIFERENCIACION -->
+<section class="diferencia">
+  <div class="dif-left">
+    <p class="dif-eyebrow">Por qué One2One Pro</p>
+    <h2 class="dif-title">No solo<br><em>artistas.</em><br>Cualquier sector.</h2>
+    <p class="dif-desc">La mayoría de plataformas de facturación operan únicamente en el Régimen Especial de Artistas. One2One Pro cubre cualquier actividad laboral en España, con la misma rapidez y sencillez.</p>
+  </div>
+  <div class="dif-right">
+    <div class="dif-item">
+      <div class="dif-dash">—</div>
+      <div>
+        <div class="dif-item-title">Sin restricción de sector</div>
+        <div class="dif-item-desc">Construcción, tecnología, hostelería, logística, arte, formación, salud. Si hay trabajo, hay solución.</div>
+      </div>
+    </div>
+    <div class="dif-item">
+      <div class="dif-dash">—</div>
+      <div>
+        <div class="dif-item-title">Presupuesto inmediato</div>
+        <div class="dif-item-desc">Sin esperas ni llamadas. El coste exacto —Seguridad Social incluida— en menos de dos minutos.</div>
+      </div>
+    </div>
+    <div class="dif-item">
+      <div class="dif-dash">—</div>
+      <div>
+        <div class="dif-item-title">Alta y baja automáticas</div>
+        <div class="dif-item-desc">Gestionamos el alta en la Seguridad Social el día que corresponde y la baja al finalizar. Sin que tenga que hacer nada.</div>
+      </div>
+    </div>
+    <div class="dif-item">
+      <div class="dif-dash">—</div>
+      <div>
+        <div class="dif-item-title">Compatible con el paro y pluriempleo</div>
+        <div class="dif-item-desc">El trabajador puede cobrar su prestación por desempleo y trabajar con nosotros al mismo tiempo, comunicándolo al SEPE.</div>
+      </div>
+    </div>
+    <div class="dif-item">
+      <div class="dif-dash">—</div>
+      <div>
+        <div class="dif-item-title">Sin cuotas fijas</div>
+        <div class="dif-item-desc">Solo paga cuando contrata. Sin permanencia, sin tarifas mensuales, sin letra pequeña.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTORES -->
+<section class="sectores" id="sectores">
+  <div class="sec-header">
+    <div>
+      <p class="sec-eyebrow">Cobertura</p>
+      <h2 class="sec-title">Todos los sectores</h2>
+    </div>
+    <p class="sec-note">Si su actividad no aparece, consúltenos. Cubrimos cualquier epígrafe de la Seguridad Social.</p>
+  </div>
+  <div class="sectores-grid">
+    <div class="sector-item"><div class="sector-name">Música y espectáculo</div><div class="sector-ejemplos">DJs, músicos, técnicos de sonido, animadores, actores</div></div>
+    <div class="sector-item"><div class="sector-name">Fotografía y audiovisual</div><div class="sector-ejemplos">Fotógrafos, videógrafos, editores, directores de arte</div></div>
+    <div class="sector-item"><div class="sector-name">Tecnología y diseño</div><div class="sector-ejemplos">Desarrolladores, diseñadores, analistas, consultores IT</div></div>
+    <div class="sector-item"><div class="sector-name">Construcción e instalaciones</div><div class="sector-ejemplos">Albañiles, electricistas, fontaneros, pintores, carpinteros</div></div>
+    <div class="sector-item"><div class="sector-name">Hostelería y eventos</div><div class="sector-ejemplos">Camareros, cocineros, barman, personal de sala y catering</div></div>
+    <div class="sector-item"><div class="sector-name">Logística y transporte</div><div class="sector-ejemplos">Conductores, repartidores, mozos de almacén, mensajeros</div></div>
+    <div class="sector-item"><div class="sector-name">Formación y consultoría</div><div class="sector-ejemplos">Formadores, asesores, coaches, ponentes, traductores</div></div>
+    <div class="sector-item"><div class="sector-name">Ventas y atención al cliente</div><div class="sector-ejemplos">Promotores, azafatas, representantes, dependientes</div></div>
+    <div class="sector-item"><div class="sector-name">Cuidados y servicios</div><div class="sector-ejemplos">Auxiliares, cuidadores, fisioterapeutas, personal de limpieza</div></div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+  <div class="faq-left">
+    <p class="como-eyebrow">Dudas frecuentes</p>
+    <h2 class="faq-title">Preguntas<br>frecuentes</h2>
+  </div>
+  <div class="faqs">
+    <div class="faq" onclick="toggleFaq(this)">
+      <div class="faq-q">¿Es legal contratar a alguien a través de One2One Pro? <span class="faq-arrow">↓</span></div>
+      <div class="faq-a">Sí, es completamente legal. One2One Pro da de alta al trabajador en la Seguridad Social en Régimen General, emite la factura y gestiona el contrato laboral. La empresa cliente paga una única factura y no asume ninguna relación laboral directa.</div>
+    </div>
+    <div class="faq" onclick="toggleFaq(this)">
+      <div class="faq-q">¿Cuánto tiempo tarda el proceso? <span class="faq-arrow">↓</span></div>
+      <div class="faq-a">El presupuesto es inmediato. Una vez aceptado, tramitamos el alta en la Seguridad Social en menos de 24 horas. Es imprescindible solicitarlo con al menos un día de antelación a la fecha de inicio del trabajo.</div>
+    </div>
+    <div class="faq" onclick="toggleFaq(this)">
+      <div class="faq-q">¿Qué pasa si el trabajo se cancela? <span class="faq-arrow">↓</span></div>
+      <div class="faq-a">Si la cancelación se comunica antes de tramitar el alta, no hay ningún coste. Si el alta ya ha sido tramitada, se generará una obligación de pago por los costes de Seguridad Social correspondientes a los días dados de alta.</div>
+    </div>
+    <div class="faq" onclick="toggleFaq(this)">
+      <div class="faq-q">¿Puede el trabajador cobrar el paro y trabajar con One2One Pro? <span class="faq-arrow">↓</span></div>
+      <div class="faq-a">Sí. El trabajador puede compatibilizar la prestación por desempleo con trabajos puntuales, siempre que lo comunique a su oficina del SEPE antes de comenzar. Esto varía según la comunidad autónoma, por lo que recomendamos consultarlo previamente.</div>
+    </div>
+    <div class="faq" onclick="toggleFaq(this)">
+      <div class="faq-q">¿Se puede contratar a varias personas para el mismo trabajo? <span class="faq-arrow">↓</span></div>
+      <div class="faq-a">Sí. Se puede emitir una única factura para un grupo de personas, siempre que todas estén registradas en la plataforma. Cada trabajador recibirá su liquidación individual.</div>
+    </div>
+    <div class="faq" onclick="toggleFaq(this)">
+      <div class="faq-q">¿Se puede contratar a alguien para trabajar en el extranjero? <span class="faq-arrow">↓</span></div>
+      <div class="faq-a">Sí, sin coste adicional. Es necesario comunicarlo con al menos 20 días de antelación para tramitar el formulario A1, imprescindible para trabajar fuera de España.</div>
+    </div>
+    <div class="faq" onclick="toggleFaq(this)">
+      <div class="faq-q">¿Qué IVA se aplica en la factura? <span class="faq-arrow">↓</span></div>
+      <div class="faq-a">El IVA aplicable es siempre el 21%, al tratarse de una sociedad mercantil la que emite la factura. Esto aplica independientemente del tipo de actividad o sector.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section class="contacto" id="contacto">
+  <div class="contacto-left">
+    <p class="contacto-eyebrow">Contacto</p>
+    <h2 class="contacto-title">¿Tiene alguna duda?</h2>
+    <p class="contacto-desc">Si su caso es particular o necesita asesoramiento antes de tramitar el alta, escríbanos. Le respondemos en el menor tiempo posible.</p>
+    <div class="contacto-datos">
+      <div class="contacto-dato">
+        <span class="contacto-dato-label">Email</span>
+        <span class="contacto-dato-val">info@one2onepro.es</span>
+      </div>
+      <div class="contacto-dato">
+        <span class="contacto-dato-label">WhatsApp</span>
+        <span class="contacto-dato-val">+34 600 000 000</span>
+      </div>
+      <div class="contacto-dato">
+        <span class="contacto-dato-label">Horario</span>
+        <span class="contacto-dato-val">Lunes a viernes, 9:00 – 18:00</span>
+      </div>
+    </div>
+  </div>
+  <div>
+    <form class="contacto-form" onsubmit="enviarContacto(event)">
+      <div class="cf-row">
+        <div class="cf-field"><label>Nombre</label><input type="text" placeholder="Su nombre" required></div>
+        <div class="cf-field"><label>Email</label><input type="email" placeholder="su@email.com" required></div>
+      </div>
+      <div class="cf-field">
+        <label>Motivo de consulta</label>
+        <select>
+          <option value="">Seleccione una opción</option>
+          <option>Contratar a un trabajador</option>
+          <option>Emitir una factura como trabajador</option>
+          <option>Duda sobre el proceso</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="cf-field"><label>Mensaje</label><textarea placeholder="Describa su caso brevemente" rows="3"></textarea></div>
+      <button type="submit" class="btn-enviar">Enviar consulta</button>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">One2One Pro</div>
+    <p class="footer-copy">© 2026 One2One SL · Todos los derechos reservados · CIF B00000000</p>
+  </div>
+  <ul class="footer-links">
+    <li><a href="#">Aviso legal</a></li>
+    <li><a href="#">Política de privacidad</a></li>
+    <li><a href="#">Cookies</a></li>
+  </ul>
+</footer>
+
+<script>
+/* ─── DATA ─── */
+const ACTIVIDADES = [
+  { id:'musica',      label:'Música o entretenimiento',       sub:'Artistas, técnicos de sonido, animadores',       atep:1.5, grupo:4 },
+  { id:'audiovisual', label:'Fotografía o audiovisual',       sub:'Fotografía, vídeo, producción, edición',         atep:1.5, grupo:4 },
+  { id:'tech',        label:'Tecnología o diseño',            sub:'Desarrollo, diseño, consultoría digital',        atep:1.5, grupo:1 },
+  { id:'obras',       label:'Construcción e instalaciones',   sub:'Albañilería, electricidad, fontanería',          atep:5.5, grupo:8 },
+  { id:'hosteleria',  label:'Hostelería o eventos',           sub:'Sala, cocina, barra, catering',                  atep:3.0, grupo:4 },
+  { id:'logistica',   label:'Logística o transporte',         sub:'Conducción, reparto, carga y descarga',          atep:4.0, grupo:8 },
+  { id:'formacion',   label:'Formación o consultoría',        sub:'Docencia, asesoramiento, ponencias',             atep:1.5, grupo:2 },
+  { id:'salud',       label:'Cuidados o servicios generales', sub:'Atención sanitaria, cuidado, limpieza',          atep:2.5, grupo:4 },
+  { id:'comercio',    label:'Ventas o atención al cliente',   sub:'Promoción, representación comercial',            atep:2.0, grupo:4 },
+  { id:'otro',        label:'Otra actividad',                 sub:'Lo verificamos antes de confirmar el presupuesto', atep:2.5, grupo:4 },
+];
+const UBICACIONES = [
+  { id:'interior', label:'En un espacio interior',       sub:'Oficina, local, estudio, sala, nave',            factor:1.0 },
+  { id:'exterior', label:'Al aire libre',                sub:'Obra exterior, festival, reparto, mercado',      factor:1.15 },
+  { id:'mixto',    label:'Combina interior y exterior',  sub:'El trabajo alterna ambos entornos',              factor:1.08 },
+];
+const PASOS_EMPRESA = [
+  { num:'01', title:'Calcule el presupuesto', desc:'Indique el tipo de trabajo, dónde se realizará, el importe acordado con el trabajador y los días. El coste total —Seguridad Social incluida— aparece al instante.' },
+  { num:'02', title:'Nos facilita los datos', desc:'Nombre del trabajador, DNI, número de cuenta y datos fiscales de su empresa. Nada más. Nosotros gestionamos el resto.' },
+  { num:'03', title:'Tramitamos el alta', desc:'Damos de alta al trabajador en la Seguridad Social el día que corresponde. Usted recibe la factura lista para contabilizar.' },
+  { num:'04', title:'El trabajador cobra', desc:'Una vez abonada la factura, el trabajador recibe el importe acordado en su cuenta en un plazo de 24 a 72 horas.' },
+  { num:'05', title:'Tramitamos la baja', desc:'Al finalizar el trabajo, gestionamos la baja automáticamente. Sin trámites adicionales por su parte.' },
+];
+const PASOS_TRABAJADOR = [
+  { num:'01', title:'Acuerde el trabajo con su cliente', desc:'Negocie el importe y los días con la empresa que le contrata. Con el simulador puede ver exactamente cuánto le llegará a usted.' },
+  { num:'02', title:'Regístrese en One2One Pro', desc:'Créese una cuenta con sus datos personales y bancarios. El proceso es rápido y gratuito.' },
+  { num:'03', title:'Abra un expediente', desc:'Indique los días de trabajo y los datos fiscales de la empresa que le paga. Lo puede hacer desde cualquier dispositivo, en cualquier momento.' },
+  { num:'04', title:'Descargue la factura', desc:'El mismo día que deba entregarla a su cliente, descárguela desde su área de usuario. La fecha de la factura será la del día de descarga.' },
+  { num:'05', title:'Realice su trabajo y cobre', desc:'Una vez su cliente abone la factura, recibirá el importe acordado en su cuenta en concepto de nómina.' },
+];
+
+const BASES_MIN = { 1:1929, 2:1599.60, 3:1391.70, 4:1381.20, 8:1381.20 };
+const COMISION = 0.18;
+
+let perfil = 'empresa';
+let simState = { step:0, actividad:null, ubicacion:null, importe:'', dias:'' };
+
+/* ─── PERFIL ─── */
+function setPerfil(p) {
+  perfil = p;
+  simState = { step:0, actividad:null, ubicacion:null, importe:'', dias:'' };
+  document.getElementById('btn-empresa').classList.toggle('active', p==='empresa');
+  document.getElementById('btn-trabajador').classList.toggle('active', p==='trabajador');
+  renderPasos();
+  renderSim();
+}
+
+/* ─── PASOS ─── */
+function renderPasos() {
+  const pasos = perfil === 'empresa' ? PASOS_EMPRESA : PASOS_TRABAJADOR;
+  document.getElementById('pasos-container').innerHTML = pasos.map(p=>`
+    <div class="paso">
+      <div class="paso-num">${p.num}</div>
+      <div class="paso-content">
+        <div class="paso-title">${p.title}</div>
+        <div class="paso-desc">${p.desc}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ─── SIMULADOR ─── */
+function fmt(n) { return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+
+function progress(total) {
+  return `<div class="sim-progress">${Array.from({length:total},(_,i)=>`<div class="sim-p ${i<simState.step?'done':i===simState.step?'active':''}"></div>`).join('')}</div>`;
+}
+
+function optList(items, key) {
+  return `<div class="sim-opts">${items.map(o=>`
+    <div class="sim-opt ${simState[key]&&simState[key].id===o.id?'sel':''}" onclick="pickSim('${key}',${JSON.stringify(o).replace(/"/g,'&quot;')})">
+      <div><div class="sim-opt-label">${o.label}</div><div class="sim-opt-sub">${o.sub}</div></div>
+      <div class="sim-opt-dot"></div>
+    </div>`).join('')}</div>`;
+}
+
+function calcular() {
+  const act=simState.actividad, loc=simState.ubicacion;
+  const imp=parseFloat(simState.importe), dias=parseInt(simState.dias);
+  const atepPct=(act.atep*loc.factor)/100;
+  const bMin=BASES_MIN[act.grupo]||1381.20;
+  const bDiaria=Math.min(Math.max(imp/dias,bMin/30),5101.20/30);
+  const base=bDiaria*dias;
+  const cc=base*0.236, des=base*0.067, atep=base*atepPct, otros=base*(0.002+0.006+0.0067);
+  const ss=cc+des+atep+otros;
+  const coste=imp+ss, com=coste*COMISION, sinIva=coste+com, iva=sinIva*0.21, total=sinIva+iva;
+  return {imp,dias,cc,des,atep,otros,ss,coste,com,sinIva,iva,total};
+}
+
+function renderSim() {
+  const c = document.getElementById('sim-container');
+  const s = simState;
+  const isEmpresa = perfil === 'empresa';
+  const STEPS = 3;
+
+  if (s.step === 0) {
+    c.innerHTML = `
+      ${progress(STEPS)}
+      <div class="sim-step-label">Paso 1 de ${STEPS}</div>
+      <div class="sim-step-q">${isEmpresa ? '¿Qué tipo de trabajo va a realizar la persona que desea contratar?' : '¿Qué tipo de trabajo va a realizar?'}</div>
+      <div class="sim-step-hint">Seleccione la categoría que mejor describe la actividad.</div>
+      ${optList(ACTIVIDADES,'actividad')}
+      <button class="sim-btn-next" onclick="simNext()" ${!s.actividad?'disabled':''}>Continuar</button>`;
+  } else if (s.step === 1) {
+    c.innerHTML = `
+      ${progress(STEPS)}
+      <button class="sim-btn-back" onclick="simBack()">← Volver</button>
+      <div class="sim-step-label">Paso 2 de ${STEPS}</div>
+      <div class="sim-step-q">¿Dónde va a desarrollarse el trabajo?</div>
+      <div class="sim-step-hint">La ubicación determina el nivel de cobertura por accidentes laborales aplicable.</div>
+      ${optList(UBICACIONES,'ubicacion')}
+      <button class="sim-btn-next" onclick="simNext()" ${!s.ubicacion?'disabled':''}>Continuar</button>`;
+  } else if (s.step === 2) {
+    c.innerHTML = `
+      ${progress(STEPS)}
+      <button class="sim-btn-back" onclick="simBack()">← Volver</button>
+      <div class="sim-step-label">Paso 3 de ${STEPS}</div>
+      <div class="sim-step-q">Importe y duración</div>
+      <div class="sim-step-hint">${isEmpresa ? 'Indique el importe acordado con el trabajador y el número de días de trabajo.' : 'Indique el importe que ha acordado con la empresa y los días que va a trabajar.'}</div>
+      <div class="sim-fields">
+        <div class="sim-field-row">
+          <div class="sim-field has-prefix">
+            <label>Importe acordado</label>
+            <div class="inp-wrap"><span class="inp-prefix">€</span>
+            <input type="number" placeholder="0" value="${s.importe}" min="1" id="i-imp" oninput="simState.importe=this.value;refreshSimBtn()"></div>
+          </div>
+          <div class="sim-field">
+            <label>Días de trabajo</label>
+            <input type="number" placeholder="0" value="${s.dias}" min="1" max="365" id="i-dias" oninput="simState.dias=this.value;refreshSimBtn()">
+          </div>
+        </div>
+      </div>
+      <button class="sim-btn-next" id="btn-sim2" onclick="simNext()" ${!(s.importe&&s.dias)?'disabled':''}>Obtener presupuesto</button>`;
+  } else {
+    const calc = calcular();
+    const label = isEmpresa ? 'Total a pagar por su empresa' : 'Total que factura su cliente';
+    const note = isEmpresa
+      ? `IVA incluido. ${s.actividad.label} · ${calc.dias} día${calc.dias>1?'s':''}. El trabajador recibe ${fmt(calc.imp)} íntegramente.`
+      : `IVA incluido. ${s.actividad.label} · ${calc.dias} día${calc.dias>1?'s':''}. Usted recibe ${fmt(calc.imp)} en su cuenta.`;
+    c.innerHTML = `
+      <div class="res-anim">
+        <div class="res-tags">
+          <span class="res-tag">${s.actividad.label}</span>
+          <span class="res-tag">${s.ubicacion.label}</span>
+          <span class="res-tag">${calc.dias} día${calc.dias>1?'s':''}</span>
+          <span class="res-edit" onclick="simState.step=0;renderSim()">Modificar</span>
+        </div>
+        <div class="res-total-block">
+          <div class="res-total-label">${label}</div>
+          <div class="res-total-price">${fmt(calc.total)}</div>
+          <div class="res-total-note">${note}</div>
+        </div>
+        <table class="res-table">
+          <tr><td>${isEmpresa ? 'Pago neto al trabajador' : 'Importe acordado'}</td><td>${fmt(calc.imp)}</td></tr>
+          <tr class="res-spacer"><td colspan="2"></td></tr>
+          <tr><td>Seguridad Social — contingencias comunes</td><td>${fmt(calc.cc)}</td></tr>
+          <tr><td>Seguridad Social — desempleo</td><td>${fmt(calc.des)}</td></tr>
+          <tr><td>Seguridad Social — accidentes de trabajo</td><td>${fmt(calc.atep)}</td></tr>
+          <tr><td>FOGASA, formación profesional y MEI</td><td>${fmt(calc.otros)}</td></tr>
+          <tr class="res-spacer"><td colspan="2"></td></tr>
+          <tr><td>Gestión One2One Pro (18%)</td><td>${fmt(calc.com)}</td></tr>
+          <tr><td>IVA (21%)</td><td>${fmt(calc.iva)}</td></tr>
+          <tr class="res-spacer"><td colspan="2"></td></tr>
+          <tr class="res-total-row"><td>Total factura</td><td>${fmt(calc.total)}</td></tr>
+        </table>
+        <button class="res-cta" onclick="document.getElementById('contacto').scrollIntoView({behavior:'smooth'})">Tramitar el alta</button>
+        <div class="res-legal">Presupuesto calculado conforme a la Orden PJC/297/2026. Importes orientativos, sujetos a verificación.</div>
+      </div>`;
+  }
+}
+
+function pickSim(key, val) { simState[key]=val; renderSim(); }
+function simNext() { simState.step++; renderSim(); }
+function simBack() { simState.step--; renderSim(); }
+function refreshSimBtn() {
+  const b=document.getElementById('btn-sim2');
+  if(b) b.disabled=!(simState.importe&&simState.dias);
+}
+
+/* ─── FAQ ─── */
+function toggleFaq(el) {
+  const open=el.classList.contains('open');
+  document.querySelectorAll('.faq').forEach(f=>f.classList.remove('open'));
+  if(!open) el.classList.add('open');
+}
+
+/* ─── CONTACTO ─── */
+function enviarContacto(e) {
+  e.preventDefault();
+  e.target.innerHTML=`<p style="font-size:14px;font-weight:300;color:var(--gris-texto);line-height:1.75;padding:20px 0;">Mensaje recibido. Le responderemos en el menor tiempo posible.</p>`;
+}
+
+/* ─── INIT ─── */
+renderPasos();
+renderSim();
+</script>
+</body>
+</html>
