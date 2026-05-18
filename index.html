@@ -740,6 +740,7 @@ async function finalizarEmpresa(){
     base_imponible: r.sinIva,
     iva: r.iva,
     total_factura: r.total,
+    total_factura_centimos: Math.round(r.total * 100),
     // Empresa
     empresa_razon_social: st.eRazon,
     empresa_cif: st.eCif,
