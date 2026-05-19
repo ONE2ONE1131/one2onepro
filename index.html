@@ -315,12 +315,19 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
   .hero-stats{gap:20px;flex-wrap:wrap}
   .galeria{grid-template-columns:1fr 1fr}
 }
+
+/* VALIDACIÓN DE CAMPOS */
+.form-field input.invalid,.form-field select.invalid{border-bottom-color:#e53935!important}
+.form-field input.valid,.form-field select.valid{border-bottom-color:#00a86b!important}
+.field-error{font-size:10px;color:#e53935;margin-top:3px;font-weight:400;display:none}
+.field-error.show{display:block}
+.form-field input.invalid+.field-error,.form-field .field-error.show{display:block}
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="#" class="logo">One2One<em>Pro</em></a>
+  <a href="#" class="logo" style="display:flex;align-items:center;gap:8px"><img src="logo.png" alt="One2One Pro" style="height:36px;width:auto;object-fit:contain" onerror="this.style.display='none'">One2One<em>Pro</em></a>
   <ul class="nav-links">
     <li><a href="#quienes">Quiénes somos</a></li>
     <li><a href="#como">Cómo funciona</a></li>
@@ -493,7 +500,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 
 <footer>
   <div>
-    <div class="foot-logo">One2One<em>Pro</em></div>
+    <div class="foot-logo" style="display:flex;align-items:center;gap:8px"><img src="logo.png" alt="One2One Pro" style="height:30px;width:auto;object-fit:contain;opacity:0.5" onerror="this.style.display='none'">One2One<em>Pro</em></div>
     <div class="foot-legal">
       ONE2ONE SOLUTIONS S.L. · CIF B19428846<br>
       Calle Pintor Madrazo 6 · 11630 Arcos de la Frontera, Cádiz<br>
@@ -586,7 +593,7 @@ function calcular(){
     base=bD*dias;cc=base*0.236;des=base*0.067;atep=base*atepPct;fog=base*0.002;fp=base*0.006;mei=base*0.0075;
     ss=cc+des+atep+fog+fp+mei+(dias<30?33.62:0);
   }
-  const com=(imp+ss)*COM,sinIva=imp+ss+com,iva=sinIva*0.21,total=sinIva+iva;
+  const com=Math.round((imp+ss)*COM*100)/100,sinIva=Math.round((imp+ss+com)*100)/100,iva=Math.round(sinIva*0.21*100)/100,total=Math.round((sinIva+iva)*100)/100;
   return{imp,dias,ss,cc,des,atep,fog,fp,mei,com,sinIva,iva,total,esA};
 }
 
@@ -664,16 +671,16 @@ function renderEmpresa(){
     <div class="form-section">
       <div class="form-section-title">Datos personales del trabajador</div>
       <div class="form-grid">
-        <div class="form-field"><label>Nombre</label><input type="text" placeholder="Nombre" value="${st.tNombre}" oninput="st.tNombre=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>Apellidos</label><input type="text" placeholder="Apellidos" value="${st.tApellidos}" oninput="st.tApellidos=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>DNI / NIE</label><input type="text" placeholder="12345678A" value="${st.tDni}" oninput="st.tDni=this.value;rBtn('bs3m',trabDatosValidos)"></div>
+        <div class="form-field"><label>Nombre</label><input type="text" placeholder="Nombre" value="${st.tNombre}" maxlength="50" oninput="st.tNombre=sanitizeName(this.value);this.value=st.tNombre;validateName(this);rBtn('bs3m',trabDatosValidos)"><div class="field-error">Solo letras, espacios y guiones. Mín. 2 caracteres.</div></div>
+        <div class="form-field"><label>Apellidos</label><input type="text" placeholder="Apellidos" value="${st.tApellidos}" maxlength="80" oninput="st.tApellidos=sanitizeName(this.value);this.value=st.tApellidos;validateName(this);rBtn('bs3m',trabDatosValidos)"><div class="field-error">Solo letras, espacios y guiones. Mín. 2 caracteres.</div></div>
+        <div class="form-field"><label>DNI / NIE</label><input type="text" placeholder="12345678A" value="${st.tDni}" maxlength="9" oninput="st.tDni=this.value.toUpperCase();validateDni(this);rBtn('bs3m',trabDatosValidos)"><div class="field-error">DNI: 8 números + 1 letra (ej: 12345678Z). NIE: X/Y/Z + 7 números + letra</div></div>
         <div class="form-field"><label>Fecha de nacimiento</label><input type="date" value="${st.tFechaNac}" oninput="st.tFechaNac=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>Nacionalidad</label><input type="text" placeholder="Española" value="${st.tNacionalidad}" oninput="st.tNacionalidad=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>Nº Afiliación SS (NAF)</label><input type="text" placeholder="Opcional" value="${st.tNaf}" oninput="st.tNaf=this.value"></div>
-        <div class="form-field full"><label>Dirección completa</label><input type="text" placeholder="Calle, número, municipio, provincia, CP" value="${st.tDireccion}" oninput="st.tDireccion=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>IBAN</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" value="${st.tIban}" oninput="st.tIban=this.value;rBtn('bs3m',trabDatosValidos)"></div>
+        <div class="form-field"><label>Nacionalidad</label><input type="text" placeholder="Española" value="${st.tNacionalidad}" maxlength="50" oninput="st.tNacionalidad=sanitizeName(this.value);this.value=st.tNacionalidad;validateName(this);rBtn('bs3m',trabDatosValidos)"><div class="field-error">Indique su nacionalidad (ej: Española)</div></div>
+        <div class="form-field"><label>Nº Afiliación SS (NAF)</label><input type="text" placeholder="281234567890 (opcional)" value="${st.tNaf}" maxlength="12" oninput="st.tNaf=this.value.replace(/\D/g,'').substring(0,12);this.value=st.tNaf;validateNaf(this)"><div class="field-error">El NAF tiene 12 dígitos (ej: 281234567890)</div></div>
+        <div class="form-field full"><label>Dirección completa</label><input type="text" placeholder="Calle, número, municipio, provincia, CP" value="${st.tDireccion}" maxlength="200" oninput="st.tDireccion=this.value;validateDireccion(this);rBtn('bs3m',trabDatosValidos)"><div class="field-error">Incluya calle, número, municipio, provincia y código postal.</div></div>
+        <div class="form-field"><label>IBAN</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" value="${st.tIban}" maxlength="29" oninput="st.tIban=formatIban(this.value);this.value=st.tIban;validateIban(this);rBtn('bs3m',trabDatosValidos)"><div class="field-error">IBAN español: ES seguido de 22 dígitos (ej: ES91 2100 0418 4502 0005 1332)</div></div>
         <div class="form-field"><label>Email</label><input type="email" placeholder="su@email.com" value="${st.tEmail}" oninput="st.tEmail=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>Teléfono</label><input type="tel" placeholder="+34 600 000 000" value="${st.tTel}" oninput="st.tTel=this.value;rBtn('bs3m',trabDatosValidos)"></div>
+        <div class="form-field"><label>Teléfono</label><input type="tel" placeholder="+34 600 000 000" value="${st.tTel}" maxlength="16" oninput="st.tTel=this.value;validateTel(this);rBtn('bs3m',trabDatosValidos)"><div class="field-error">Teléfono español válido (ej: +34 600 000 000 o 600000000)</div></div>
       </div>
     </div>
     <button class="btn-n" id="bs3m" onclick="next()" ${!trabDatosValidos()?'disabled':''}>Continuar</button>`
@@ -684,11 +691,11 @@ function renderEmpresa(){
     <div class="form-section">
       <div class="form-section-title">Datos de su empresa</div>
       <div class="form-grid">
-        <div class="form-field"><label>Razón social</label><input type="text" placeholder="Empresa S.L." value="${st.eRazon}" oninput="st.eRazon=this.value;rBtn('bs4',empValida)"></div>
-        <div class="form-field"><label>CIF</label><input type="text" placeholder="B12345678" value="${st.eCif}" oninput="st.eCif=this.value;rBtn('bs4',empValida)"></div>
-        <div class="form-field full"><label>Dirección fiscal completa</label><input type="text" placeholder="Calle, número, municipio, provincia, CP" value="${st.eDireccion}" oninput="st.eDireccion=this.value;rBtn('bs4',empValida)"></div>
+        <div class="form-field"><label>Razón social</label><input type="text" placeholder="Empresa S.L." value="${st.eRazon}" maxlength="100" oninput="st.eRazon=this.value;validateRequired(this,2);rBtn('bs4',empValida)"><div class="field-error">La razón social debe tener al menos 2 caracteres.</div></div>
+        <div class="form-field"><label>CIF</label><input type="text" placeholder="B12345678" value="${st.eCif}" maxlength="9" oninput="st.eCif=this.value.toUpperCase();this.value=st.eCif;validateCif(this);rBtn('bs4',empValida)"><div class="field-error">CIF español: letra + 7 dígitos + dígito/letra (ej: B12345678)</div></div>
+        <div class="form-field full"><label>Dirección fiscal completa</label><input type="text" placeholder="Calle, número, municipio, provincia, CP" value="${st.eDireccion}" maxlength="200" oninput="st.eDireccion=this.value;validateDireccion(this);rBtn('bs4',empValida)"><div class="field-error">Incluya calle, número, municipio, provincia y código postal.</div></div>
         <div class="form-field"><label>Email de facturación</label><input type="email" placeholder="facturacion@empresa.com" value="${st.eEmail}" oninput="st.eEmail=this.value;rBtn('bs4',empValida)"></div>
-        <div class="form-field"><label>Teléfono</label><input type="tel" placeholder="+34 600 000 000" value="${st.eTel}" oninput="st.eTel=this.value;rBtn('bs4',empValida)"></div>
+        <div class="form-field"><label>Teléfono</label><input type="tel" placeholder="+34 600 000 000" value="${st.eTel}" maxlength="16" oninput="st.eTel=this.value;validateTel(this);rBtn('bs4',empValida)"><div class="field-error">Teléfono español válido (ej: +34 600 000 000)</div></div>
         <div class="form-field"><label>Fecha inicio</label><input type="date" value="${st.eFechaInicio}" oninput="st.eFechaInicio=this.value;rBtn('bs4',empValida)"></div>
         <div class="form-field"><label>Fecha fin</label><input type="date" value="${st.eFechaFin}" oninput="st.eFechaFin=this.value;rBtn('bs4',empValida)"></div>
       </div>
@@ -708,8 +715,17 @@ function renderEmpresa(){
   }
 }
 
-function trabDatosValidos(){return st.tNombre&&st.tApellidos&&st.tDni&&st.tFechaNac&&st.tNacionalidad&&st.tDireccion&&st.tIban&&st.tEmail&&st.tTel}
-function empValida(){return st.eRazon&&st.eCif&&st.eDireccion&&st.eEmail&&st.eTel&&st.eFechaInicio&&st.eFechaFin&&st.condAceptadas}
+function trabDatosValidos(){
+  const dniOk = /^\d{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(st.tDni.toUpperCase()) || /^[XYZ]\d{7}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(st.tDni.toUpperCase());
+  const ibanOk = /^ES\d{22}$/.test(st.tIban.replace(/\s/g,'').toUpperCase());
+  const telOk = /^(\+34)?[6789]\d{8}$/.test(st.tTel.trim().replace(/\s/g,''));
+  return st.tNombre&&st.tApellidos&&dniOk&&st.tFechaNac&&st.tNacionalidad&&st.tDireccion&&ibanOk&&st.tEmail&&telOk;
+}
+function empValida(){
+  const cifOk = /^[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]$/i.test(st.eCif.trim());
+  const telOk = /^(\+34)?[6789]\d{8}$/.test(st.eTel.trim().replace(/\s/g,''));
+  return st.eRazon&&cifOk&&st.eDireccion&&st.eEmail&&telOk&&st.eFechaInicio&&st.eFechaFin&&st.condAceptadas;
+}
 
 async function finalizarEmpresa(){
   const r=calcular();
@@ -734,12 +750,12 @@ async function finalizarEmpresa(){
     fecha_inicio: st.eFechaInicio,
     fecha_fin: st.eFechaFin,
     // Importes
-    importe_trabajador: parseFloat(st.imp),
-    seguridad_social: r.ss,
-    gestion_one2one: r.com,
-    base_imponible: r.sinIva,
-    iva: r.iva,
-    total_factura: r.total,
+    importe_trabajador: Math.round(parseFloat(st.imp) * 100) / 100,
+    seguridad_social: Math.round(r.ss * 100) / 100,
+    gestion_one2one: Math.round(r.com * 100) / 100,
+    base_imponible: Math.round(r.sinIva * 100) / 100,
+    iva: Math.round(r.iva * 100) / 100,
+    total_factura: Math.round(r.total * 100) / 100,
     total_factura_centimos: Math.round(r.total * 100),
     // Empresa
     empresa_razon_social: st.eRazon,
@@ -757,7 +773,7 @@ async function finalizarEmpresa(){
     trabajador_nacionalidad: st.tNacionalidad||'',
     trabajador_direccion: st.tDireccion||'',
     trabajador_naf: st.tNaf||'',
-    trabajador_iban: st.tIban||'',
+    trabajador_iban: (st.tIban||'').replace(/\s/g,'').toUpperCase(),
     trabajador_telefono: st.tTel||'',
   };
 
@@ -836,16 +852,16 @@ function renderTrabajador(){
     <div class="form-section">
       <div class="form-section-title">Sus datos personales</div>
       <div class="form-grid">
-        <div class="form-field"><label>Nombre</label><input type="text" placeholder="Su nombre" value="${st.tNombre}" oninput="st.tNombre=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>Apellidos</label><input type="text" placeholder="Sus apellidos" value="${st.tApellidos}" oninput="st.tApellidos=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>DNI / NIE</label><input type="text" placeholder="12345678A" value="${st.tDni}" oninput="st.tDni=this.value;rBtn('bt3',trabDatosValidos)"></div>
+        <div class="form-field"><label>Nombre</label><input type="text" placeholder="Su nombre" value="${st.tNombre}" maxlength="50" oninput="st.tNombre=sanitizeName(this.value);this.value=st.tNombre;validateName(this);rBtn('bt3',trabDatosValidos)"><div class="field-error">Solo letras, espacios y guiones. Mín. 2 caracteres.</div></div>
+        <div class="form-field"><label>Apellidos</label><input type="text" placeholder="Sus apellidos" value="${st.tApellidos}" maxlength="80" oninput="st.tApellidos=sanitizeName(this.value);this.value=st.tApellidos;validateName(this);rBtn('bt3',trabDatosValidos)"><div class="field-error">Solo letras, espacios y guiones. Mín. 2 caracteres.</div></div>
+        <div class="form-field"><label>DNI / NIE</label><input type="text" placeholder="12345678A" value="${st.tDni}" maxlength="9" oninput="st.tDni=this.value.toUpperCase();validateDni(this);rBtn('bt3',trabDatosValidos)"><div class="field-error">DNI: 8 números + 1 letra (ej: 12345678Z). NIE: X/Y/Z + 7 números + letra</div></div>
         <div class="form-field"><label>Fecha de nacimiento</label><input type="date" value="${st.tFechaNac}" oninput="st.tFechaNac=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>Nacionalidad</label><input type="text" placeholder="Española" value="${st.tNacionalidad}" oninput="st.tNacionalidad=this.value;rBtn('bt3',trabDatosValidos)"></div>
+        <div class="form-field"><label>Nacionalidad</label><input type="text" placeholder="Española" value="${st.tNacionalidad}" maxlength="50" oninput="st.tNacionalidad=sanitizeName(this.value);this.value=st.tNacionalidad;validateName(this);rBtn('bt3',trabDatosValidos)"><div class="field-error">Indique su nacionalidad (ej: Española)</div></div>
         <div class="form-field"><label>Nº Afiliación SS (NAF)</label><input type="text" placeholder="Opcional" value="${st.tNaf}" oninput="st.tNaf=this.value"></div>
-        <div class="form-field full"><label>Dirección completa</label><input type="text" placeholder="Calle, número, municipio, provincia, CP" value="${st.tDireccion}" oninput="st.tDireccion=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>IBAN</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" value="${st.tIban}" oninput="st.tIban=this.value;rBtn('bt3',trabDatosValidos)"></div>
+        <div class="form-field full"><label>Dirección completa</label><input type="text" placeholder="Calle, número, municipio, provincia, CP" value="${st.tDireccion}" maxlength="200" oninput="st.tDireccion=this.value;validateDireccion(this);rBtn('bt3',trabDatosValidos)"><div class="field-error">Incluya calle, número, municipio, provincia y código postal.</div></div>
+        <div class="form-field"><label>IBAN</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" value="${st.tIban}" maxlength="29" oninput="st.tIban=formatIban(this.value);this.value=st.tIban;validateIban(this);rBtn('bt3',trabDatosValidos)"><div class="field-error">IBAN español: ES seguido de 22 dígitos (ej: ES91 2100 0418 4502 0005 1332)</div></div>
         <div class="form-field"><label>Email</label><input type="email" placeholder="su@email.com" value="${st.tEmail}" oninput="st.tEmail=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>Teléfono</label><input type="tel" placeholder="+34 600 000 000" value="${st.tTel}" oninput="st.tTel=this.value;rBtn('bt3',trabDatosValidos)"></div>
+        <div class="form-field"><label>Teléfono</label><input type="tel" placeholder="+34 600 000 000" value="${st.tTel}" maxlength="16" oninput="st.tTel=this.value;validateTel(this);rBtn('bt3',trabDatosValidos)"><div class="field-error">Teléfono español válido (ej: +34 600 000 000 o 600000000)</div></div>
       </div>
     </div>
     <button class="btn-n" id="bt3" onclick="generarEnlace()" ${!trabDatosValidos()?'disabled':''}>Generar presupuesto para la empresa →</button>
@@ -924,6 +940,106 @@ function toggleDesglose(el){
 }
 function toggleFaq(el){const o=el.classList.contains('open');document.querySelectorAll('.faq').forEach(f=>f.classList.remove('open'));if(!o)el.classList.add('open')}
 function enviarContacto(e){e.preventDefault();e.target.innerHTML='<p style="font-size:14px;font-weight:300;color:rgba(255,255,255,.5);padding:20px 0;line-height:1.75">Mensaje recibido. Le responderemos en breve.</p>'}
+
+
+/* ─── FUNCIONES DE VALIDACIÓN ─── */
+function validateDni(input) {
+  const v = input.value.trim().toUpperCase();
+  // DNI: 8 digits + letter
+  const dniReg = /^\d{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/;
+  // NIE: X/Y/Z + 7 digits + letter
+  const nieReg = /^[XYZ]\d{7}[TRWAGMYFPDXBNJZSQVHLCKE]$/;
+  const valid = dniReg.test(v) || nieReg.test(v);
+  // Additional DNI check - verify letter
+  if (dniReg.test(v)) {
+    const letters = 'TRWAGMYFPDXBNJZSQVHLCKE';
+    const num = parseInt(v.substring(0, 8));
+    const expectedLetter = letters[num % 23];
+    const actualValid = v[8] === expectedLetter;
+    setFieldState(input, actualValid, 'DNI: letra incorrecta. Verificar.');
+    return actualValid;
+  }
+  setFieldState(input, valid);
+  return valid;
+}
+
+function formatIban(val) {
+  // Remove spaces, convert to uppercase
+  let clean = val.replace(/\s/g,'').toUpperCase();
+  // Only allow alphanumeric
+  clean = clean.replace(/[^A-Z0-9]/g,'');
+  // Limit to 24 chars (ES + 22 digits)
+  clean = clean.substring(0, 24);
+  // Format with spaces every 4 chars
+  return clean.replace(/(.{4})/g,'$1 ').trim();
+}
+
+function validateIban(input) {
+  const clean = input.value.replace(/\s/g,'').toUpperCase();
+  // Spanish IBAN: ES + 2 check digits + 20 bank account digits = 24 chars
+  const valid = /^ES\d{22}$/.test(clean);
+  setFieldState(input, valid);
+  return valid;
+}
+
+function validateNaf(input) {
+  if (!input.value) { input.classList.remove('invalid','valid'); return true; } // optional
+  const valid = /^\d{12}$/.test(input.value);
+  setFieldState(input, valid);
+  return valid;
+}
+
+function sanitizeName(val) {
+  // Allow letters (including accented), spaces, hyphens, apostrophes
+  return val.replace(/[^a-záéíóúüñàèìòùâêîôûçA-ZÁÉÍÓÚÜÑÀÈÌÒÙÂÊÎÔÛÇ\s'\-]/g,'');
+}
+
+function validateName(input) {
+  const valid = input.value.trim().length >= 2;
+  setFieldState(input, valid);
+  return valid;
+}
+
+function validateTel(input) {
+  const v = input.value.trim().replace(/\s/g,'');
+  // Spanish phone: +34 + 9 digits, or 9 digits starting with 6/7/8/9
+  const valid = /^(\+34)?[6789]\d{8}$/.test(v);
+  setFieldState(input, valid);
+  return valid;
+}
+
+function validateCif(input) {
+  const v = input.value.trim().toUpperCase();
+  // Spanish CIF: letter [ABCDEFGHJKLMNPQRSUVW] + 7 digits + control digit/letter
+  const valid = /^[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]$/i.test(v);
+  setFieldState(input, valid);
+  return valid;
+}
+
+function validateRequired(input, minLen) {
+  const valid = input.value.trim().length >= (minLen || 1);
+  setFieldState(input, valid);
+  return valid;
+}
+
+function validateDireccion(input) {
+  // Must contain at least a number (street number) and be at least 10 chars
+  const v = input.value.trim();
+  const valid = v.length >= 10 && /\d/.test(v);
+  setFieldState(input, valid);
+  return valid;
+}
+
+function setFieldState(input, valid, customMsg) {
+  input.classList.toggle('valid', valid);
+  input.classList.toggle('invalid', !valid);
+  const errEl = input.nextElementSibling;
+  if (errEl && errEl.classList.contains('field-error')) {
+    if (!valid && customMsg) errEl.textContent = customMsg;
+    errEl.classList.toggle('show', !valid && input.value.length > 0);
+  }
+}
+
 
 renderPasos();
 renderSim();
