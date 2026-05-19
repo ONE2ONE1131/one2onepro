@@ -19,8 +19,9 @@ body{font-family:'DM Sans',sans-serif;background:#f5f7fa;color:#0f2d5e;overflow-
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(15,45,94,0.98);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.08)}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#00a86b,#007a4d);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.nav-logo-icon svg{width:20px;height:20px}
+.nav-logo-icon{width:40px;height:40px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden}
+.nav-logo-icon::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0));pointer-events:none}
+.nav-logo-icon svg{width:26px;height:26px;position:relative;z-index:1}
 .nav-logo-text{display:flex;flex-direction:column;line-height:1}
 .nav-logo-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.3px}
 .nav-logo-tag{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-top:2px}
@@ -279,8 +280,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;display:flex;ali
 /* FOOTER */
 footer{background:#091d3d;padding:48px 6%;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
 .foot-logo{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.foot-logo-icon{width:30px;height:30px;background:linear-gradient(135deg,rgba(0,168,107,0.6),rgba(0,120,77,0.6));border-radius:6px;display:flex;align-items:center;justify-content:center}
-.foot-logo-icon svg{width:16px;height:16px}
+.foot-logo-icon{width:30px;height:30px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.foot-logo-icon svg{width:18px;height:18px}
 .foot-logo-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:rgba(255,255,255,.5)}
 .foot-legal{font-size:11px;color:rgba(255,255,255,.2);line-height:1.8;font-weight:300}
 .foot-right{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
@@ -423,10 +424,13 @@ footer{grid-template-columns:1fr}
 <nav>
 <a href="#" class="nav-logo">
 <div class="nav-logo-icon">
-<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="6" cy="10" r="4" stroke="white" stroke-width="2"/>
-<circle cx="14" cy="10" r="4" stroke="white" stroke-width="2" fill="rgba(255,255,255,0.15)"/>
-<path d="M10 7v6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+<svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- 1:1 concept - two circles connected, representing one2one -->
+<circle cx="8" cy="13" r="5.5" stroke="white" stroke-width="1.8"/>
+<circle cx="18" cy="13" r="5.5" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-dasharray="2 0"/>
+<line x1="13.5" y1="13" x2="12.5" y2="13" stroke="white" stroke-width="2" stroke-linecap="round"/>
+<circle cx="8" cy="13" r="2" fill="white"/>
+<circle cx="18" cy="13" r="2" fill="rgba(255,255,255,0.4)"/>
 </svg>
 </div>
 <div class="nav-logo-text">
@@ -487,7 +491,6 @@ footer{grid-template-columns:1fr}
 <div class="quienes-puntos">
 <div class="punto"><div class="punto-icon"></div>El trabajador cobra íntegramente lo acordado</div>
 <div class="punto"><div class="punto-icon"></div>Alta en la Seguridad Social en tiempo récord</div>
-<div class="punto"><div class="punto-icon"></div>Compatible con cobrar el paro</div>
 <div class="punto"><div class="punto-icon"></div>Sin cuotas mensuales ni permanencia</div>
 <div class="punto"><div class="punto-icon"></div>Servicio exclusivo para trabajos puntuales y no recurrentes</div>
 </div>
@@ -526,7 +529,6 @@ footer{grid-template-columns:1fr}
 <div class="sec-head">
 <p class="section-eyebrow">Cobertura</p>
 <h2 class="section-title" style="font-size:clamp(24px,2.5vw,36px)">Sectores disponibles</h2>
-<p style="font-size:13px;color:var(--gris-suave);font-weight:300;margin-top:10px;line-height:1.6;max-width:580px">Gestionamos trabajos puntuales en los siguientes sectores. Si tu actividad no encaja exactamente, consúltanos antes de contratar.</p>
 </div>
 <div class="sec-grid">
 <div class="sec-item">
@@ -548,7 +550,7 @@ footer{grid-template-columns:1fr}
 <span class="sec-icon">&#128188;</span>
 <div class="sec-name">Servicios profesionales y creativos</div>
 <div class="sec-sub">Para contratar profesionales que entregan un trabajo técnico o creativo</div>
-<div class="sec-ej">Diseñador que crea portadas &middot; Consultor que imparte formación &middot; Coach para un taller &middot; Asesor para un proyecto puntual &middot; Ilustrador para una campaña &middot; Maquetador para una publicación</div>
+<div class="sec-ej">Diseñador que crea portadas para un álbum &middot; Consultor que imparte una formación &middot; Coach para un taller &middot; Asesor para un proyecto puntual &middot; Ilustrador para una campaña &middot; Maquetador para una publicación</div>
 <div class="sec-nota">&#191;Tu caso es creativo o técnico pero no sabes si encaja? Consúltanos antes de contratar.</div>
 </div>
 </div>
@@ -629,9 +631,11 @@ footer{grid-template-columns:1fr}
 <div>
 <div class="foot-logo">
 <div class="foot-logo-icon">
-<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="6" cy="10" r="4" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
-<circle cx="14" cy="10" r="4" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" fill="rgba(255,255,255,0.1)"/>
+<svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="8" cy="13" r="5.5" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+<circle cx="18" cy="13" r="5.5" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+<circle cx="8" cy="13" r="2" fill="rgba(255,255,255,0.4)"/>
+<circle cx="18" cy="13" r="2" fill="rgba(255,255,255,0.2)"/>
 </svg>
 </div>
 <div class="foot-logo-name">One2One Pro</div>
@@ -680,7 +684,7 @@ const PASOS_TRAB=[
 {n:'01',t:'Calcule lo que cobrará',d:'Tipo de trabajo, lugar e importe acordado. Verá exactamente lo que recibirá.'},
 {n:'02',t:'Facilite o revise sus datos',d:'Puede introducir sus datos o dejar que la empresa los rellene.'},
 {n:'03',t:'Envíe el presupuesto a la empresa',d:'Generamos un enlace personalizado. La empresa confirma y paga.'},
-{n:'04',t:'La empresa paga y you cobra',d:'Estará dado de alta en la Seguridad Social. Recibe el importe íntegro acordado.'},
+{n:'04',t:'La empresa paga y usted cobra',d:'Estará dado de alta en la Seguridad Social. Recibe el importe íntegro acordado.'},
 ];
 
 const BASES_MIN={1:1989.30,2:1649.70,3:1435.20,4:1424.40,7:1424.40,8:47.48};
@@ -744,7 +748,6 @@ return`
 </div>
 </div>`;
 }
-/* renderEmpresa y renderTrabajador */
 function renderEmpresa(){
 const c=document.getElementById('sim-c');
 const STEPS=5;
@@ -868,17 +871,17 @@ base_imponible:Math.round(r.sinIva*100)/100,iva:Math.round(r.iva*100)/100,
 total_factura:Math.round(r.total*100)/100,total_factura_centimos:Math.round(r.total*100),
 empresa_razon_social:st.eRazon,empresa_cif:st.eCif,empresa_calle:st.eCalle,
 empresa_cp:st.eCp,empresa_ciudad:st.eCiudad,empresa_provincia:st.eProvincia,
-empresa_pais:st.ePais,empresa_direccion:empDir,empresa_email:st.eEmail,empresa_telefono:st.eTel,
+empresa_pais:st.ePais,empresa_direccion:empDir,empresa_email:'ivan@o2oagency.es',empresa_telefono:st.eTel,
 trabajador_nombre:st.tNombre,trabajador_apellidos:st.tApellidos,trabajador_dni:st.tDni,
 trabajador_fecha_nacimiento:st.tFechaNac,trabajador_nacionalidad:st.tNacionalidad,
 trabajador_calle:st.tCalle,trabajador_cp:st.tCp,trabajador_ciudad:st.tCiudad,
 trabajador_provincia:st.tProvincia,trabajador_pais:st.tPais,trabajador_direccion:trabDir,
 trabajador_naf:st.tNaf||'',trabajador_iban:st.tIban.replace(/\s/g,'').toUpperCase(),
-trabajador_email:st.tEmail,trabajador_telefono:st.tTel,
+trabajador_email:'itroncoso94@gmail.com',trabajador_telefono:st.tTel,
 };
 try{
 await fetch('https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon">&#10003;</div><div class="exito-title">Solicitud recibida</div><div class="exito-sub">Hemos recibido su solicitud. En breve recibirá:<br><br>&#128231; <strong>${st.eEmail}</strong> — Enlace de pago seguro con el importe exacto.<br>&#128231; <strong>${st.tEmail}</strong> — Aviso al trabajador de que ${st.eRazon} gestionará su alta puntual.</div><div class="exito-exp">N&#186; de expediente: ${expNum}</div><p class="exito-note">En cuanto confirme el pago tramitamos el alta en tiempo récord. Recuerde: este servicio es exclusivo para trabajos puntuales y no recurrentes.</p></div>`;
+document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon">&#10003;</div><div class="exito-title">Solicitud recibida</div><div class="exito-sub">Hemos recibido su solicitud. En breve recibirá:<br><br>&#128231; <strong>ivan@o2oagency.es</strong> — Enlace de pago seguro con el importe exacto.<br>&#128231; <strong>itroncoso94@gmail.com</strong> — Aviso al trabajador de que ${st.eRazon} gestionará su alta puntual.</div><div class="exito-exp">N&#186; de expediente: ${expNum}</div><p class="exito-note">En cuanto confirme el pago tramitamos el alta en tiempo récord. Recuerde: este servicio es exclusivo para trabajos puntuales y no recurrentes.</p></div>`;
 }catch(err){
 document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div><div class="exito-title">Error de conexión</div><div class="exito-sub">No hemos podido procesar su solicitud. Contáctenos en <strong>info@one2onepro.es</strong>.</div></div>`;
 }
