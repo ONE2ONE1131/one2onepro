@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 180" width="400" height="180">
+    <path d="M248 72 C248 50 230 38 214 52 C202 64 194 72 186 72" fill="none" stroke="#2563EB" stroke-width="12" stroke-linecap="round"/>
+    <path d="M248 72 C248 94 230 106 214 92 C202 80 194 72 186 72" fill="none" stroke="#2563EB" stroke-width="12" stroke-linecap="round"/>
+    <path d="M124 72 C124 50 142 38 158 52 C170 64 178 72 186 72" fill="none" stroke="#0F2A5E" stroke-width="12" stroke-linecap="round"/>
+    <path d="M124 72 C124 94 142 106 158 92 C170 80 178 72 186 72" fill="none" stroke="#0F2A5E" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="186" cy="72" r="6" fill="#2563EB"/>
+    <text x="186" y="136" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="36" font-weight="700" fill="#0F2A5E" letter-spacing="-0.5">One<tspan fill="#2563EB">2</tspan>One</text>
+    <rect x="299" y="114" width="46" height="24" rx="6" fill="#2563EB"/>
+    <text x="322" y="131" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="600" fill="white" letter-spacing="1">Pro</text>
+    <text x="186" y="162" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="9" fill="#94A3B8" letter-spacing="2">Tu trabajas, nosotros, el resto.</text>
+</svg>
