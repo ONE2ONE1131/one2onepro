@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>One2One Pro — Gestión laboral para trabajos puntuales</title>
-<link rel="icon" type="image/svg+xml" href="one2onepro-logo-dark.svg">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230f2d5e'/><text x='16' y='13' font-family='Georgia,serif' font-size='8' font-weight='700' fill='%2300a86b' text-anchor='middle' letter-spacing='1'>ONE</text><rect x='6' y='14.5' width='20' height='1.5' rx='0.75' fill='%2300a86b'/><text x='16' y='25' font-family='Georgia,serif' font-size='8' font-weight='700' fill='white' text-anchor='middle' letter-spacing='1'>ONE</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -498,7 +498,6 @@ footer{grid-template-columns:1fr}
 <p class="section-eyebrow">Proceso</p>
 <h2 class="section-title">Así de<br><em>sencillo.</em></h2>
 </div>
-<p id="como-perfil-desc" style="font-size:13px;font-weight:300;color:var(--gris-texto);line-height:1.7;margin-bottom:24px;padding:12px 16px;background:var(--azul-claro);border-left:3px solid var(--verde)">El proceso es sencillo. Usted inicia, paga y nosotros tramitamos.</p>
 <div class="pasos" id="pasos"></div>
 </div>
 </section>
@@ -929,7 +928,7 @@ c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</bu
 }
 
 function renderSim(){if(perfil==='empresa')renderEmpresa();else renderTrabajador()}
-function pick(k,v){if(k==='perfil'){perfil=v;renderPasos();const d=document.getElementById('como-perfil-desc');if(d)d.textContent=v==='empresa'?'El proceso es sencillo. Usted inicia, paga y nosotros tramitamos.':'Calcule lo que cobrará y envíe el presupuesto a su empresa. Ellos pagan — usted solo trabaja y cobra.';}else{st[k]=v;}renderSim();}
+function pick(k,v){if(k==='perfil'){perfil=v;renderPasos();}else{st[k]=v;}renderSim();}
 function next(){st.step++;renderSim()}
 function back(){st.step--;renderSim()}
 function rBtn(id,check){const b=document.getElementById(id);if(b)b.disabled=!check()}
@@ -958,7 +957,8 @@ function setFieldState(input,valid,customMsg){input.classList.toggle('valid',val
 
 function renderPasos(){
 const p=PASOS_EMP;
-document.getElementById('pasos').innerHTML=p.map(x=>`<div class="paso"><div class="paso-n">${x.n}</div><div><div class="paso-t">${x.t}</div><div class="paso-d">${x.d}</div></div></div>`).join('');
+const desc=perfil==='empresa'?'El proceso es sencillo. Usted inicia, paga y nosotros tramitamos.':'Calcule lo que cobrará y envíe el presupuesto a su empresa. Ellos pagan — usted solo trabaja y cobra.';
+document.getElementById('pasos').innerHTML=`<p id="como-perfil-desc" style="font-size:13px;font-weight:300;color:var(--gris-texto);line-height:1.7;margin-bottom:24px;padding:12px 16px;background:var(--azul-claro);border-left:3px solid var(--verde)">${desc}</p>`+p.map(x=>`<div class="paso"><div class="paso-n">${x.n}</div><div><div class="paso-t">${x.t}</div><div class="paso-d">${x.d}</div></div></div>`).join('');
 }
 
 renderPasos();
