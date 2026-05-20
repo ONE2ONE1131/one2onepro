@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>One2One Pro — Gestión laboral para trabajos puntuales</title>
+<link rel="icon" type="image/svg+xml" href="one2onepro-logo-dark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -435,22 +436,28 @@ footer{grid-template-columns:1fr}
 <button class="nav-cta" onclick="document.getElementById('sim').scrollIntoView({behavior:'smooth'})">Calcular presupuesto</button>
 </nav>
 
+<div id="banner-coop" style="display:none;background:#091d3d;padding:10px 5%;border-bottom:1px solid rgba(255,255,255,0.08)">
+<div style="max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<p style="font-size:12px;color:rgba(255,255,255,0.7);font-weight:300;line-height:1.5;margin:0">¿Tu plataforma de facturación ha cerrado o está siendo investigada? <strong style="color:#fff">One2One Pro es la alternativa 100% legal</strong> — la empresa paga, tú cobras íntegro.</p>
+<div style="display:flex;align-items:center;gap:12px;flex-shrink:0"><a href="#como" style="font-size:11px;font-weight:600;color:var(--verde);text-decoration:none;letter-spacing:0.5px">Ver cómo funciona →</a><button onclick="document.getElementById('banner-coop').style.display='none';localStorage.setItem('banner-coop-closed','1')" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:16px;cursor:pointer;padding:0;line-height:1">×</button></div>
+</div>
+</div>
 <section class="hero">
 <div class="hero-l">
 <div class="hero-l-content">
 <p class="hero-eyebrow">Gestión laboral para trabajos puntuales &middot; España</p>
 <h1 class="hero-h1">Pague a quien necesita.<br><em>Sin complicaciones.</em></h1>
-<p class="hero-desc">Alta en la Seguridad Social y factura para trabajos puntuales. Sin que el trabajador sea autónomo.</p>
+<p class="hero-desc">La empresa paga el alta y la gestión. El trabajador cobra íntegramente lo acordado. Todo legal, sin burocracia.</p>
 <div class="hero-btns">
 <button class="btn-verde" onclick="document.getElementById('sim').scrollIntoView({behavior:'smooth'})">Calcular presupuesto</button>
 <button class="btn-ghost" onclick="document.getElementById('como').scrollIntoView({behavior:'smooth'})">Ver cómo funciona</button>
 </div>
 <div class="aviso-legal">
 <span class="aviso-legal-icon">&#10003;</span>
-<span class="aviso-legal-text">One2One Pro opera exclusivamente para trabajos puntuales y no recurrentes, conforme a la normativa laboral española vigente.</span>
+<span class="aviso-legal-text">One2One Pro opera exclusivamente para trabajos puntuales y no recurrentes, conforme a la normativa laboral española vigente. Alta garantizada en menos de 24 horas.</span>
 </div>
 <div class="hero-stats">
-<div><span class="stat-num">Rápido</span><span class="stat-label">Alta en tiempo récord</span></div>
+<div><span class="stat-num">24h</span><span class="stat-label">Alta tramitada antes de que empieces</span></div>
 <div><span class="stat-num">0&#8364;</span><span class="stat-label">Sin cuotas mensuales</span></div>
 </div>
 </div>
@@ -480,6 +487,7 @@ footer{grid-template-columns:1fr}
 <div class="punto"><div class="punto-icon"></div>Alta en la Seguridad Social en tiempo récord</div>
 <div class="punto"><div class="punto-icon"></div>Sin cuotas mensuales ni permanencia</div>
 <div class="punto"><div class="punto-icon"></div>Servicio exclusivo para trabajos puntuales y no recurrentes</div>
+<div class="punto"><div class="punto-icon"></div>La empresa paga. El trabajador cobra íntegramente lo acordado.</div>
 </div>
 </div>
 </section>
@@ -490,10 +498,22 @@ footer{grid-template-columns:1fr}
 <p class="section-eyebrow">Proceso</p>
 <h2 class="section-title">Así de<br><em>sencillo.</em></h2>
 </div>
+<p id="como-perfil-desc" style="font-size:13px;font-weight:300;color:var(--gris-texto);line-height:1.7;margin-bottom:24px;padding:12px 16px;background:var(--azul-claro);border-left:3px solid var(--verde)">El proceso es sencillo. Usted inicia, paga y nosotros tramitamos.</p>
 <div class="pasos" id="pasos"></div>
 </div>
 </section>
 
+<section style="padding:80px 6%;background:#fff;border-top:1px solid var(--gris-borde)" id="testimonios">
+<div style="max-width:900px;margin:0 auto">
+<p class="section-eyebrow">Testimonios</p>
+<h2 class="section-title" style="margin-bottom:48px">Lo que dicen nuestros clientes</h2>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+<div style="background:#fff;border:1px solid var(--gris-borde);border-radius:8px;padding:28px 24px;text-align:center"><div style="font-family:'Playfair Display',serif;font-size:48px;font-weight:700;color:var(--verde);line-height:1;margin-bottom:12px">+24h</div><div style="font-size:13px;font-weight:300;color:var(--gris-texto);line-height:1.7">Plazo máximo de tramitación del alta desde la confirmación del pago</div></div>
+<div style="background:#fff;border:1px solid var(--gris-borde);border-radius:8px;padding:28px 24px;text-align:center"><div style="font-family:'Playfair Display',serif;font-size:48px;font-weight:700;color:var(--verde);line-height:1;margin-bottom:12px">0€</div><div style="font-size:13px;font-weight:300;color:var(--gris-texto);line-height:1.7">El trabajador no paga nada. Todos los costes corren a cargo de la empresa contratante</div></div>
+<div style="background:#fff;border:1px solid var(--gris-borde);border-radius:8px;padding:28px 24px;text-align:center"><div style="font-family:'Playfair Display',serif;font-size:48px;font-weight:700;color:var(--verde);line-height:1;margin-bottom:12px">100%</div><div style="font-size:13px;font-weight:300;color:var(--gris-texto);line-height:1.7">Digital. Sin papeles, sin desplazamientos, sin llamadas. Todo desde el móvil o el ordenador</div></div>
+</div>
+</div>
+</section>
 <section class="dif">
 <div class="dif-inner">
 <div>
@@ -505,7 +525,8 @@ footer{grid-template-columns:1fr}
 <div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">El trabajador cobra íntegramente lo acordado</div><div class="dif-id">Los costes de Seguridad Social y la gestión los asume la empresa contratante, no el trabajador.</div></div></div>
 <div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Amplia cobertura sectorial</div><div class="dif-id">Música y espectáculo, artes escénicas, hostelería puntual, servicios profesionales y promotores en eventos.</div></div></div>
 <div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Presupuesto en segundos</div><div class="dif-id">Sin esperas ni llamadas. El coste exacto —Seguridad Social incluida— al instante.</div></div></div>
-<div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Alta en tiempo récord</div><div class="dif-id">Tramitamos el alta en la Seguridad Social con la máxima rapidez, en cuanto se confirma el pago.</div></div></div>
+<div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Alta en menos de 24 horas</div><div class="dif-id">Tramitamos el alta en la Seguridad Social en menos de 24 horas desde la confirmación del pago. Es imprescindible solicitarlo con al menos 24 horas de antelación.</div></div></div>
+<div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Comisión única y transparente</div><div class="dif-id">Solo cobramos un 10% sobre el importe del servicio. Sin cuotas mensuales, sin letra pequeña, sin sorpresas. El desglose completo aparece antes de pagar.</div></div></div>
 <div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Solo para trabajos puntuales</div><div class="dif-id">Nuestro servicio está diseñado exclusivamente para gestiones puntuales, no para relaciones laborales continuas ni recurrentes.</div></div></div>
 </div>
 </div>
@@ -560,7 +581,7 @@ footer{grid-template-columns:1fr}
 </div>
 <div style="margin-top:24px;padding:16px 20px;background:var(--azul-claro);border:1px solid var(--gris-borde);display:flex;align-items:flex-start;gap:12px">
 <span style="color:var(--verde);font-size:16px;flex-shrink:0;margin-top:1px">&#10003;</span>
-<span style="font-size:12px;color:var(--gris-texto);font-weight:300;line-height:1.6">One2One Pro está diseñado para trabajos puntuales y no continuados. No gestionamos relaciones laborales de carácter estable, recurrente o sustitución de plantilla.</span>
+<span style="font-size:12px;color:var(--gris-texto);font-weight:300;line-height:1.6">One2One Pro gestiona altas puntuales en los sectores indicados. No tramitamos relaciones laborales estables ni sustituciones de plantilla. Si tienes dudas sobre tu caso, escríbenos antes de contratar.</span>
 </div>
 </div>
 </section>
@@ -572,10 +593,11 @@ footer{grid-template-columns:1fr}
 <h2 class="section-title" style="font-size:clamp(24px,2.5vw,36px)">Preguntas<br>frecuentes</h2>
 </div>
 <div>
+<div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Es One2One Pro una cooperativa de facturación? <span class="faq-arr">&#8595;</span></div><div class="faq-a">No. One2One Pro no es una cooperativa de facturación. Es una empresa gestora de altas laborales. La diferencia es fundamental: en una cooperativa el trabajador factura a través de ella. En One2One Pro, es la empresa contratante quien inicia el proceso, paga y asume los costes. El trabajador solo trabaja y cobra. Este modelo está alineado con la normativa laboral española vigente y es la alternativa legal a las plataformas de facturación.</div></div>
 <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">&#191;El trabajador recibe íntegramente lo acordado? <span class="faq-arr">&#8595;</span></div><div class="faq-a">Sí. El importe acordado es exactamente lo que recibe en su cuenta. Los costes de Seguridad Social y la gestión de One2One Pro los asume la empresa contratante. El trabajador no soporta ningún descuento.</div></div>
 <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">&#191;Qué incluye el servicio de One2One Pro? <span class="faq-arr">&#8595;</span></div><div class="faq-a">El alta del trabajador en la Seguridad Social, la emisión de la factura a la empresa y la gestión del pago al trabajador. El alta se tramita en tiempo récord en cuanto se confirma el pago.</div></div>
 <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">&#191;Qué se considera un trabajo "puntual"? <span class="faq-arr">&#8595;</span></div><div class="faq-a">Un trabajo puntual es concreto y no continuado: un bolo, un evento, una jornada de catering, una ponencia, un proyecto concreto. One2One Pro no es adecuado para cubrir puestos estables o relaciones laborales continuadas. Si tienes dudas sobre si tu caso encaja, consúltanos antes de contratar.</div></div>
-<div class="faq" onclick="toggleFaq(this)"><div class="faq-q">&#191;Cuánto tarda el proceso? <span class="faq-arr">&#8595;</span></div><div class="faq-a">El presupuesto es inmediato. Tramitamos el alta en cuanto se confirma el pago, con la máxima rapidez posible. Es imprescindible solicitarlo con al menos un día de antelación.</div></div>
+<div class="faq" onclick="toggleFaq(this)"><div class="faq-q">&#191;Cuánto tarda el proceso? <span class="faq-arr">&#8595;</span></div><div class="faq-a">El presupuesto es inmediato. Tramitamos el alta en menos de 24 horas desde la confirmación del pago. Es imprescindible solicitarlo con al menos 24 horas de antelación.</div></div>
 <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">&#191;El trabajador puede cobrar el paro? <span class="faq-arr">&#8595;</span></div><div class="faq-a">Sí, siempre que el trabajo sea puntual y se comunique al SEPE antes de comenzar. Es perfectamente compatible con la prestación por desempleo.</div></div>
 <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">&#191;Qué IVA se aplica? <span class="faq-arr">&#8595;</span></div><div class="faq-a">Siempre el 21%. Si su empresa está dada de alta en el IVA, puede deducirlo íntegramente en su próxima declaración trimestral.</div></div>
 <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">&#191;Hay un límite de usos? <span class="faq-arr">&#8595;</span></div><div class="faq-a">No existe un límite fijo, pero el servicio está diseñado para trabajos genuinamente puntuales. Si detectamos un patrón recurrente entre la misma empresa y el mismo trabajador, nos reservamos el derecho a revisar la operación antes de tramitarla.</div></div>
@@ -602,7 +624,7 @@ footer{grid-template-columns:1fr}
 <select>
 <option value="">Seleccione...</option>
 <option>Necesito pagar a alguien por un trabajo puntual</option>
-<option>Voy a realizar un trabajo puntual y quiero cobrar legalmente</option>
+<option>Voy a realizar un trabajo puntual — calcula lo que cobrarás y envíasélo a tu empresa</option>
 <option>Quiero verificar si mi caso es válido</option>
 <option>Tengo una duda sobre el proceso</option>
 <option>Otro</option>
@@ -621,7 +643,8 @@ footer{grid-template-columns:1fr}
 </div>
 <div class="foot-legal">
 Servicio exclusivo para trabajos puntuales y no recurrentes.<br>
-Conforme a la normativa laboral española vigente.<br><br>
+Conforme a la normativa laboral española vigente.<br>
+One2One Pro no es una cooperativa de facturación. Es una empresa gestora de altas laborales.<br><br>
 &copy; 2026 One2One Pro &middot; Todos los derechos reservados
 </div>
 </div>
@@ -656,7 +679,7 @@ const PASOS_EMP=[
 {n:'01',t:'Calcule el presupuesto',d:'Tipo de trabajo, lugar, importe y días. El coste total aparece al instante.'},
 {n:'02',t:'Complete los datos del trabajador',d:'Nombre, DNI/NIE, dirección, IBAN y contacto. Son imprescindibles para tramitar el alta.'},
 {n:'03',t:'Complete los datos de su empresa y confirme',d:'Razón social, CIF, dirección fiscal, fechas y aceptación de las condiciones del servicio.'},
-{n:'04',t:'Pague de forma segura',d:'Pasarela de pago seguro. Una vez confirmado el pago, tramitamos el alta en tiempo récord.'},
+{n:'04',t:'Pague de forma segura',d:'Pasarela de pago seguro. Una vez confirmado el pago, tramitamos el alta en menos de 24 horas. Es imprescindible solicitarlo con al menos 24 horas de antelación.'},
 {n:'05',t:'Recibe factura y el trabajador cobra',d:'El trabajador recibe el importe íntegro acordado. Usted recibe la factura para contabilizar.'},
 ];
 const PASOS_TRAB=[
@@ -808,13 +831,20 @@ c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</bu
 </div>
 <div class="contrato-box">
 <strong>CONDICIONES DEL SERVICIO — ONE2ONE PRO</strong><br><br>
-ONE2ONE SOLUTIONS S.L. presta un servicio de gestión del alta en la Seguridad Social y emisión de factura, exclusivamente para trabajos puntuales, esporádicos y no recurrentes.<br><br>
-El Cliente declara expresamente que el trabajo tiene naturaleza puntual y no continuada, que no existe relación laboral estable entre el Cliente y el trabajador, y asume plena responsabilidad por la veracidad de los datos facilitados.<br><br>
-One2One Pro tramita el alta en la Seguridad Social y emite la factura. El pago es condición previa imprescindible para iniciar cualquier gestión. Para cualquier controversia, las partes se someten a los Juzgados y Tribunales de Cádiz.
+ONE2ONE SOLUTIONS S.L. (CIF B19428846) presta un servicio de gestión del alta en la Seguridad Social y emisión de factura, exclusivamente para trabajos puntuales, esporádicos y no recurrentes.<br><br>
+<strong>One2One Pro NO es una ETT</strong>, no presta servicios de relaciones laborales continuadas y no actúa como empleador en ningún caso.<br><br>
+<strong>El Cliente declara expresamente:</strong><br>
+a) Que el trabajo tiene naturaleza puntual y no continuada.<br>
+b) Que no existe relación laboral estable entre el Cliente y el trabajador.<br>
+c) Que todos los datos facilitados son verídicos y completos.<br>
+d) Que asume plena responsabilidad por la veracidad de los datos facilitados.<br><br>
+<strong>No devolución:</strong> Una vez confirmado el pago y tramitada el alta, no procede devolución alguna, dado que los trámites ya han sido ejecutados ante la Seguridad Social.<br><br>
+<strong>Responsabilidad limitada:</strong> La responsabilidad máxima de One2One Pro queda limitada al importe efectivamente abonado por el servicio.<br><br>
+Para cualquier controversia, las partes se someten a los Juzgados y Tribunales de Cádiz.
 </div>
 <label class="contrato-check">
 <input type="checkbox" id="chk" onchange="st.condAceptadas=this.checked;rBtn('bs4',empValida)">
-<span class="contrato-check-text">He leído y acepto las <a href="#" onclick="event.preventDefault();abrirModal('condiciones')">Condiciones del Servicio</a>, la <a href="#" onclick="event.preventDefault();abrirModal('privacidad')">Política de Privacidad</a> y el <a href="#" onclick="event.preventDefault();abrirModal('aviso')">Aviso Legal</a>. Declaro que el trabajo es puntual y no recurrente.</span>
+<span class="contrato-check-text">He leído y acepto las <a href="#" onclick="event.preventDefault();abrirModal('condiciones')">Condiciones del Servicio</a>, la <a href="#" onclick="event.preventDefault();abrirModal('privacidad')">Política de Privacidad</a> y el <a href="#" onclick="event.preventDefault();abrirModal('aviso')">Aviso Legal</a>. Declaro que el trabajo es puntual y no recurrente, y asumo responsabilidad por la veracidad de los datos facilitados.</span>
 </label>
 <button class="btn-n" id="bs4" onclick="finalizarEmpresa()" ${!empValida()?'disabled':''}>Proceder al pago →</button>
 <p class="legal">Al continuar será redirigido a la pasarela de pago seguro. La aceptación queda registrada con fecha, hora e identificador.</p>`;
@@ -899,7 +929,7 @@ c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</bu
 }
 
 function renderSim(){if(perfil==='empresa')renderEmpresa();else renderTrabajador()}
-function pick(k,v){st[k]=v;renderSim()}
+function pick(k,v){if(k==='perfil'){perfil=v;renderPasos();const d=document.getElementById('como-perfil-desc');if(d)d.textContent=v==='empresa'?'El proceso es sencillo. Usted inicia, paga y nosotros tramitamos.':'Calcule lo que cobrará y envíe el presupuesto a su empresa. Ellos pagan — usted solo trabaja y cobra.';}else{st[k]=v;}renderSim();}
 function next(){st.step++;renderSim()}
 function back(){st.step--;renderSim()}
 function rBtn(id,check){const b=document.getElementById(id);if(b)b.disabled=!check()}
@@ -933,6 +963,21 @@ document.getElementById('pasos').innerHTML=p.map(x=>`<div class="paso"><div clas
 
 renderPasos();
 renderSim();
+</script>
+
+<script>
+(function(){
+  if(localStorage.getItem('banner-coop-closed')) return;
+  var params = new URLSearchParams(window.location.search);
+  var ref = (params.get('ref')||params.get('utm_source')||params.get('utm_campaign')||params.get('q')||'').toLowerCase();
+  var keywords = ['artistamente','factoo','inpulse','cooperativa','facturacion','alternativa'];
+  var show = keywords.some(function(k){return ref.indexOf(k)>=0;}) || !localStorage.getItem('banner-coop-seen');
+  if(show){
+    var b = document.getElementById('banner-coop');
+    if(b) b.style.display='block';
+    localStorage.setItem('banner-coop-seen','1');
+  }
+})();
 </script>
 </body>
 </html>
