@@ -884,7 +884,8 @@ trabajador_nombre:st.tNombre,trabajador_apellidos:st.tApellidos,trabajador_dni:s
 trabajador_fecha_nacimiento:st.tFechaNac,trabajador_nacionalidad:st.tNacionalidad,
 trabajador_calle:st.tCalle,trabajador_cp:st.tCp,trabajador_ciudad:st.tCiudad,
 trabajador_provincia:st.tProvincia,trabajador_pais:st.tPais,trabajador_direccion:trabDir,
-trabajador_naf:st.tNaf||'',trabajador_iban:st.tIban.replace(/\s/g,'').toUpptrabajador_email:st.tEmailgmail.com',trabajador_telefono:st.tTel,
+trabajador_naf:st.tNaf||'',trabajador_iban:st.tIban.replace(/\s/g,'').toUpperCase(),
+trabajador_email:st.tEmail,trabajador_telefono:st.tTel,
 };
 try{
 await fetch('https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
