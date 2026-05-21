@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth
 body{font-family:'DM Sans',sans-serif;background:#f5f7fa;color:#0f2d5e;overflow-x:hidden}
 :root{
 --azul:#0f2d5e;--azul-medio:#1a4a8a;--azul-claro:#e8f0fe;
@@ -879,17 +879,17 @@ base_imponible:Math.round(r.sinIva*100)/100,iva:Math.round(r.iva*100)/100,
 total_factura:Math.round(r.total*100)/100,total_factura_centimos:Math.round(r.total*100),
 empresa_razon_social:st.eRazon,empresa_cif:st.eCif,empresa_calle:st.eCalle,
 empresa_cp:st.eCp,empresa_ciudad:st.eCiudad,empresa_provincia:st.eProvincia,
-empresa_pais:st.ePais,empresa_direccion:empDir,empresa_email:'ivan@o2oagency.es',empresa_telefono:st.eTel,
+empresa_pais:st.ePais,empresa_direccion:empDir,empresa_email:st.eEmail,empresa_telefono:st.eTel,
 trabajador_nombre:st.tNombre,trabajador_apellidos:st.tApellidos,trabajador_dni:st.tDni,
 trabajador_fecha_nacimiento:st.tFechaNac,trabajador_nacionalidad:st.tNacionalidad,
 trabajador_calle:st.tCalle,trabajador_cp:st.tCp,trabajador_ciudad:st.tCiudad,
 trabajador_provincia:st.tProvincia,trabajador_pais:st.tPais,trabajador_direccion:trabDir,
 trabajador_naf:st.tNaf||'',trabajador_iban:st.tIban.replace(/\s/g,'').toUpperCase(),
-trabajador_email:'itroncoso94@gmail.com',trabajador_telefono:st.tTel,
+trabajador_email:st.tEmail,trabajador_telefono:st.tTel,
 };
 try{
 await fetch('https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon">&#10003;</div><div class="exito-title">Solicitud recibida</div><div class="exito-sub">Hemos recibido su solicitud. En breve recibirá:<br><br>&#128231; <strong>ivan@o2oagency.es</strong> — Enlace de pago seguro con el importe exacto.<br>&#128231; <strong>itroncoso94@gmail.com</strong> — Aviso al trabajador de que ${st.eRazon} gestionará su alta puntual.</div><div class="exito-exp">N&#186; de expediente: ${expNum}</div><p class="exito-note">En cuanto confirme el pago tramitamos el alta en tiempo récord. Recuerde: este servicio es exclusivo para trabajos puntuales y no recurrentes.</p></div>`;
+document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon">&#10003;</div><div class="exito-title">Solicitud recibida</div><div class="exito-sub">Hemos recibido su solicitud. En breve recibirá:<br><br>&#128231; ${st.eEmail} — Enlace de pago seguro con el importe exacto.<br>&#128231; ${st.tEmail} — Aviso al trabajador de que ${st.eRazon} gestionará su alta puntual.</div><div class="exito-exp">N&#186; de expediente: ${expNum}</div><p class="exito-note">En cuanto confirme el pago tramitamos el alta en tiempo récord. Recuerde: este servicio es exclusivo para trabajos puntuales y no recurrentes.</p></div>`;
 }catch(err){
 document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div><div class="exito-title">Error de conexión</div><div class="exito-sub">No hemos podido procesar su solicitud. Contáctenos en <strong>info@one2onepro.es</strong>.</div></div>`;
 }
