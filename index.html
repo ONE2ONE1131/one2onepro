@@ -806,7 +806,7 @@ c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</bu
 <div class="form-section-title">Identificación de la empresa</div>
 <div class="form-grid">
 <div class="form-field"><label>Razón social *</label><input type="text" placeholder="Empresa S.L." value="${st.eRazon}" maxlength="100" oninput="st.eRazon=this.value;validateRequired(this,2);rBtn('bs4',empValida)"></div>
-<div class="form-field"><label>CIF *</label><input type="text" placeholder="B12345678" value="${st.eCif}" maxlength="9" oninput="st.eCif=this.value.toUpperCase();this.value=st.eCif;validateCif(this);rBtn('bs4',empValida)"><div class="field-error">CIF español: letra + 7 dígitos + control</div></div>
+<div class="form-field"><label>CIF / DNI / NIE *</label><input type="text" placeholder="B12345678 / 12345678A" value="${st.eCif}" maxlength="9" oninput="st.eCif=this.value.toUpperCase();this.value=st.eCif;validateCif(this);rBtn('bs4',empValida)"><div class="field-error">Introduce un CIF, DNI o NIE válido</div></div>
 </div>
 </div>
 <div class="form-section">
@@ -857,7 +857,7 @@ const cpOk=/^\d{5}$/.test(st.tCp.trim());
 return st.tNombre&&st.tApellidos&&dniOk&&st.tFechaNac&&st.tNacionalidad&&st.tCalle&&cpOk&&st.tCiudad&&st.tProvincia&&ibanOk&&st.tEmail&&telOk;
 }
 function empValida(){
-const cifOk=/^[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]$/i.test(st.eCif.trim());
+const cifOk=esCifDniNie(st.eCif);
 const telOk=/^(\+34)?[6789]\d{8}$/.test(st.eTel.trim().replace(/\s/g,''));
 const cpOk=/^\d{5}$/.test(st.eCp.trim());
 return st.eRazon&&cifOk&&st.eCalle&&cpOk&&st.eCiudad&&st.eProvincia&&st.eEmail&&telOk&&st.eFechaInicio&&st.eFechaFin&&st.condAceptadas;
@@ -965,7 +965,8 @@ function validateNaf(input){if(!input.value){input.classList.remove('invalid','v
 function sanitizeName(val){return val.replace(/[^a-záéíóúüñàèìòùâêîôûçA-ZÁÉÍÓÚÜÑÀÈÌÒÙÂÊÎÔÛÇ\s'\-]/g,'');}
 function validateName(input){const valid=input.value.trim().length>=2;setFieldState(input,valid);return valid;}
 function validateTel(input){const v=input.value.trim().replace(/\s/g,'');const valid=/^(\+34)?[6789]\d{8}$/.test(v);setFieldState(input,valid);return valid;}
-function validateCif(input){const v=input.value.trim().toUpperCase();const valid=/^[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]$/i.test(v);setFieldState(input,valid);return valid;}
+function esCifDniNie(v){v=(v||'').trim().toUpperCase();return /^[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]$/.test(v)||/^\d{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(v)||/^[XYZ]\d{7}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(v);}
+function validateCif(input){const v=input.value.trim().toUpperCase();const valid=esCifDniNie(v);setFieldState(input,valid);return valid;}
 function validateRequired(input,minLen){const valid=input.value.trim().length>=(minLen||1);setFieldState(input,valid);return valid;}
 function validateCalle(input){const v=input.value.trim();const valid=v.length>=5&&/\d/.test(v);setFieldState(input,valid);return valid;}
 function validateCp(input){const valid=/^\d{5}$/.test(input.value.trim());setFieldState(input,valid);return valid;}
