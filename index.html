@@ -897,36 +897,53 @@ document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito
 
 function renderTrabajador(){
 const c=document.getElementById('sim-c');
-const STEPS=4;
-if(st.step===0){
-c.innerHTML=`${prog(STEPS)}<p class="sim-meta">Paso 1 de 4</p><p class="sim-q">¿Qué tipo de trabajo va a realizar?</p><p class="sim-hint">Seleccione la opción que mejor describe su actividad.</p>${oGrid(ACTS,'act')}<button class="btn-n" onclick="next()" ${!st.act?'disabled':''}>Continuar</button>`;
-} else if(st.step===1){
-c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</button><p class="sim-meta">Paso 2 de 4</p><p class="sim-q">¿Dónde se realiza el trabajo?</p><p class="sim-hint">Afecta a la cobertura por accidentes laborales.</p>${oGrid(UBICS,'ubic')}<button class="btn-n" onclick="next()" ${!st.ubic?'disabled':''}>Continuar</button>`;
-} else if(st.step===2){
-c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</button><p class="sim-meta">Paso 3 de 4</p><p class="sim-q">¿Cuánto ha acordado cobrar?</p><p class="sim-hint">El importe que recibirá íntegramente en su cuenta.</p>
-<div class="inp-row">
-<div class="inp-f hp"><label>Importe acordado</label><div class="wr"><span class="pre">€</span><input class="grande" type="number" placeholder="0" value="${st.imp}" min="1" id="ii" oninput="st.imp=this.value;rBtn('bt2',()=>st.imp&&st.dias)"></div></div>
-<div class="inp-f"><label>Días de trabajo</label><input class="grande" type="number" placeholder="0" value="${st.dias}" min="1" max="365" id="id" oninput="st.dias=this.value;rBtn('bt2',()=>st.imp&&st.dias)"></div>
+if(st.invEnviada){
+c.innerHTML=`<div class="exito"><div class="exito-icon">&#10003;</div><div class="exito-title">¡Hecho!</div><div class="exito-sub">Hemos enviado un correo a <strong>${st.invEmail}</strong> para que pueda tramitar tu alta. Tú no tienes que hacer nada más.</div><p class="exito-note">Si no le llega en unos minutos, dile que revise la carpeta de spam.</p></div>`;
+return;
+}
+c.innerHTML=`<button class="btn-b" onclick="volverInicio()">← Volver</button>
+<p class="sim-meta">Soy trabajador</p>
+<p class="sim-q">¿Quién te contrata?</p>
+<p class="sim-hint">Solo necesitamos el correo de quien te contrata. Le explicaremos cómo darte de alta de forma legal, sencilla y sin complicaciones. Tú no tienes que hacer nada más.</p>
+<div class="form-section">
+<div class="form-grid">
+<div class="form-field full"><label>Tu nombre *</label><input type="text" id="inv-nombre" placeholder="Tu nombre" maxlength="80" value="${st.invNombre||''}" oninput="st.invNombre=this.value;rBtn('bt-inv',invValida)"></div>
+<div class="form-field full"><label>Correo de quien te contrata *</label><input type="email" id="inv-email" placeholder="empresa@email.com" value="${st.invEmail||''}" oninput="st.invEmail=this.value;validateInvEmail(this);rBtn('bt-inv',invValida)"><div class="field-error">Introduce un correo válido (debe contener @).</div></div>
 </div>
-<button class="btn-n" id="bt2" onclick="next()" ${!(st.imp&&st.dias)?'disabled':''}>Ver lo que cobro</button>`;
-} else if(st.step===3){
-const r=calcular();
-c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</button>
-<div class="res">
-<div class="res-tags"><span class="res-tag">${st.act.label}</span><span class="res-tag">${st.ubic.label}</span><span class="res-tag">${r.dias} día${r.dias>1?'s':''}</span><button class="res-edit" onclick="st.step=0;renderSim()">Modificar</button></div>
-<span class="regimen-badge">${r.esA?'Régimen Especial de Artistas':'Régimen General'}</span>
-<div class="res-trab-cobras"><div class="rtc-label">Usted cobra en su cuenta</div><div class="rtc-val">${fmt(r.imp)}</div><div class="rtc-sub">Exactamente lo acordado · Sin ningún descuento</div></div>
-<div class="res-trab-info">
-<div class="rti-row"><span class="rti-l">Importe acordado</span><span class="rti-v">${fmt(r.imp)}</span></div>
-<div class="rti-row"><span class="rti-l">Cuotas de Seguridad Social</span><span class="rti-v verde">Las paga la empresa</span></div>
-<div class="rti-row"><span class="rti-l">Gestión One2One Pro</span><span class="rti-v verde">La paga la empresa</span></div>
-<div class="rti-row"><span class="rti-l">Lo que usted recibe</span><span class="rti-v" style="font-size:16px;font-weight:700">${fmt(r.imp)}</span></div>
 </div>
-<div class="res-trab-aviso">Todos los costes asociados al alta corren a cargo de la empresa contratante. Este servicio es para trabajos puntuales y no recurrentes.</div>
-</div>`;
+<button class="btn-n" id="bt-inv" onclick="enviarInvitacion()" ${!invValida()?'disabled':''}>Enviar</button>`;
+}
+function invValida(){
+const nombreOk=(st.invNombre||'').trim().length>=2;
+const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((st.invEmail||'').trim());
+return nombreOk&&emailOk;
+}
+function validateInvEmail(input){const valid=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim());setFieldState(input,valid);return valid;}
+function volverInicio(){st.invEnviada=false;renderInicio();}
+async function enviarInvitacion(){
+if(!invValida())return;
+const c=document.getElementById('sim-c');
+c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">&#9203;</div><div class="exito-title">Enviando...</div><div class="exito-sub">Un momento por favor.</div></div>`;
+try{
+await fetch('https://hook.eu1.make.com/2yos3m7i1dw67mc6u6kh3zmdltl90xvy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre_trabajador:(st.invNombre||'').trim(),email_quien_contrata:(st.invEmail||'').trim()})});
+st.invEnviada=true;
+renderTrabajador();
+}catch(err){
+c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div><div class="exito-title">Error de conexión</div><div class="exito-sub">No hemos podido enviar el aviso. Inténtalo de nuevo o escríbenos a <strong>info@one2onepro.es</strong>.</div></div><button class="btn-n" onclick="renderTrabajador()" style="margin-top:12px">Reintentar</button>`;
 }
 }
 
+function renderInicio(){
+const c=document.getElementById('sim-c');
+c.innerHTML=`<p class="sim-meta">Empecemos</p>
+<p class="sim-q">¿Quién eres?</p>
+<p class="sim-hint">Elige una opción para continuar.</p>
+<div class="bifurcacion">
+<div class="bif-card" onclick="elegirPerfil('empresa')"><span class="bif-card-icon">&#127970;</span><div class="bif-card-title">Soy empresario / autónomo</div><div class="bif-card-desc">Quiero dar de alta y pagar a alguien por un trabajo puntual.</div></div>
+<div class="bif-card" onclick="elegirPerfil('trabajador')"><span class="bif-card-icon">&#128587;</span><div class="bif-card-title">Soy trabajador</div><div class="bif-card-desc">Quiero que quien me contrata tramite mi alta. Solo tardas un momento.</div></div>
+</div>`;
+}
+function elegirPerfil(p){perfil=p;st.step=0;renderPasos();renderSim();}
 function renderSim(){if(perfil==='empresa')renderEmpresa();else renderTrabajador()}
 function pick(k,v){if(k==='perfil'){perfil=v;renderPasos();}else{st[k]=v;}renderSim();}
 function next(){st.step++;renderSim()}
@@ -962,7 +979,7 @@ document.getElementById('pasos').innerHTML=`<p id="como-perfil-desc" style="font
 }
 
 renderPasos();
-renderSim();
+renderInicio();
 </script>
 
 <script>
