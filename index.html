@@ -690,6 +690,9 @@ let st={
   pNombre:'',pCif:'',pEmail:'',
   /* Cuenta empresa — datos del ARTISTA */
   aNombre:'',aApellidos:'',aDni:'',aFechaNac:'',aNacionalidad:'',aDireccion:'',aIban:'',aNaf:'',aTel:'',
+  /* Cuenta empresa — datos fiscales de la EMPRESA (se piden en cada expediente) */
+  eContacto:'',eTel:'',eRazon:'',eCif:'',eEmailFact:'',
+  eTipoVia:'Calle',eCalle:'',eNumero:'',ePiso:'',eCp:'',eMunicipio:'',eProvincia:'',
   condAceptadas:false
 };
 
@@ -701,6 +704,9 @@ function resetExpedienteState(){
   st.pNombre='';st.pCif='';st.pEmail='';
   st.aNombre='';st.aApellidos='';st.aDni='';st.aFechaNac='';st.aNacionalidad='';
   st.aDireccion='';st.aIban='';st.aNaf='';st.aTel='';
+  st.eContacto='';st.eTel='';st.eRazon='';st.eCif='';st.eEmailFact='';
+  st.eTipoVia='Calle';st.eCalle='';st.eNumero='';st.ePiso='';
+  st.eCp='';st.eMunicipio='';st.eProvincia='';
   st.condAceptadas=false;
 }
 
@@ -950,6 +956,7 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 }
 
 function doLogin(){
+  aSyncFormFromDOM();
   const f=artistAuth.form||{};
   const email=(f.email||'').trim().toLowerCase();
   const pass=f.pass||'';
@@ -963,6 +970,7 @@ function doLogin(){
 }
 
 function doRegister(){
+  aSyncFormFromDOM();
   const f=artistAuth.form||{};
   const nombre=(f.nombre||'').trim();
   const email=(f.email||'').trim().toLowerCase();
@@ -1003,6 +1011,10 @@ function doLogout(){
 function renderArtProfileForm(user){
   const c=document.getElementById('sim-c');
   const p=artistAuth.form;
+  /* Sincroniza el estado con los valores por defecto renderizados: sin esto,
+     un campo que muestra el nombre de la cuenta pero cuyo estado está vacío
+     hace fallar la validación al pulsar "Continuar". */
+  if(!p.nombre)p.nombre=user.nombre||'';
   if(!p.tipoVia)p.tipoVia='Calle';
   if(!p.tipoDoc)p.tipoDoc='DNI';
   if(!p.sexo)p.sexo='';
@@ -1090,6 +1102,7 @@ function profileArtValido(){
 }
 
 function submitArtProfile(){
+  aSyncFormFromDOM();
   const err=profileArtValido();
   if(err){artistAuth.error=err;renderSim();const simEl=document.getElementById('sim');if(simEl)window.scrollTo({top:simEl.offsetTop,behavior:'smooth'});return;}
   const user=aGetCurrentUser();if(!user)return;
@@ -1106,84 +1119,11 @@ function submitArtProfile(){
   renderSim();
 }
 
-/* ─── PERFIL EMPRESA ─── */
-function renderEmpresaProfileForm(user){
-  const c=document.getElementById('sim-c');
-  const p=artistAuth.form;
-  if(!p.tipoVia)p.tipoVia='Calle';
-  if(!p.provincia)p.provincia='';
-  const provOpts=PROVINCIAS_ES.map(pr=>`<option value="${pr}" ${p.provincia===pr?'selected':''}>${pr}</option>`).join('');
-  const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${p.tipoVia===v?'selected':''}>${v}</option>`).join('');
-  c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">Completa tu perfil de empresa</p>
-<h2 class="auth-title">Datos de tu <em>empresa</em></h2>
-<p class="auth-lead">Necesitamos los datos fiscales de tu empresa para emitir facturas legales. Sin perfil completo y verificado no podrás crear expedientes.</p>
-</div>
-${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:''}
-<div class="form-section">
-<div class="form-section-title">Persona de contacto</div>
-<div class="form-grid">
-<div class="form-field"><label>Nombre de contacto *</label><input type="text" placeholder="Nombre y apellidos" maxlength="100" value="${aEscape(p.contacto||user.nombre||'')}" oninput="artistAuth.form.contacto=this.value"></div>
-<div class="form-field"><label>Teléfono *</label><input type="tel" placeholder="+34 600 000 000" maxlength="16" value="${aEscape(p.telefono||'')}" oninput="artistAuth.form.telefono=this.value" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido')"><div class="field-error"></div></div>
-</div>
-</div>
-<div class="form-section">
-<div class="form-section-title">Identificación fiscal</div>
-<div class="form-grid">
-<div class="form-field"><label>Razón social *</label><input type="text" placeholder="Empresa S.L." maxlength="120" value="${aEscape(p.razonSocial||'')}" oninput="artistAuth.form.razonSocial=this.value"></div>
-<div class="form-field"><label>CIF *</label><input type="text" placeholder="B12345678 / 12345678A" maxlength="9" value="${aEscape(p.cif||'')}" oninput="artistAuth.form.cif=this.value.toUpperCase();this.value=artistAuth.form.cif" onblur="aShowFieldError(this,aValidCifDniNie(this.value)?null:'CIF, DNI o NIE inválido')"><div class="field-error"></div></div>
-<div class="form-field full"><label>Email de facturación *</label><input type="email" placeholder="facturacion@empresa.com" value="${aEscape(p.emailFact||'')}" oninput="artistAuth.form.emailFact=this.value.trim().toLowerCase()" onblur="aShowFieldError(this,aValidEmail(this.value)?null:'Email inválido')"><div class="field-error"></div></div>
-</div>
-</div>
-<div class="form-section">
-<div class="form-section-title">Dirección fiscal</div>
-<div class="form-grid">
-<div class="form-field"><label>Tipo de vía *</label><select onchange="artistAuth.form.tipoVia=this.value">${viaOpts}</select></div>
-<div class="form-field"><label>Nombre de la vía *</label><input type="text" placeholder="Gran Vía" maxlength="120" value="${aEscape(p.calle||'')}" oninput="artistAuth.form.calle=this.value"></div>
-<div class="form-field"><label>Número *</label><input type="text" placeholder="15" maxlength="10" value="${aEscape(p.numero||'')}" oninput="artistAuth.form.numero=this.value"></div>
-<div class="form-field"><label>Piso / puerta (opcional)</label><input type="text" placeholder="3ºA" maxlength="20" value="${aEscape(p.piso||'')}" oninput="artistAuth.form.piso=this.value"></div>
-<div class="form-field"><label>Código Postal *</label><input type="text" placeholder="28001" maxlength="5" value="${aEscape(p.cp||'')}" oninput="artistAuth.form.cp=this.value.replace(/\D/g,'').substring(0,5);this.value=artistAuth.form.cp"></div>
-<div class="form-field"><label>Municipio *</label><input type="text" placeholder="Madrid" maxlength="80" value="${aEscape(p.municipio||'')}" oninput="artistAuth.form.municipio=this.value"></div>
-<div class="form-field full"><label>Provincia *</label><select class="prov-sel" onchange="artistAuth.form.provincia=this.value"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
-</div>
-</div>
-<button class="btn-verde-full" onclick="submitEmpresaProfile()">Enviar perfil a revisión</button>
-<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
-  artistAuth.error='';
-}
+/* PERFIL EMPRESA eliminado — la cuenta empresa va directa de la verificación
+   de email al dashboard. Los datos fiscales (razón social, CIF, dirección fiscal,
+   email de facturación, etc.) se recogen en el momento de crear cada expediente. */
 
-function profileEmpresaValido(){
-  const p=artistAuth.form||{};
-  if(!p.contacto||p.contacto.trim().length<2)return 'Indica el nombre de contacto.';
-  if(!aValidTelES(p.telefono))return 'Introduce un teléfono español válido.';
-  if(!p.razonSocial||p.razonSocial.trim().length<2)return 'Indica la razón social.';
-  if(!aValidCifDniNie(p.cif))return 'CIF, DNI o NIE inválido.';
-  if(!aValidEmail(p.emailFact))return 'Introduce un email de facturación válido.';
-  if(!p.tipoVia)return 'Selecciona el tipo de vía.';
-  if(!p.calle||p.calle.trim().length<2)return 'Indica el nombre de la vía.';
-  if(!p.numero)return 'Indica el número.';
-  if(!/^\d{5}$/.test((p.cp||'').trim()))return 'El CP debe tener 5 dígitos.';
-  if(!p.municipio||p.municipio.trim().length<2)return 'Indica el municipio.';
-  if(!p.provincia)return 'Selecciona la provincia.';
-  return null;
-}
-
-function submitEmpresaProfile(){
-  const err=profileEmpresaValido();
-  if(err){artistAuth.error=err;renderSim();const simEl=document.getElementById('sim');if(simEl)window.scrollTo({top:simEl.offsetTop,behavior:'smooth'});return;}
-  const user=aGetCurrentUser();if(!user)return;
-  const p=artistAuth.form;
-  const c=document.getElementById('sim-c');
-  c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Guardando tu perfil...</div><div class="exito-sub">Un momento por favor.</div></div>`;
-  /* El perfil de empresa tampoco va al webhook — Stripe se dispara
-     sólo cuando se procede al pago en un expediente concreto. */
-  const profileToStore=Object.assign({},p);
-  aUpdateUser(user.email,{profile:profileToStore,profileStatus:'en_revision',profileSubmittedAt:new Date().toISOString()});
-  artistAuth.form={};artistAuth.error='';
-  renderSim();
-}
-
-/* ─── PERFIL EN REVISIÓN ─── */
+/* ─── PERFIL EN REVISIÓN (sólo cuentas artista) ─── */
 function renderProfileReview(user){
   const c=document.getElementById('sim-c');
   const submittedDate=user.profileSubmittedAt?new Date(user.profileSubmittedAt).toLocaleDateString('es-ES'):'';
@@ -1229,20 +1169,18 @@ function renderArtDashboard(user){
 
 function renderEmpresaDashboard(user){
   const c=document.getElementById('sim-c');
-  const p=user.profile||{};
   c.innerHTML=`<div class="auth-hero">
 <p class="auth-eyebrow">Panel de empresa</p>
 <h2 class="auth-title">Tu <em>cuenta</em></h2>
 </div>
 <div class="dashboard-card">
-<div class="dashboard-welcome">Bienvenido, <strong>${aEscape(p.contacto||user.nombre)}</strong></div>
-<div class="dashboard-sub">${aEscape(p.razonSocial||'')} · CIF ${aEscape(p.cif||'')}</div>
+<div class="dashboard-welcome">Bienvenido, <strong>${aEscape(user.nombre)}</strong></div>
 <div class="dashboard-user-email">${aEscape(user.email)}</div>
-<span class="status-badge validado">Perfil validado</span>
+<span class="status-badge validado">Cuenta activa</span>
 </div>
 <div class="dashboard-card">
 <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:10px">Crea un nuevo expediente</div>
-<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Contrata a un artista para un trabajo puntual. Introduce sus datos y procede al pago seguro.</p>
+<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Contrata a un artista para un trabajo puntual. Introducirás los datos fiscales de tu empresa (razón social, CIF, dirección fiscal, email de facturación) al crear el expediente.</p>
 <button class="btn-verde-full" style="margin-top:0" onclick="iniciarExpediente()">+ Nuevo expediente</button>
 </div>
 <button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
@@ -1306,10 +1244,17 @@ ${prog(STEPS)}<p class="sim-meta">Paso 3 de ${STEPS} — Caché, días y fechas<
 }
 
 function continueFromCache(){
+  aSyncFormFromDOM();
   const err=expFechasValidas();
   if(err){artistAuth.error=err;alert(err);return;}
   if(!st.imp||parseFloat(st.imp)<=0){alert('Indica un caché válido.');return;}
   if(!st.dias||parseInt(st.dias)<=0){alert('Indica los días de trabajo.');return;}
+  next();
+}
+
+function continueEmpresaPaso3(){
+  aSyncFormFromDOM();
+  if(!artistaDatosValidos()){alert('Revisa los datos del artista antes de continuar.');return;}
   next();
 }
 
@@ -1383,7 +1328,8 @@ function promotorDatosValidos(){
 }
 
 function generarEnlaceArtista(){
-  if(!promotorDatosValidos())return;
+  aSyncFormFromDOM();
+  if(!promotorDatosValidos()){alert('Revisa los datos del promotor.');return;}
   const code='O2O-'+Math.floor(Math.random()*90000+10000);
   const url='https://one2onepro.es/pagar?exp='+encodeURIComponent(code);
   artistAuth.expedienteResult={code:code,url:url,createdAt:new Date().toISOString()};
@@ -1424,13 +1370,47 @@ ${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del artista</p>
 <div class="form-field"><label>NAF (opcional)</label><input type="text" placeholder="12 dígitos" maxlength="12" value="${aEscape(st.aNaf)}" oninput="st.aNaf=this.value.replace(/\D/g,'').substring(0,12);this.value=st.aNaf"></div>
 </div>
 </div>
-<button class="btn-n" id="exp-bs3" onclick="next()" ${!artistaDatosValidos()?'disabled':''}>Continuar a confirmación →</button>`;
+<button class="btn-n" id="exp-bs3" onclick="continueEmpresaPaso3()" ${!artistaDatosValidos()?'disabled':''}>Continuar a confirmación →</button>`;
   } else if(st.step===4){
+    /* Pre-rellenar el contacto con el nombre de la cuenta si está vacío */
+    if(!st.eContacto)st.eContacto=user.nombre||'';
+    if(!st.eEmailFact)st.eEmailFact=user.email||'';
+    if(!st.eTipoVia)st.eTipoVia='Calle';
     const r=calcular();
+    const provOpts=PROVINCIAS_ES.map(pr=>`<option value="${pr}" ${st.eProvincia===pr?'selected':''}>${pr}</option>`).join('');
+    const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${st.eTipoVia===v?'selected':''}>${v}</option>`).join('');
     c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
-${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Confirmación y pago</p>
-<p class="sim-q">Revisa y procede al pago</p>
-<div class="res" style="margin-bottom:12px">${resumenEmpresa(r)}</div>
+${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Datos de tu empresa, confirmación y pago</p>
+<p class="sim-q">Datos fiscales y confirmación</p>
+<p class="sim-hint">Necesitamos los datos fiscales de tu empresa para emitir la factura legal del servicio.</p>
+<div class="res" style="margin-bottom:14px">${resumenEmpresa(r)}</div>
+<div class="form-section">
+<div class="form-section-title">Persona de contacto</div>
+<div class="form-grid">
+<div class="form-field"><label>Nombre de contacto *</label><input type="text" placeholder="Nombre y apellidos" maxlength="100" value="${aEscape(st.eContacto)}" oninput="st.eContacto=this.value;rBtn('exp-bs4',empresaDatosValidos)" onchange="st.eContacto=this.value;rBtn('exp-bs4',empresaDatosValidos)"></div>
+<div class="form-field"><label>Teléfono *</label><input type="tel" placeholder="+34 600 000 000" maxlength="16" value="${aEscape(st.eTel)}" oninput="st.eTel=this.value;rBtn('exp-bs4',empresaDatosValidos)" onchange="st.eTel=this.value;rBtn('exp-bs4',empresaDatosValidos)" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido')"><div class="field-error"></div></div>
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">Identificación fiscal</div>
+<div class="form-grid">
+<div class="form-field"><label>Razón social *</label><input type="text" placeholder="Empresa S.L." maxlength="120" value="${aEscape(st.eRazon)}" oninput="st.eRazon=this.value;rBtn('exp-bs4',empresaDatosValidos)" onchange="st.eRazon=this.value;rBtn('exp-bs4',empresaDatosValidos)"></div>
+<div class="form-field"><label>CIF / DNI / NIE *</label><input type="text" placeholder="B12345678" maxlength="9" value="${aEscape(st.eCif)}" oninput="st.eCif=this.value.toUpperCase();this.value=st.eCif;rBtn('exp-bs4',empresaDatosValidos)" onchange="st.eCif=this.value.toUpperCase();this.value=st.eCif;rBtn('exp-bs4',empresaDatosValidos)" onblur="aShowFieldError(this,aValidCifDniNie(this.value)?null:'CIF, DNI o NIE inválido')"><div class="field-error"></div></div>
+<div class="form-field full"><label>Email de facturación *</label><input type="email" placeholder="facturacion@empresa.com" value="${aEscape(st.eEmailFact)}" oninput="st.eEmailFact=this.value.trim().toLowerCase();rBtn('exp-bs4',empresaDatosValidos)" onchange="st.eEmailFact=this.value.trim().toLowerCase();rBtn('exp-bs4',empresaDatosValidos)" onblur="aShowFieldError(this,aValidEmail(this.value)?null:'Email inválido')"><div class="field-error"></div></div>
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">Dirección fiscal</div>
+<div class="form-grid">
+<div class="form-field"><label>Tipo de vía *</label><select onchange="st.eTipoVia=this.value;rBtn('exp-bs4',empresaDatosValidos)">${viaOpts}</select></div>
+<div class="form-field"><label>Nombre de la vía *</label><input type="text" placeholder="Gran Vía" maxlength="120" value="${aEscape(st.eCalle)}" oninput="st.eCalle=this.value;rBtn('exp-bs4',empresaDatosValidos)" onchange="st.eCalle=this.value;rBtn('exp-bs4',empresaDatosValidos)"></div>
+<div class="form-field"><label>Número *</label><input type="text" placeholder="15" maxlength="10" value="${aEscape(st.eNumero)}" oninput="st.eNumero=this.value;rBtn('exp-bs4',empresaDatosValidos)" onchange="st.eNumero=this.value;rBtn('exp-bs4',empresaDatosValidos)"></div>
+<div class="form-field"><label>Piso / puerta (opcional)</label><input type="text" placeholder="3ºA" maxlength="20" value="${aEscape(st.ePiso)}" oninput="st.ePiso=this.value" onchange="st.ePiso=this.value"></div>
+<div class="form-field"><label>Código Postal *</label><input type="text" placeholder="28001" maxlength="5" value="${aEscape(st.eCp)}" oninput="st.eCp=this.value.replace(/\D/g,'').substring(0,5);this.value=st.eCp;rBtn('exp-bs4',empresaDatosValidos)" onchange="st.eCp=this.value.replace(/\D/g,'').substring(0,5);this.value=st.eCp;rBtn('exp-bs4',empresaDatosValidos)"></div>
+<div class="form-field"><label>Municipio *</label><input type="text" placeholder="Madrid" maxlength="80" value="${aEscape(st.eMunicipio)}" oninput="st.eMunicipio=this.value;rBtn('exp-bs4',empresaDatosValidos)" onchange="st.eMunicipio=this.value;rBtn('exp-bs4',empresaDatosValidos)"></div>
+<div class="form-field full"><label>Provincia *</label><select class="prov-sel" onchange="st.eProvincia=this.value;rBtn('exp-bs4',empresaDatosValidos)"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
+</div>
+</div>
 <div class="contrato-box">
 <strong>CONDICIONES DEL SERVICIO — ONE2ONE PRO</strong><br><br>
 ONE2ONE SOLUTIONS S.L. (CIF B19428846) presta un servicio de gestión del alta en la Seguridad Social y emisión de factura, exclusivamente para trabajos puntuales, esporádicos y no recurrentes.<br><br>
@@ -1438,13 +1418,64 @@ El Cliente declara expresamente que el trabajo tiene naturaleza puntual y no con
 One2One Pro tramita el alta y emite la factura. El pago es condición previa imprescindible. Para cualquier controversia, las partes se someten a los Juzgados y Tribunales de Cádiz.
 </div>
 <label class="contrato-check">
-<input type="checkbox" ${st.condAceptadas?'checked':''} onchange="st.condAceptadas=this.checked;rBtn('exp-bs4',()=>st.condAceptadas)">
+<input type="checkbox" ${st.condAceptadas?'checked':''} onchange="st.condAceptadas=this.checked;rBtn('exp-bs4',empresaDatosValidos)">
 <span class="contrato-check-text">He leído y acepto las <strong>Condiciones del Servicio</strong>. Declaro que el trabajo es puntual y no recurrente.</span>
 </label>
-<button class="btn-n" id="exp-bs4" onclick="finalizarExpedienteEmpresa()" ${!st.condAceptadas?'disabled':''}>Proceder al pago →</button>
+<button class="btn-n" id="exp-bs4" onclick="finalizarExpedienteEmpresa()" ${!empresaDatosValidos()?'disabled':''}>Proceder al pago →</button>
 <p class="legal">Al continuar serás redirigido a la pasarela de pago seguro. La aceptación queda registrada con fecha, hora e identificador.</p>`;
   }
 }
+
+function empresaDatosValidos(){
+  /* Lee los valores actuales del DOM como defensa contra autofill que
+     no dispara `oninput`. Cae al estado en memoria si los inputs no están. */
+  aSyncEmpresaDatosFromDOM();
+  if(!st.eContacto||st.eContacto.trim().length<2)return false;
+  if(!aValidTelES(st.eTel))return false;
+  if(!st.eRazon||st.eRazon.trim().length<2)return false;
+  if(!aValidCifDniNie(st.eCif))return false;
+  if(!aValidEmail(st.eEmailFact))return false;
+  if(!st.eTipoVia)return false;
+  if(!st.eCalle||st.eCalle.trim().length<2)return false;
+  if(!st.eNumero)return false;
+  if(!/^\d{5}$/.test((st.eCp||'').trim()))return false;
+  if(!st.eMunicipio||st.eMunicipio.trim().length<2)return false;
+  if(!st.eProvincia)return false;
+  if(!st.condAceptadas)return false;
+  return true;
+}
+
+function aSyncFormFromDOM(){
+  /* Recorre todos los <input>/<select> del panel y, leyendo el atributo
+     inline `oninput`/`onchange`, infiere qué clave de estado actualiza y la
+     sincroniza con el valor real del DOM. Defensa contra autofill, gestores
+     de contraseñas y cambios programáticos que no disparan `input`. */
+  const c=document.getElementById('sim-c');if(!c)return;
+  const inputs=c.querySelectorAll('input, select, textarea');
+  inputs.forEach(el=>{
+    if(el.type==='file')return;
+    const handler=(el.getAttribute('oninput')||'')+';'+(el.getAttribute('onchange')||'');
+    /* st.xxx=this.value(.method(...)?) */
+    const mSt=handler.match(/st\.([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*this\.value/);
+    if(mSt){
+      let v=el.value;
+      if(/toUpperCase\(\)/.test(handler))v=v.toUpperCase();
+      if(/trim\(\)/.test(handler))v=v.trim();
+      if(/toLowerCase\(\)/.test(handler))v=v.toLowerCase();
+      st[mSt[1]]=v;return;
+    }
+    /* artistAuth.form.xxx=this.value(.method)? */
+    const mAf=handler.match(/artistAuth\.form\.([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*this\.value/);
+    if(mAf){
+      let v=el.value;
+      if(/toUpperCase\(\)/.test(handler))v=v.toUpperCase();
+      if(/trim\(\)/.test(handler))v=v.trim();
+      if(/toLowerCase\(\)/.test(handler))v=v.toLowerCase();
+      artistAuth.form[mAf[1]]=v;return;
+    }
+  });
+}
+function aSyncEmpresaDatosFromDOM(){aSyncFormFromDOM();}
 
 function artistaDatosValidos(){
   if(!st.aNombre||st.aNombre.trim().length<2)return false;
@@ -1460,10 +1491,15 @@ function artistaDatosValidos(){
 
 async function finalizarExpedienteEmpresa(){
   const user=aGetCurrentUser();if(!user)return;
+  /* Sincronización defensiva desde el DOM por si autofill no disparó oninput */
+  aSyncEmpresaDatosFromDOM();
+  if(!empresaDatosValidos()){
+    alert('Revisa los datos de tu empresa antes de continuar.');
+    return;
+  }
   const r=calcular();
   const expNum='O2O-'+Math.floor(Math.random()*90000+10000);
-  const profile=user.profile||{};
-  const empresaDir=[profile.tipoVia,profile.calle,profile.numero,profile.piso].filter(Boolean).join(' ')+', '+(profile.cp||'')+' '+(profile.municipio||'')+', '+(profile.provincia||'');
+  const empresaDir=[st.eTipoVia,st.eCalle,st.eNumero,st.ePiso].filter(Boolean).join(' ')+', '+(st.eCp||'')+' '+(st.eMunicipio||'')+', '+(st.eProvincia||'');
   document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Procesando su solicitud...</div><div class="exito-sub">Estamos preparando su enlace de pago. Un momento por favor.</div></div>`;
   const payload={
     expediente:expNum,
@@ -1482,13 +1518,14 @@ async function finalizarExpedienteEmpresa(){
     iva:r.iva,
     total_factura:r.totalPromotor,
     total_factura_centimos:Math.round(r.totalPromotor*100),
-    /* Empresa (de su perfil) */
-    empresa_email:profile.emailFact||user.email,
-    empresa_razon_social:profile.razonSocial||'',
-    empresa_cif:profile.cif||'',
+    /* Empresa (recogida en este expediente) */
+    empresa_email:st.eEmailFact||user.email,
+    empresa_razon_social:st.eRazon,
+    empresa_cif:st.eCif,
     empresa_direccion:empresaDir,
-    empresa_telefono:profile.telefono||'',
-    empresa_contacto:profile.contacto||user.nombre||'',
+    empresa_telefono:st.eTel,
+    empresa_contacto:st.eContacto||user.nombre||'',
+    empresa_usuario_email:user.email,
     /* Artista (del expediente) */
     modo_datos_trabajador:'manual',
     trabajador_email:'',
@@ -1556,16 +1593,16 @@ function renderSim(){
   perfil=user.accountType;
   updateChromeUI();
   if(!user.verified)return renderPendingVerification(user);
-  if(!user.profile){
-    if(user.accountType==='empresa')return renderEmpresaProfileForm(user);
-    return renderArtProfileForm(user);
+  if(user.accountType==='empresa'){
+    /* Cuenta empresa: tras verificar email va directa al dashboard.
+       Los datos fiscales se recogen en el momento de crear cada expediente. */
+    if(!artistAuth.expedienteOpen)return renderEmpresaDashboard(user);
+    return renderExpedienteEmpresa(user);
   }
+  /* Cuenta artista: perfil obligatorio + validación manual */
+  if(!user.profile)return renderArtProfileForm(user);
   if(user.profileStatus!=='validado')return renderProfileReview(user);
-  if(!artistAuth.expedienteOpen){
-    if(user.accountType==='empresa')return renderEmpresaDashboard(user);
-    return renderArtDashboard(user);
-  }
-  if(user.accountType==='empresa')return renderExpedienteEmpresa(user);
+  if(!artistAuth.expedienteOpen)return renderArtDashboard(user);
   return renderExpedienteArtista(user);
 }
 
@@ -1576,6 +1613,23 @@ function renderSim(){
   updateChromeUI();
   renderPasos();
   renderSim();
+
+  /* Delegación global: cuando un input o select dispara `change` (autofill,
+     gestores de contraseñas, etc. no siempre disparan `input`), reenviamos
+     un evento `input` para que los handlers inline `oninput="..."` se ejecuten
+     y actualicen el estado. Idempotente: si el usuario teclea normalmente,
+     ambos eventos disparan el mismo handler sin efectos secundarios. */
+  const simHost=document.getElementById('sim-c');
+  if(simHost){
+    simHost.addEventListener('change',function(e){
+      const t=e.target;
+      if(!t)return;
+      if(t.tagName==='INPUT'&&t.type==='file')return; /* file inputs usan onchange propio */
+      if(t.matches('input, textarea')){
+        t.dispatchEvent(new Event('input',{bubbles:true}));
+      }
+    },true);
+  }
 })();
 </script>
 </body>
