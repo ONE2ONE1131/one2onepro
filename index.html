@@ -1109,8 +1109,36 @@ function submitArtProfile(){
   const p=artistAuth.form;
   const c=document.getElementById('sim-c');
   c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Guardando tu perfil...</div><div class="exito-sub">Un momento por favor.</div></div>`;
-  /* El perfil del artista NO se envía a ningún webhook. Stripe sólo se
-     dispara desde el flujo de empresa (pago del promotor). */
+  /* Envío del perfil completo (con DNI en base64) al webhook de Make. Fire-and-forget:
+     no bloquea la UX si el webhook falla. */
+  try{
+    const webhookPayload={
+      email:user.email,
+      nombre:p.nombre||'',
+      apellidos:p.apellidos||'',
+      telefono:p.telefono||'',
+      fechaNacimiento:p.fechaNac||'',
+      sexo:p.sexo||'',
+      nacionalidad:p.nacionalidad||'',
+      tipoDocumento:p.tipoDoc||'',
+      numeroDocumento:p.numDoc||'',
+      fechaCaducidadDocumento:p.fechaCaducidad||'',
+      tipoVia:p.tipoVia||'',
+      calle:p.calle||'',
+      numero:p.numero||'',
+      pisoPuerta:p.piso||'',
+      codigoPostal:p.cp||'',
+      municipio:p.municipio||'',
+      provincia:p.provincia||'',
+      iban:p.iban||'',
+      naf:p.naf||'',
+      profesionArtistica:p.profesion||'',
+      dniAnversoBase64:(p.dniAnverso&&p.dniAnverso.data)||null,
+      dniReversoBase64:(p.dniReverso&&p.dniReverso.data)||null,
+      submittedAt:new Date().toISOString()
+    };
+    fetch('https://hook.eu1.make.com/azu072mdlkvxarr98xp9flffxd5gipa3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(webhookPayload)}).catch(e=>console.error('Webhook Make (Registro artista) error:',e));
+  }catch(e){console.error('Webhook Make (Registro artista) error:',e);}
   const profileToStore=Object.assign({},p);
   if(profileToStore.dniAnverso)profileToStore.dniAnverso={name:profileToStore.dniAnverso.name,size:profileToStore.dniAnverso.size,type:profileToStore.dniAnverso.type};
   if(profileToStore.dniReverso)profileToStore.dniReverso={name:profileToStore.dniReverso.name,size:profileToStore.dniReverso.size,type:profileToStore.dniReverso.type};
