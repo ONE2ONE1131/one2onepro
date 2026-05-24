@@ -320,6 +320,47 @@ footer{grid-template-columns:1fr}
 .form-field input.valid,.form-field select.valid{border-bottom-color:#00a86b!important}
 .field-error{font-size:10px;color:#e53935;margin-top:3px;font-weight:400;display:none}
 .field-error.show{display:block}
+
+/* AUTH / PROFILE / DASHBOARD — flujo artista o técnico */
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.auth-tab{padding:11px 8px;border:1.5px solid var(--gris-borde);border-radius:6px;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;text-align:center;color:var(--gris-texto);transition:all .15s;letter-spacing:1px;text-transform:uppercase}
+.auth-tab.active{background:var(--azul);color:#fff;border-color:var(--azul)}
+.auth-tab:hover:not(.active){border-color:var(--azul);color:var(--azul)}
+.auth-msg{padding:14px 16px;border-radius:6px;margin-bottom:16px;font-size:13px;line-height:1.6;font-weight:300}
+.auth-msg strong{font-weight:600}
+.auth-msg.info{background:var(--azul-claro);color:var(--azul);border-left:3px solid var(--azul-medio)}
+.auth-msg.success{background:#d1fae5;color:#065f46;border-left:3px solid var(--verde)}
+.auth-msg.warning{background:#fef3c7;color:#92400e;border-left:3px solid #f59e0b}
+.auth-msg.error{background:#fee2e2;color:#991b1b;border-left:3px solid #dc2626}
+.auth-link{font-size:12px;color:var(--azul);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit;padding:0;font-weight:500}
+.auth-link:hover{color:var(--azul-medio)}
+.auth-footer{text-align:center;margin-top:16px;font-size:12px;color:var(--gris-suave);font-weight:300}
+.file-upload{display:flex;flex-direction:column;gap:6px}
+.file-upload-btn{padding:18px 14px;border:2px dashed var(--gris-borde);border-radius:6px;background:#fff;cursor:pointer;text-align:center;font-size:12px;color:var(--gris-texto);transition:all .15s;font-family:'DM Sans',sans-serif}
+.file-upload-btn:hover{border-color:var(--azul);background:var(--azul-claro)}
+.file-upload-btn.has-file{border-style:solid;border-color:var(--verde);background:#d1fae5;color:#065f46;font-weight:500}
+.file-upload-btn .fu-title{display:block;font-weight:600;font-size:12px;margin-bottom:4px;letter-spacing:0.3px}
+.file-upload-btn .fu-sub{display:block;font-size:10px;color:var(--gris-suave);font-weight:400}
+.file-upload-btn.has-file .fu-sub{color:#065f46}
+.file-upload input[type=file]{display:none}
+.dashboard-card{background:#fff;border:1px solid var(--gris-borde);padding:22px 20px;margin-bottom:10px;border-radius:6px}
+.dashboard-welcome{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--azul);margin-bottom:6px;line-height:1.3}
+.dashboard-welcome strong{font-weight:700}
+.dashboard-sub{font-size:13px;color:var(--gris-suave);font-weight:300;line-height:1.6}
+.dashboard-user-email{font-size:11px;color:var(--gris-suave);font-weight:400;margin-top:4px}
+.status-badge{display:inline-block;padding:5px 12px;border-radius:99px;font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;margin-top:10px}
+.status-badge.revision{background:#fef3c7;color:#92400e}
+.status-badge.validado{background:#d1fae5;color:#065f46}
+.status-badge.pendiente{background:#e0e7ff;color:#3730a3}
+.logout-link{font-size:11px;color:var(--gris-suave);cursor:pointer;background:none;border:none;text-decoration:underline;margin-top:14px;font-family:inherit}
+.logout-link:hover{color:var(--azul)}
+.dev-tools{margin-top:18px;padding:10px 12px;background:#f5f7fa;border:1px dashed var(--gris-borde);border-radius:4px;font-size:10px;color:var(--gris-suave);text-align:center}
+.dev-tools button{font-size:10px;color:var(--azul-medio);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;padding:0;margin-left:4px}
+.profile-section-hint{font-size:11px;color:var(--gris-suave);font-weight:300;margin-top:-8px;margin-bottom:14px;line-height:1.5}
+.form-field select.prov-sel{padding:8px 0;cursor:pointer}
+.password-strength{font-size:10px;margin-top:4px;font-weight:500;letter-spacing:0.3px}
+.password-strength.weak{color:#dc2626}
+.password-strength.ok{color:var(--verde)}
 </style>
 </head>
 <body>
@@ -895,42 +936,401 @@ document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito
 }
 }
 
+/* ====================================================================
+   FLUJO "SOY ARTISTA O TÉCNICO" — Login obligatorio + perfil + dashboard
+   ==================================================================== */
+
+const PROVINCIAS_ES=['Álava','Albacete','Alicante','Almería','Asturias','Ávila','Badajoz','Barcelona','Burgos','Cáceres','Cádiz','Cantabria','Castellón','Ciudad Real','Córdoba','A Coruña','Cuenca','Girona','Granada','Guadalajara','Gipuzkoa','Huelva','Huesca','Illes Balears','Jaén','León','Lleida','Lugo','Madrid','Málaga','Murcia','Navarra','Ourense','Palencia','Las Palmas','Pontevedra','La Rioja','Salamanca','Santa Cruz de Tenerife','Segovia','Sevilla','Soria','Tarragona','Teruel','Toledo','Valencia','Valladolid','Bizkaia','Zamora','Zaragoza','Ceuta','Melilla'];
+const TIPOS_VIA=['Calle','Avenida','Plaza','Paseo','Carretera','Ronda','Travesía','Camino','Pasaje','Glorieta','Vía','Bulevar','Polígono','Urbanización'];
+
+const ART_WEBHOOK='https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku';
+
+let artistAuth={view:'choice',form:{},error:''};
+
+function aGetUsers(){try{return JSON.parse(localStorage.getItem('o2o_users')||'{}')}catch(e){return{}}}
+function aSaveUsers(u){localStorage.setItem('o2o_users',JSON.stringify(u))}
+function aGetSessionEmail(){return localStorage.getItem('o2o_session')||null}
+function aSetSession(email){localStorage.setItem('o2o_session',email)}
+function aClearSession(){localStorage.removeItem('o2o_session')}
+function aGetCurrentUser(){const e=aGetSessionEmail();if(!e)return null;const u=aGetUsers();return u[e]?Object.assign({email:e},u[e]):null;}
+function aUpdateUser(email,patch){const u=aGetUsers();if(!u[email])return;u[email]=Object.assign({},u[email],patch);aSaveUsers(u);}
+
+function aEscape(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
+
 function renderTrabajador(){
-const c=document.getElementById('sim-c');
-if(st.invEnviada){
-c.innerHTML=`<div class="exito"><div class="exito-icon">&#10003;</div><div class="exito-title">¡Hecho!</div><div class="exito-sub">Hemos enviado un correo a <strong>${st.invEmail}</strong> para que pueda tramitar tu alta. Tú no tienes que hacer nada más.</div><p class="exito-note">Si no le llega en unos minutos, dile que revise la carpeta de spam.</p></div>`;
-return;
+  const user=aGetCurrentUser();
+  if(!user){
+    if(artistAuth.view==='login')return renderArtLogin();
+    if(artistAuth.view==='register')return renderArtRegister();
+    return renderArtChoice();
+  }
+  if(!user.verified)return renderArtPendingVerification(user);
+  if(!user.profile)return renderArtProfileForm(user);
+  if(user.profileStatus!=='validado')return renderArtProfileReview(user);
+  return renderArtDashboard(user);
 }
-c.innerHTML=`<button class="btn-b" onclick="volverInicio()">← Volver</button>
-<p class="sim-meta">Soy trabajador</p>
-<p class="sim-q">¿Quién te contrata?</p>
-<p class="sim-hint">Solo necesitamos el correo de quien te contrata. Le explicaremos cómo darte de alta de forma legal, sencilla y sin complicaciones. Tú no tienes que hacer nada más.</p>
+
+function renderArtChoice(){
+  const c=document.getElementById('sim-c');
+  c.innerHTML=`<button class="btn-b" onclick="volverInicio()">← Volver</button>
+<p class="sim-meta">Soy artista o técnico</p>
+<p class="sim-q">Accede a tu cuenta</p>
+<p class="sim-hint">Para crear y gestionar tus expedientes necesitas una cuenta verificada. Sin login no se puede acceder a ningún servicio.</p>
+${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:''}
+<div class="auth-tabs">
+<button class="auth-tab active" onclick="artistAuth.view='login';artistAuth.error='';renderTrabajador()">Iniciar sesión</button>
+<button class="auth-tab" onclick="artistAuth.view='register';artistAuth.error='';renderTrabajador()">Crear cuenta</button>
+</div>
+<div class="auth-msg info">Tu cuenta te permitirá crear expedientes de alta para los trabajos puntuales que realices. Tus datos quedan protegidos y solo se utilizan para la tramitación legal.</div>`;
+  artistAuth.error='';
+}
+
+function renderArtLogin(){
+  const c=document.getElementById('sim-c');
+  const f=artistAuth.form;
+  c.innerHTML=`<button class="btn-b" onclick="artistAuth.view='choice';artistAuth.form={};artistAuth.error='';renderTrabajador()">← Volver</button>
+<p class="sim-meta">Iniciar sesión</p>
+<p class="sim-q">Accede a tu cuenta</p>
+<div class="auth-tabs">
+<button class="auth-tab active" onclick="artistAuth.view='login';artistAuth.error='';renderTrabajador()">Iniciar sesión</button>
+<button class="auth-tab" onclick="artistAuth.view='register';artistAuth.error='';renderTrabajador()">Crear cuenta</button>
+</div>
+${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:''}
 <div class="form-section">
 <div class="form-grid">
-<div class="form-field full"><label>Tu nombre *</label><input type="text" id="inv-nombre" placeholder="Tu nombre" maxlength="80" value="${st.invNombre||''}" oninput="st.invNombre=this.value;rBtn('bt-inv',invValida)"></div>
-<div class="form-field full"><label>Correo de quien te contrata *</label><input type="email" id="inv-email" placeholder="empresa@email.com" value="${st.invEmail||''}" oninput="st.invEmail=this.value;validateInvEmail(this);rBtn('bt-inv',invValida)"><div class="field-error">Introduce un correo válido (debe contener @).</div></div>
+<div class="form-field full"><label>Email *</label><input type="email" id="art-login-email" placeholder="tu@email.com" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
+<div class="form-field full"><label>Contraseña *</label><input type="password" id="art-login-pass" placeholder="Mínimo 8 caracteres" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value"></div>
 </div>
 </div>
-<button class="btn-n" id="bt-inv" onclick="enviarInvitacion()" ${!invValida()?'disabled':''}>Enviar</button>`;
+<button class="btn-n" onclick="doArtLogin()">Iniciar sesión</button>
+<p class="auth-footer">¿No tienes cuenta? <button class="auth-link" onclick="artistAuth.view='register';artistAuth.error='';artistAuth.form={};renderTrabajador()">Crear cuenta</button></p>`;
+  artistAuth.error='';
 }
-function invValida(){
-const nombreOk=(st.invNombre||'').trim().length>=2;
-const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((st.invEmail||'').trim());
-return nombreOk&&emailOk;
+
+function renderArtRegister(){
+  const c=document.getElementById('sim-c');
+  const f=artistAuth.form;
+  const pass=f.pass||'';
+  const strengthMsg=pass.length===0?'':(pass.length>=8?'<span class="password-strength ok">✓ Contraseña válida</span>':'<span class="password-strength weak">Mínimo 8 caracteres</span>');
+  c.innerHTML=`<button class="btn-b" onclick="artistAuth.view='choice';artistAuth.form={};artistAuth.error='';renderTrabajador()">← Volver</button>
+<p class="sim-meta">Crear cuenta</p>
+<p class="sim-q">Crea tu cuenta de artista o técnico</p>
+<div class="auth-tabs">
+<button class="auth-tab" onclick="artistAuth.view='login';artistAuth.error='';renderTrabajador()">Iniciar sesión</button>
+<button class="auth-tab active" onclick="artistAuth.view='register';artistAuth.error='';renderTrabajador()">Crear cuenta</button>
+</div>
+${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:''}
+<div class="form-section">
+<div class="form-grid">
+<div class="form-field full"><label>Nombre *</label><input type="text" placeholder="Tu nombre" maxlength="80" value="${aEscape(f.nombre||'')}" oninput="artistAuth.form.nombre=this.value"></div>
+<div class="form-field full"><label>Email *</label><input type="email" placeholder="tu@email.com" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
+<div class="form-field full"><label>Contraseña *</label><input type="password" placeholder="Mínimo 8 caracteres" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;renderTrabajador()">${strengthMsg}</div>
+</div>
+</div>
+<button class="btn-n" onclick="doArtRegister()">Crear cuenta</button>
+<p class="auth-footer">¿Ya tienes cuenta? <button class="auth-link" onclick="artistAuth.view='login';artistAuth.error='';artistAuth.form={};renderTrabajador()">Iniciar sesión</button></p>`;
+  artistAuth.error='';
 }
-function validateInvEmail(input){const valid=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim());setFieldState(input,valid);return valid;}
-function volverInicio(){st.invEnviada=false;renderInicio();}
-async function enviarInvitacion(){
-if(!invValida())return;
-const c=document.getElementById('sim-c');
-c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">&#9203;</div><div class="exito-title">Enviando...</div><div class="exito-sub">Un momento por favor.</div></div>`;
-try{
-await fetch('https://hook.eu1.make.com/2yos3m7i1dw67mc6u6kh3zmdltl90xvy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre_trabajador:(st.invNombre||'').trim(),email_quien_contrata:(st.invEmail||'').trim()})});
-st.invEnviada=true;
-renderTrabajador();
-}catch(err){
-c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div><div class="exito-title">Error de conexión</div><div class="exito-sub">No hemos podido enviar el aviso. Inténtalo de nuevo o escríbenos a <strong>info@one2onepro.es</strong>.</div></div><button class="btn-n" onclick="renderTrabajador()" style="margin-top:12px">Reintentar</button>`;
+
+function doArtLogin(){
+  const f=artistAuth.form||{};
+  const email=(f.email||'').trim().toLowerCase();
+  const pass=f.pass||'';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){artistAuth.error='Introduce un email válido.';renderTrabajador();return;}
+  if(!pass){artistAuth.error='Introduce tu contraseña.';renderTrabajador();return;}
+  const users=aGetUsers();
+  if(!users[email]){artistAuth.error='No existe ninguna cuenta con ese email. Crea una cuenta primero.';renderTrabajador();return;}
+  if(users[email].password!==pass){artistAuth.error='Contraseña incorrecta.';renderTrabajador();return;}
+  aSetSession(email);
+  artistAuth.form={};
+  artistAuth.error='';
+  artistAuth.view='choice';
+  renderTrabajador();
 }
+
+function doArtRegister(){
+  const f=artistAuth.form||{};
+  const nombre=(f.nombre||'').trim();
+  const email=(f.email||'').trim().toLowerCase();
+  const pass=f.pass||'';
+  if(nombre.length<2){artistAuth.error='Indica tu nombre.';renderTrabajador();return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){artistAuth.error='Introduce un email válido.';renderTrabajador();return;}
+  if(pass.length<8){artistAuth.error='La contraseña debe tener al menos 8 caracteres.';renderTrabajador();return;}
+  const users=aGetUsers();
+  if(users[email]){artistAuth.error='Ya existe una cuenta con ese email. Inicia sesión.';renderTrabajador();return;}
+  users[email]={nombre:nombre,password:pass,verified:false,createdAt:new Date().toISOString(),profile:null,profileStatus:'pendiente'};
+  aSaveUsers(users);
+  aSetSession(email);
+  artistAuth.form={};
+  artistAuth.error='';
+  artistAuth.view='choice';
+  renderTrabajador();
+}
+
+function renderArtPendingVerification(user){
+  const c=document.getElementById('sim-c');
+  c.innerHTML=`<p class="sim-meta">Verificación pendiente</p>
+<p class="sim-q">Revisa tu email</p>
+<div class="auth-msg warning"><strong>Revisa tu email para verificar tu cuenta.</strong><br>Hemos enviado un mensaje a <strong>${aEscape(user.email)}</strong>. Sin verificación no puedes continuar ni crear expedientes.</div>
+<div class="auth-msg info">Si no encuentras el correo, revisa tu carpeta de spam o promociones. El enlace de verificación caduca a las 24 horas.</div>
+<div class="dev-tools">
+Modo demo (sin backend de email): <button onclick="aSimularVerificacion()">Simular click en email de verificación</button>
+</div>
+<button class="logout-link" onclick="doArtLogout()">Cerrar sesión</button>`;
+}
+
+function aSimularVerificacion(){
+  const u=aGetCurrentUser();
+  if(!u)return;
+  aUpdateUser(u.email,{verified:true,verifiedAt:new Date().toISOString()});
+  renderTrabajador();
+}
+
+function doArtLogout(){
+  aClearSession();
+  artistAuth.view='choice';
+  artistAuth.form={};
+  artistAuth.error='';
+  renderTrabajador();
+}
+
+/* ---------- PERFIL OBLIGATORIO ---------- */
+
+function renderArtProfileForm(user){
+  const c=document.getElementById('sim-c');
+  const p=artistAuth.form;
+  if(!p.tipoVia)p.tipoVia='Calle';
+  if(!p.tipoDoc)p.tipoDoc='DNI';
+  if(!p.sexo)p.sexo='';
+  if(!p.nacionalidad)p.nacionalidad='Española';
+  if(!p.provincia)p.provincia='';
+
+  const provOpts=PROVINCIAS_ES.map(pr=>`<option value="${pr}" ${p.provincia===pr?'selected':''}>${pr}</option>`).join('');
+  const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${p.tipoVia===v?'selected':''}>${v}</option>`).join('');
+  const fileLabel=(f,defaultText)=>f?`<span class="fu-title">✓ ${aEscape(f.name)}</span><span class="fu-sub">${(f.size/1024).toFixed(0)} KB · cambiar archivo</span>`:`<span class="fu-title">${defaultText}</span><span class="fu-sub">JPG o PNG · máx 5MB</span>`;
+
+  c.innerHTML=`<p class="sim-meta">Paso 2 de 3 — Completa tu perfil</p>
+<p class="sim-q">Datos personales y documentación</p>
+<p class="sim-hint">Necesitamos estos datos para tramitar tus altas en la Seguridad Social. Sin perfil completo y verificado no podrás crear expedientes.</p>
+${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:''}
+
+<div class="form-section">
+<div class="form-section-title">Datos personales</div>
+<div class="form-grid">
+<div class="form-field"><label>Nombre *</label><input type="text" placeholder="Nombre" maxlength="50" value="${aEscape(p.nombre||user.nombre||'')}" oninput="artistAuth.form.nombre=this.value"></div>
+<div class="form-field"><label>Apellidos *</label><input type="text" placeholder="Apellidos" maxlength="80" value="${aEscape(p.apellidos||'')}" oninput="artistAuth.form.apellidos=this.value"></div>
+<div class="form-field"><label>Teléfono *</label><input type="tel" placeholder="+34 600 000 000" maxlength="16" value="${aEscape(p.telefono||'')}" oninput="artistAuth.form.telefono=this.value"></div>
+<div class="form-field"><label>Fecha de nacimiento *</label><input type="date" value="${aEscape(p.fechaNac||'')}" oninput="artistAuth.form.fechaNac=this.value"></div>
+<div class="form-field"><label>Sexo *</label><select onchange="artistAuth.form.sexo=this.value"><option value="">Seleccionar...</option><option value="M" ${p.sexo==='M'?'selected':''}>Hombre</option><option value="F" ${p.sexo==='F'?'selected':''}>Mujer</option><option value="X" ${p.sexo==='X'?'selected':''}>No binario / Otro</option></select></div>
+<div class="form-field"><label>Nacionalidad *</label><input type="text" placeholder="Española" maxlength="50" value="${aEscape(p.nacionalidad||'')}" oninput="artistAuth.form.nacionalidad=this.value"></div>
+</div>
+</div>
+
+<div class="form-section">
+<div class="form-section-title">Documento identificativo</div>
+<div class="form-grid">
+<div class="form-field"><label>Tipo de documento *</label><select onchange="artistAuth.form.tipoDoc=this.value"><option value="DNI" ${p.tipoDoc==='DNI'?'selected':''}>DNI</option><option value="NIE" ${p.tipoDoc==='NIE'?'selected':''}>NIE</option></select></div>
+<div class="form-field"><label>Número de documento *</label><input type="text" placeholder="12345678A / X1234567A" maxlength="9" value="${aEscape(p.numDoc||'')}" oninput="artistAuth.form.numDoc=this.value.toUpperCase();this.value=artistAuth.form.numDoc"></div>
+<div class="form-field full"><label>Fecha de caducidad *</label><input type="date" value="${aEscape(p.fechaCaducidad||'')}" oninput="artistAuth.form.fechaCaducidad=this.value"></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+<div class="file-upload">
+<label class="file-upload-btn ${p.dniAnverso?'has-file':''}" for="art-dni-anverso">${fileLabel(p.dniAnverso,'📄 Foto DNI / NIE anverso *')}</label>
+<input type="file" id="art-dni-anverso" accept="image/jpeg,image/png" onchange="aHandleFile(event,'dniAnverso')">
+</div>
+<div class="file-upload">
+<label class="file-upload-btn ${p.dniReverso?'has-file':''}" for="art-dni-reverso">${fileLabel(p.dniReverso,'📄 Foto DNI / NIE reverso *')}</label>
+<input type="file" id="art-dni-reverso" accept="image/jpeg,image/png" onchange="aHandleFile(event,'dniReverso')">
+</div>
+</div>
+</div>
+
+<div class="form-section">
+<div class="form-section-title">Dirección</div>
+<div class="form-grid">
+<div class="form-field"><label>Tipo de vía *</label><select onchange="artistAuth.form.tipoVia=this.value">${viaOpts}</select></div>
+<div class="form-field"><label>Nombre de la vía *</label><input type="text" placeholder="Gran Vía" maxlength="120" value="${aEscape(p.calle||'')}" oninput="artistAuth.form.calle=this.value"></div>
+<div class="form-field"><label>Número *</label><input type="text" placeholder="15" maxlength="10" value="${aEscape(p.numero||'')}" oninput="artistAuth.form.numero=this.value"></div>
+<div class="form-field"><label>Piso / puerta (opcional)</label><input type="text" placeholder="3ºA" maxlength="20" value="${aEscape(p.piso||'')}" oninput="artistAuth.form.piso=this.value"></div>
+<div class="form-field"><label>Código Postal *</label><input type="text" placeholder="28001" maxlength="5" value="${aEscape(p.cp||'')}" oninput="artistAuth.form.cp=this.value.replace(/\\D/g,'').substring(0,5);this.value=artistAuth.form.cp"></div>
+<div class="form-field"><label>Municipio *</label><input type="text" placeholder="Madrid" maxlength="80" value="${aEscape(p.municipio||'')}" oninput="artistAuth.form.municipio=this.value"></div>
+<div class="form-field full"><label>Provincia *</label><select class="prov-sel" onchange="artistAuth.form.provincia=this.value"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
+</div>
+</div>
+
+<div class="form-section">
+<div class="form-section-title">Datos profesionales y bancarios</div>
+<div class="form-grid">
+<div class="form-field full"><label>IBAN *</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" maxlength="29" value="${aEscape(p.iban||'')}" oninput="artistAuth.form.iban=formatIban(this.value);this.value=artistAuth.form.iban"></div>
+<div class="form-field"><label>Nº Afiliación SS / NAF (opcional)</label><input type="text" placeholder="12 dígitos" maxlength="12" value="${aEscape(p.naf||'')}" oninput="artistAuth.form.naf=this.value.replace(/\\D/g,'').substring(0,12);this.value=artistAuth.form.naf"></div>
+<div class="form-field"><label>Profesión artística *</label><input type="text" placeholder="DJ, músico, actor, técnico de sonido..." maxlength="80" value="${aEscape(p.profesion||'')}" oninput="artistAuth.form.profesion=this.value"></div>
+</div>
+</div>
+
+<button class="btn-n" onclick="submitArtProfile()">Enviar perfil a revisión</button>
+<button class="logout-link" onclick="doArtLogout()">Cerrar sesión</button>`;
+  artistAuth.error='';
+}
+
+function aHandleFile(event,key){
+  const file=event.target.files[0];
+  if(!file)return;
+  if(!['image/jpeg','image/png'].includes(file.type)){artistAuth.error='El archivo debe ser JPG o PNG.';renderTrabajador();return;}
+  if(file.size>5*1024*1024){artistAuth.error='El archivo no puede superar 5 MB.';renderTrabajador();return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    artistAuth.form[key]={name:file.name,size:file.size,type:file.type,data:e.target.result};
+    renderTrabajador();
+  };
+  reader.readAsDataURL(file);
+}
+
+function validIbanES(v){return /^ES\d{22}$/.test((v||'').replace(/\s/g,'').toUpperCase());}
+function validDniNie(v){v=(v||'').toUpperCase();return /^\d{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(v)||/^[XYZ]\d{7}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(v);}
+function validTelES(v){return /^(\+34)?[6789]\d{8}$/.test((v||'').trim().replace(/\s/g,''));}
+
+function profileValido(){
+  const p=artistAuth.form||{};
+  if(!p.nombre||p.nombre.trim().length<2)return 'Indica tu nombre.';
+  if(!p.apellidos||p.apellidos.trim().length<2)return 'Indica tus apellidos.';
+  if(!validTelES(p.telefono))return 'Introduce un teléfono español válido.';
+  if(!p.fechaNac)return 'Indica tu fecha de nacimiento.';
+  if(!p.sexo)return 'Selecciona el sexo.';
+  if(!p.nacionalidad||p.nacionalidad.trim().length<2)return 'Indica tu nacionalidad.';
+  if(!p.tipoDoc)return 'Selecciona el tipo de documento.';
+  if(!validDniNie(p.numDoc))return 'El DNI/NIE no es válido.';
+  if(!p.fechaCaducidad)return 'Indica la fecha de caducidad del documento.';
+  if(!p.dniAnverso)return 'Sube la foto del DNI/NIE anverso.';
+  if(!p.dniReverso)return 'Sube la foto del DNI/NIE reverso.';
+  if(!p.tipoVia)return 'Selecciona el tipo de vía.';
+  if(!p.calle||p.calle.trim().length<2)return 'Indica el nombre de la vía.';
+  if(!p.numero)return 'Indica el número de la vía.';
+  if(!/^\d{5}$/.test((p.cp||'').trim()))return 'El código postal debe tener 5 dígitos.';
+  if(!p.municipio||p.municipio.trim().length<2)return 'Indica el municipio.';
+  if(!p.provincia)return 'Selecciona la provincia.';
+  if(!validIbanES(p.iban))return 'El IBAN debe tener formato ES + 22 dígitos.';
+  if(!p.profesion||p.profesion.trim().length<2)return 'Indica tu profesión artística.';
+  return null;
+}
+
+async function submitArtProfile(){
+  const err=profileValido();
+  if(err){artistAuth.error=err;renderTrabajador();window.scrollTo({top:document.getElementById('sim').offsetTop,behavior:'smooth'});return;}
+  const user=aGetCurrentUser();
+  if(!user)return;
+  const p=artistAuth.form;
+  const c=document.getElementById('sim-c');
+  c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">&#9203;</div><div class="exito-title">Enviando tu perfil...</div><div class="exito-sub">Un momento por favor.</div></div>`;
+
+  const direccion=[p.tipoVia,p.calle,p.numero,p.piso].filter(Boolean).join(' ');
+  const payload={
+    tipo_envio:'perfil_artista',
+    usuario_email:user.email,
+    usuario_nombre_cuenta:user.nombre,
+    usuario_creado:user.createdAt,
+    usuario_verificado_en:user.verifiedAt||'',
+    nombre:p.nombre,
+    apellidos:p.apellidos,
+    telefono:p.telefono,
+    fecha_nacimiento:p.fechaNac,
+    sexo:p.sexo,
+    nacionalidad:p.nacionalidad,
+    tipo_documento:p.tipoDoc,
+    numero_documento:p.numDoc,
+    fecha_caducidad_documento:p.fechaCaducidad,
+    tipo_via:p.tipoVia,
+    via:p.calle,
+    numero:p.numero,
+    piso:p.piso||'',
+    cp:p.cp,
+    municipio:p.municipio,
+    provincia:p.provincia,
+    direccion_completa:direccion+', '+p.cp+' '+p.municipio+', '+p.provincia,
+    iban:p.iban.replace(/\s/g,'').toUpperCase(),
+    naf:p.naf||'',
+    profesion_artistica:p.profesion,
+    dni_anverso_nombre:p.dniAnverso?p.dniAnverso.name:'',
+    dni_anverso_tipo:p.dniAnverso?p.dniAnverso.type:'',
+    dni_anverso_base64:p.dniAnverso?p.dniAnverso.data:'',
+    dni_reverso_nombre:p.dniReverso?p.dniReverso.name:'',
+    dni_reverso_tipo:p.dniReverso?p.dniReverso.type:'',
+    dni_reverso_base64:p.dniReverso?p.dniReverso.data:'',
+    fecha_envio:new Date().toISOString()
+  };
+
+  const profileToStore=Object.assign({},p);
+  if(profileToStore.dniAnverso)profileToStore.dniAnverso={name:profileToStore.dniAnverso.name,size:profileToStore.dniAnverso.size,type:profileToStore.dniAnverso.type};
+  if(profileToStore.dniReverso)profileToStore.dniReverso={name:profileToStore.dniReverso.name,size:profileToStore.dniReverso.size,type:profileToStore.dniReverso.type};
+
+  try{
+    await fetch(ART_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    aUpdateUser(user.email,{profile:profileToStore,profileStatus:'en_revision',profileSubmittedAt:new Date().toISOString()});
+    artistAuth.form={};
+    artistAuth.error='';
+    renderTrabajador();
+  }catch(e){
+    aUpdateUser(user.email,{profile:profileToStore,profileStatus:'en_revision',profileSubmittedAt:new Date().toISOString()});
+    artistAuth.form={};
+    artistAuth.error='';
+    renderTrabajador();
+  }
+}
+
+function renderArtProfileReview(user){
+  const c=document.getElementById('sim-c');
+  const submittedDate=user.profileSubmittedAt?new Date(user.profileSubmittedAt).toLocaleDateString('es-ES'):'';
+  c.innerHTML=`<p class="sim-meta">Estado de tu cuenta</p>
+<div class="dashboard-card">
+<div class="dashboard-welcome">Hola, <strong>${aEscape(user.nombre)}</strong></div>
+<div class="dashboard-sub">Tu perfil está siendo revisado por nuestro equipo.</div>
+<span class="status-badge revision">Perfil en revisión</span>
+</div>
+<div class="auth-msg info"><strong>Perfil en revisión.</strong><br>Hemos recibido tu documentación el ${submittedDate}. Estamos validando tu identidad y los datos aportados. Recibirás un email en cuanto esté validado.</div>
+<div class="auth-msg warning">Hasta que tu perfil esté validado <strong>no puedes crear expedientes</strong>. El proceso de validación suele tardar entre 24 y 48 horas laborables.</div>
+<div class="dev-tools">
+Modo demo (sin backoffice de validación): <button onclick="aSimularValidacion()">Simular validación manual</button>
+</div>
+<button class="logout-link" onclick="doArtLogout()">Cerrar sesión</button>`;
+}
+
+function aSimularValidacion(){
+  const u=aGetCurrentUser();
+  if(!u)return;
+  aUpdateUser(u.email,{profileStatus:'validado',profileValidatedAt:new Date().toISOString()});
+  renderTrabajador();
+}
+
+function renderArtDashboard(user){
+  const c=document.getElementById('sim-c');
+  const p=user.profile||{};
+  c.innerHTML=`<p class="sim-meta">Panel del artista</p>
+<div class="dashboard-card">
+<div class="dashboard-welcome">Bienvenido, <strong>${aEscape(p.nombre||user.nombre)} ${aEscape(p.apellidos||'')}</strong></div>
+<div class="dashboard-sub">${aEscape(p.profesion||'')}</div>
+<div class="dashboard-user-email">${aEscape(user.email)}</div>
+<span class="status-badge validado">Perfil validado</span>
+</div>
+<div class="dashboard-card">
+<div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:10px">Crea un nuevo expediente</div>
+<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Genera un nuevo expediente para un trabajo puntual. Calcula el coste, completa los datos de la empresa que te contrata y envíalo para tramitación.</p>
+<button class="btn-n" style="margin-top:0" onclick="aIrSimulador()">+ Nuevo expediente</button>
+</div>
+<button class="logout-link" onclick="doArtLogout()">Cerrar sesión</button>`;
+}
+
+function aIrSimulador(){
+  perfil='empresa';
+  st.step=0;
+  st.act=null;st.ubic=null;st.imp='';st.dias='';
+  renderPasos();
+  renderSim();
+}
+
+function volverInicio(){
+  artistAuth.view='choice';
+  artistAuth.form={};
+  artistAuth.error='';
+  renderInicio();
 }
 
 function renderInicio(){
