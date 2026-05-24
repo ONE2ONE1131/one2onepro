@@ -1066,7 +1066,12 @@ function copiarEnlace(){
    ======================================================================== */
 const PROVINCIAS_ES=['Álava','Albacete','Alicante','Almería','Asturias','Ávila','Badajoz','Barcelona','Burgos','Cáceres','Cádiz','Cantabria','Castellón','Ciudad Real','Córdoba','A Coruña','Cuenca','Girona','Granada','Guadalajara','Gipuzkoa','Huelva','Huesca','Illes Balears','Jaén','León','Lleida','Lugo','Madrid','Málaga','Murcia','Navarra','Ourense','Palencia','Las Palmas','Pontevedra','La Rioja','Salamanca','Santa Cruz de Tenerife','Segovia','Sevilla','Soria','Tarragona','Teruel','Toledo','Valencia','Valladolid','Bizkaia','Zamora','Zaragoza','Ceuta','Melilla'];
 const TIPOS_VIA=['Calle','Avenida','Plaza','Paseo','Carretera','Ronda','Travesía','Camino','Pasaje','Glorieta','Vía','Bulevar','Polígono','Urbanización'];
-const ART_WEBHOOK='https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku';
+/* NOTA: el perfil del artista NO debe enviarse al webhook de empresa.
+   Solo el flujo de empresa (renderEmpresa) usa el webhook de pago.
+   Cuando exista un escenario de Make específico para el perfil del
+   artista, sustituir esta constante por la URL real y reactivar el
+   fetch comentado más abajo en submitArtProfile(). */
+const ART_WEBHOOK='';
 
 let artistAuth={view:'login',form:{},error:'',expedienteOpen:false};
 
@@ -1305,32 +1310,29 @@ function profileValido(){
   return null;
 }
 
-async function submitArtProfile(){
+function submitArtProfile(){
   const err=profileValido();
   if(err){artistAuth.error=err;renderTrabajador();const simEl=document.getElementById('sim');if(simEl)window.scrollTo({top:simEl.offsetTop,behavior:'smooth'});return;}
   const user=aGetCurrentUser();if(!user)return;
   const p=artistAuth.form;
   const c=document.getElementById('sim-c');
-  c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Enviando tu perfil...</div><div class="exito-sub">Un momento por favor.</div></div>`;
-  const direccion=[p.tipoVia,p.calle,p.numero,p.piso].filter(Boolean).join(' ');
-  const payload={
-    tipo_envio:'perfil_artista',
-    usuario_email:user.email,usuario_nombre_cuenta:user.nombre,usuario_creado:user.createdAt,usuario_verificado_en:user.verifiedAt||'',
-    nombre:p.nombre,apellidos:p.apellidos,telefono:p.telefono,fecha_nacimiento:p.fechaNac,sexo:p.sexo,nacionalidad:p.nacionalidad,
-    tipo_documento:p.tipoDoc,numero_documento:p.numDoc,fecha_caducidad_documento:p.fechaCaducidad,
-    tipo_via:p.tipoVia,via:p.calle,numero:p.numero,piso:p.piso||'',cp:p.cp,municipio:p.municipio,provincia:p.provincia,
-    direccion_completa:direccion+', '+p.cp+' '+p.municipio+', '+p.provincia,
-    iban:p.iban.replace(/\s/g,'').toUpperCase(),naf:p.naf||'',profesion_artistica:p.profesion,
-    dni_anverso_nombre:p.dniAnverso?p.dniAnverso.name:'',dni_anverso_tipo:p.dniAnverso?p.dniAnverso.type:'',dni_anverso_base64:p.dniAnverso?p.dniAnverso.data:'',
-    dni_reverso_nombre:p.dniReverso?p.dniReverso.name:'',dni_reverso_tipo:p.dniReverso?p.dniReverso.type:'',dni_reverso_base64:p.dniReverso?p.dniReverso.data:'',
-    fecha_envio:new Date().toISOString()
-  };
+  c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Guardando tu perfil...</div><div class="exito-sub">Un momento por favor.</div></div>`;
+  /* IMPORTANTE: el perfil del artista NO se envía a ningún webhook por ahora.
+     El webhook ...9h9rjffs4t6tl2yw789d0cnihf8mqjku es exclusivo del flujo
+     de empresa (pago del promotor). Cuando exista un escenario de Make
+     específico para validar perfiles, fijar ART_WEBHOOK y reactivar el
+     bloque siguiente:
+
+       const direccion=[p.tipoVia,p.calle,p.numero,p.piso].filter(Boolean).join(' ');
+       const payload={ tipo_envio:'perfil_artista', ...todos los campos del perfil... };
+       if(ART_WEBHOOK){
+         try{ await fetch(ART_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); }
+         catch(e){}
+       }
+  */
   const profileToStore=Object.assign({},p);
   if(profileToStore.dniAnverso)profileToStore.dniAnverso={name:profileToStore.dniAnverso.name,size:profileToStore.dniAnverso.size,type:profileToStore.dniAnverso.type};
   if(profileToStore.dniReverso)profileToStore.dniReverso={name:profileToStore.dniReverso.name,size:profileToStore.dniReverso.size,type:profileToStore.dniReverso.type};
-  try{
-    await fetch(ART_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  }catch(e){/* fallback silencioso: igualmente guardamos en local */}
   aUpdateUser(user.email,{profile:profileToStore,profileStatus:'en_revision',profileSubmittedAt:new Date().toISOString()});
   artistAuth.form={};artistAuth.error='';
   renderTrabajador();
