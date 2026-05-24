@@ -420,15 +420,15 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
   </div>
 
   <div class="hero-r" id="sim">
-    <p class="sim-label-top">¿Qué necesitas?</p>
-    <div class="perfil-sel">
+    <p class="sim-label-top" id="sim-label-top">¿Qué necesitas?</p>
+    <div class="perfil-sel" id="perfil-sel">
+      <button class="perfil-btn" id="pb-trab" onclick="setPerfil('artista')">
+        <span class="pb-main">Soy artista o técnico</span>
+        <span class="pb-sub">Gestiona tu alta y envía presupuestos a tus promotores</span>
+      </button>
       <button class="perfil-btn act" id="pb-emp" onclick="setPerfil('empresa')">
         <span class="pb-main">Soy promotor o empresa</span>
-        <span class="pb-sub">Necesito contratar a un artista y tener factura legal</span>
-      </button>
-      <button class="perfil-btn" id="pb-trab" onclick="setPerfil('trabajador')">
-        <span class="pb-main">Soy artista o técnico</span>
-        <span class="pb-sub">Consulta tu liquidación estimada y gestiona tu alta</span>
+        <span class="pb-sub">Contrata a un artista con factura y alta legal</span>
       </button>
     </div>
     <div id="sim-c"></div>
@@ -679,68 +679,83 @@ const PASOS_TRAB=[
 
 const BASES_MIN={1:1989.30,2:1649.70,3:1435.20,4:1424.40,7:1424.40,8:47.48};
 const COM=0.10;
+const EMPRESA_WEBHOOK='https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku';
+/* perfil = "artista" o "empresa". Antes del login indica qué pestaña ha pulsado el usuario.
+   Después del login se sobreescribe con user.accountType en cada renderSim(). */
 let perfil='empresa';
 let st={
   step:0,act:null,ubic:null,imp:'',dias:'',
-  modoTrabajador:null, // 'email' o 'manual'
-  tNombre:'',tApellidos:'',tDni:'',tFechaNac:'',tNacionalidad:'',
-  tDireccion:'',tIban:'',tEmail:'',tTel:'',tNaf:'',
-  eRazon:'',eCif:'',eDireccion:'',eEmail:'',eTel:'',
-  eFechaInicio:'',eFechaFin:'',
+  fechaInicio:'',fechaFin:'',
+  /* Cuenta artista — datos del PROMOTOR */
+  pNombre:'',pCif:'',pEmail:'',
+  /* Cuenta empresa — datos del ARTISTA */
+  aNombre:'',aApellidos:'',aDni:'',aFechaNac:'',aNacionalidad:'',aDireccion:'',aIban:'',aNaf:'',aTel:'',
   condAceptadas:false
 };
 
 function fmt(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}
 
+function resetExpedienteState(){
+  st.step=0;st.act=null;st.ubic=null;st.imp='';st.dias='';
+  st.fechaInicio='';st.fechaFin='';
+  st.pNombre='';st.pCif='';st.pEmail='';
+  st.aNombre='';st.aApellidos='';st.aDni='';st.aFechaNac='';st.aNacionalidad='';
+  st.aDireccion='';st.aIban='';st.aNaf='';st.aTel='';
+  st.condAceptadas=false;
+}
+
 function setPerfil(p){
+  const user=aGetCurrentUser();
+  if(user){return;} /* logueado: las pestañas no cambian nada */
   perfil=p;
-  document.getElementById('pb-emp').classList.toggle('act',p==='empresa');
-  document.getElementById('pb-trab').classList.toggle('act',p==='trabajador');
-  st.step=0;st.act=null;st.ubic=null;st.imp='';st.dias='';st.modoTrabajador=null;st.condAceptadas=false;
-  renderPasos();renderSim();
+  artistAuth.view='login';artistAuth.form={};artistAuth.error='';artistAuth.expedienteOpen=false;
+  resetExpedienteState();
+  updateChromeUI();renderPasos();renderSim();
+}
+
+function updateChromeUI(){
+  const user=aGetCurrentUser();
+  const sel=document.getElementById('perfil-sel');
+  const lbl=document.getElementById('sim-label-top');
+  if(user){
+    if(sel)sel.style.display='none';
+    if(lbl)lbl.style.display='none';
+    return;
+  }
+  if(sel)sel.style.display='grid';
+  if(lbl)lbl.style.display='block';
+  const emp=document.getElementById('pb-emp'),trab=document.getElementById('pb-trab');
+  if(emp)emp.classList.toggle('act',perfil==='empresa');
+  if(trab)trab.classList.toggle('act',perfil==='artista');
 }
 
 function renderPasos(){
-  const p=perfil==='empresa'?PASOS_EMP:PASOS_TRAB;
+  const user=aGetCurrentUser();
+  const tipo=user?user.accountType:perfil;
+  const p=tipo==='empresa'?PASOS_EMP:PASOS_TRAB;
   document.getElementById('pasos').innerHTML=p.map(x=>`<div class="paso"><div class="paso-n">${x.n}</div><div><div class="paso-t">${x.t}</div><div class="paso-d">${x.d}</div></div></div>`).join('');
 }
 
 function calcular(){
-  // NUEVO MODELO: el artista introduce el CACHÉ ACORDADO con el promotor
-  // Los costes (SS, comisión, IRPF) se descuentan del caché
-  // El promotor paga: caché + IVA (21%)
-  const a=st.act,u=st.ubic,cache=parseFloat(st.imp),dias=parseInt(st.dias);
+  /* MODELO: el caché acordado con el promotor es la base imponible.
+     Del caché se descuentan SS (cuotas obligatorias) y la comisión 10% de
+     One2One Pro. El resultado es lo que recibe el artista APROXIMADAMENTE.
+     El IRPF se calcula caso a caso según situación fiscal y NO se incluye
+     en este desglose orientativo.
+     El promotor paga: caché + IVA (21%). */
+  const a=st.act,u=st.ubic,cache=parseFloat(st.imp)||0,dias=parseInt(st.dias)||1;
   const atepPct=(a.atep*u.factor)/100;
-
-  // Base de cotización — Régimen Especial Artistas
   const baseMinDia=1424.40/30;
   const baseMaxDia=170.04;
   const baseDia=Math.min(Math.max(cache/dias,baseMinDia),baseMaxDia);
   const base=baseDia*dias;
-
-  // Cuotas SS a cargo de One2One Pro (las paga del caché)
-  const cc=base*0.236;
-  const des=base*0.055;
-  const atep=base*atepPct;
-  const fog=base*0.002;
-  const fp=base*0.006;
-  const mei=base*0.0075;
+  const cc=base*0.236,des=base*0.055,atep=base*atepPct,fog=base*0.002,fp=base*0.006,mei=base*0.0075;
   const ss=cc+des+atep+fog+fp+mei;
-
-  // Comisión One2One (10% sobre el caché)
-  const com=cache*0.10;
-
-  // IRPF retenido (15% sobre el caché — estándar artistas)
-  const irpf=cache*0.15;
-
-  // Lo que recibe el artista
-  const neto=cache-ss-com-irpf;
-
-  // Lo que paga el promotor
+  const com=cache*COM;
+  const neto=cache-ss-com;
   const iva=cache*0.21;
   const totalPromotor=cache+iva;
-
-  return{cache,dias,ss,cc,des,atep,fog,fp,mei,com,irpf,neto,iva,totalPromotor,esA:true};
+  return{cache,dias,ss,cc,des,atep,fog,fp,mei,com,neto,iva,totalPromotor};
 }
 
 function prog(total){
@@ -750,331 +765,56 @@ function oGrid(items,key){
   return`<div class="opts-grid">${items.map(o=>`<div class="opt-card ${st[key]&&st[key].id===o.id?'sel':''}" onclick="pick('${key}',${JSON.stringify(o).replace(/"/g,'&quot;')})"><div class="opt-card-label">${o.label}</div><div class="opt-card-sub">${o.sub}</div></div>`).join('')}</div>`;
 }
 
-function resumenPresupuesto(r){
+function resumenArtista(r){
+  /* Desglose orientativo para la cuenta artista. Sin IRPF.
+     Líneas exactas: Caché, Seguridad Social, Comisión 10%, Recibirás aprox. + nota. */
   return`
-    <div class="res-tags"><span class="res-tag">${st.act.label}</span><span class="res-tag">${st.ubic.label}</span><span class="res-tag">${r.dias} día${r.dias>1?'s':''}</span><button class="res-edit" onclick="st.step=0;renderSim()">Modificar</button></div>
+    <div class="res-tags"><span class="res-tag">${aEscapeText(st.act.label)}</span><span class="res-tag">${aEscapeText(st.ubic.label)}</span><span class="res-tag">${r.dias} día${r.dias>1?'s':''}</span></div>
+    <span class="regimen-badge">Régimen Especial de Artistas — cálculo orientativo</span>
+    <div class="res-trab-cobras"><div class="rtc-label">Recibirás aproximadamente</div><div class="rtc-val">${fmt(r.neto)}</div><div class="rtc-sub">${r.dias} día${r.dias>1?'s':''} · sobre caché de ${fmt(r.cache)}</div></div>
+    <div class="res-trab-info">
+      <div class="rti-row"><span class="rti-l">Caché acordado</span><span class="rti-v">${fmt(r.cache)}</span></div>
+      <div class="rti-row"><span class="rti-l">Seguridad Social</span><span class="rti-v">-${fmt(r.ss)}</span></div>
+      <div class="rti-row"><span class="rti-l">Comisión One2One (10%)</span><span class="rti-v">-${fmt(r.com)}</span></div>
+      <div class="rti-row"><span class="rti-l" style="font-weight:600">Recibirás aprox.</span><span class="rti-v verde" style="font-size:16px">${fmt(r.neto)}</span></div>
+    </div>
+    <div class="res-trab-aviso">El IRPF depende de tu situación fiscal. Este cálculo es orientativo — recibirás el importe exacto una vez estudiemos qué retención te corresponde.</div>`;
+}
+
+function resumenEmpresa(r){
+  /* Desglose para la cuenta empresa: lo que paga el promotor (caché + IVA). */
+  return`
+    <div class="res-tags"><span class="res-tag">${aEscapeText(st.act.label)}</span><span class="res-tag">${aEscapeText(st.ubic.label)}</span><span class="res-tag">${r.dias} día${r.dias>1?'s':''}</span></div>
     <span class="regimen-badge">Régimen Especial de Artistas</span>
     <div class="res-total">
-      <div><div class="rt-label">El promotor paga en total</div><div class="rt-val">${fmt(r.totalPromotor)}</div><div class="rt-iva">IVA incluido · deducible en su declaración</div></div>
+      <div><div class="rt-label">Pagarás en total</div><div class="rt-val">${fmt(r.totalPromotor)}</div><div class="rt-iva">IVA incluido · deducible en tu declaración</div></div>
       <div class="rt-neto"><div class="rt-neto-label">Caché</div><div class="rt-neto-val">${fmt(r.cache)}</div><div class="rt-neto-sub">base imponible</div></div>
     </div>
     <div class="desglose-wrap">
-      <div class="desglose-head" onclick="toggleDesglose(this)"><span>Ver desglose completo</span><span class="desglose-arrow">↓</span></div>
+      <div class="desglose-head" onclick="toggleDesglose(this)"><span>Ver desglose</span><span class="desglose-arrow">↓</span></div>
       <div class="desglose-body">
-        <div class="d-row"><span class="dl">Caché acordado</span><span class="dv">${fmt(r.cache)}</span></div>
+        <div class="d-row"><span class="dl">Caché acordado con el artista</span><span class="dv">${fmt(r.cache)}</span></div>
         <div class="d-row diva"><span class="dl">IVA (21%) — deducible al 100%</span><span class="dv">${fmt(r.iva)}</span></div>
-        <div class="d-row dtot"><span class="dl">Total que paga el promotor</span><span class="dv">${fmt(r.totalPromotor)}</span></div>
+        <div class="d-row dtot"><span class="dl">Total que pagas</span><span class="dv">${fmt(r.totalPromotor)}</span></div>
       </div>
-    </div>`;
+    </div>
+    <div class="res-trab-aviso">Sobre el caché, One2One Pro asume las cuotas de Seguridad Social y aplica el 10% de comisión. El artista cobra en limpio.</div>`;
 }
 
-/* ─── FLUJO EMPRESA ─── */
-function renderEmpresa(){
-  const c=document.getElementById('sim-c');
-  const STEPS=5;
-  if(st.step===0){
-    c.innerHTML=`${prog(STEPS)}<p class="sim-meta">Paso 1 de 5</p><p class="sim-q">¿Qué tipo de trabajo va a realizar la persona?</p><p class="sim-hint">Seleccione la opción que mejor describe la actividad.</p>${oGrid(ACTS,'act')}<button class="btn-n" onclick="next()" ${!st.act?'disabled':''}>Continuar</button>`;
-  } else if(st.step===1){
-    c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</button><p class="sim-meta">Paso 2 de 5</p><p class="sim-q">¿Dónde se realiza el trabajo?</p><p class="sim-hint">Afecta a la cobertura por accidentes laborales.</p>${oGrid(UBICS,'ubic')}<button class="btn-n" onclick="next()" ${!st.ubic?'disabled':''}>Continuar</button>`;
-  } else if(st.step===2){
-    c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</button><p class="sim-meta">Paso 3 de 5</p><p class="sim-q">¿Cuál es el caché acordado con el artista?</p><p class="sim-hint">El importe total que has acordado pagarle. Los costes se calculan automáticamente.</p>
-    <div class="inp-row">
-      <div class="inp-f hp"><label>Caché acordado (€)</label><div class="wr"><span class="pre">€</span><input class="grande" type="number" placeholder="0" value="${st.imp}" min="1" id="ii" oninput="st.imp=this.value;rBtn('bs2',()=>st.imp&&st.dias)"></div></div>
-      <div class="inp-f"><label>Días de trabajo</label><input class="grande" type="number" placeholder="0" value="${st.dias}" min="1" max="365" id="id" oninput="st.dias=this.value;rBtn('bs2',()=>st.imp&&st.dias)"></div>
-    </div>
-    <button class="btn-n" id="bs2" onclick="next()" ${!(st.imp&&st.dias)?'disabled':''}>Ver presupuesto</button>`;
-  } else if(st.step===3){
-    const r=calcular();
-    c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</button>
-    <div class="res">${resumenPresupuesto(r)}</div>
-    <p class="sim-meta" style="margin-top:16px;margin-bottom:10px">Paso 4 de 5 — Datos del trabajador</p>
-    <p class="sim-hint">¿Cómo prefiere facilitar los datos del trabajador?</p>
-    <div class="bifurcacion">
-      <div class="bif-card ${st.modoTrabajador==='email'?'sel':''}" onclick="st.modoTrabajador='email';renderSim()">
-        <span class="bif-card-icon">✉</span>
-        <div class="bif-card-title">Le envío un formulario al trabajador</div>
-        <div class="bif-card-desc">Le llegará un email con un enlace para que rellene sus propios datos. Opción recomendada.</div>
-      </div>
-      <div class="bif-card ${st.modoTrabajador==='manual'?'sel':''}" onclick="st.modoTrabajador='manual';renderSim()">
-        <span class="bif-card-icon">✎</span>
-        <div class="bif-card-title">Introduzco los datos yo mismo</div>
-        <div class="bif-card-desc">Ya tengo los datos del trabajador y prefiero introducirlos ahora para agilizar el proceso.</div>
-      </div>
-    </div>
-    ${st.modoTrabajador==='email'?`
-    <div class="form-section">
-      <div class="form-section-title">Email del trabajador</div>
-      <div class="form-grid">
-        <div class="form-field full"><label>Email del trabajador</label><input type="email" placeholder="trabajador@email.com" value="${st.tEmail}" oninput="st.tEmail=this.value;rBtn('bs3e',()=>st.tEmail)"><p class="field-note" style="margin-top:4px">Le enviaremos un formulario para que complete sus datos personales</p></div>
-      </div>
-    </div>
-    <button class="btn-n" id="bs3e" onclick="next()" ${!st.tEmail?'disabled':''}>Continuar</button>`
-    :st.modoTrabajador==='manual'?`
-    <div class="form-section">
-      <div class="form-section-title">Datos personales del trabajador</div>
-      <div class="form-grid">
-        <div class="form-field"><label>Nombre</label><input type="text" placeholder="Nombre" value="${st.tNombre}" oninput="st.tNombre=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>Apellidos</label><input type="text" placeholder="Apellidos" value="${st.tApellidos}" oninput="st.tApellidos=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>DNI / NIE</label><input type="text" placeholder="12345678A" value="${st.tDni}" oninput="st.tDni=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>Fecha de nacimiento</label><input type="date" value="${st.tFechaNac}" oninput="st.tFechaNac=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>Nacionalidad</label><input type="text" placeholder="Española" value="${st.tNacionalidad}" oninput="st.tNacionalidad=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>Nº Afiliación SS (NAF)</label><input type="text" placeholder="Opcional" value="${st.tNaf}" oninput="st.tNaf=this.value"></div>
-        <div class="form-field full"><label>Dirección completa</label><input type="text" placeholder="Calle, número, municipio, provincia, CP" value="${st.tDireccion}" oninput="st.tDireccion=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>IBAN</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" value="${st.tIban}" oninput="st.tIban=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>Email</label><input type="email" placeholder="su@email.com" value="${st.tEmail}" oninput="st.tEmail=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-        <div class="form-field"><label>Teléfono</label><input type="tel" placeholder="+34 600 000 000" value="${st.tTel}" oninput="st.tTel=this.value;rBtn('bs3m',trabDatosValidos)"></div>
-      </div>
-    </div>
-    <button class="btn-n" id="bs3m" onclick="next()" ${!trabDatosValidos()?'disabled':''}>Continuar</button>`
-    :'<p class="legal" style="margin-top:8px">Seleccione una opción para continuar</p>'}`;
-  } else if(st.step===4){
-    c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</button>
-    <p class="sim-meta">Paso 5 de 5 — Datos de su empresa y confirmación</p>
-    <div class="form-section">
-      <div class="form-section-title">Datos de su empresa</div>
-      <div class="form-grid">
-        <div class="form-field"><label>Razón social</label><input type="text" placeholder="Empresa S.L." value="${st.eRazon}" oninput="st.eRazon=this.value;rBtn('bs4',empValida)"></div>
-        <div class="form-field"><label>CIF</label><input type="text" placeholder="B12345678" value="${st.eCif}" oninput="st.eCif=this.value;rBtn('bs4',empValida)"></div>
-        <div class="form-field full"><label>Dirección fiscal completa</label><input type="text" placeholder="Calle, número, municipio, provincia, CP" value="${st.eDireccion}" oninput="st.eDireccion=this.value;rBtn('bs4',empValida)"></div>
-        <div class="form-field"><label>Email de facturación</label><input type="email" placeholder="facturacion@empresa.com" value="${st.eEmail}" oninput="st.eEmail=this.value;rBtn('bs4',empValida)"></div>
-        <div class="form-field"><label>Teléfono</label><input type="tel" placeholder="+34 600 000 000" value="${st.eTel}" oninput="st.eTel=this.value;rBtn('bs4',empValida)"></div>
-        <div class="form-field"><label>Fecha inicio</label><input type="date" value="${st.eFechaInicio}" oninput="st.eFechaInicio=this.value;rBtn('bs4',empValida)"></div>
-        <div class="form-field"><label>Fecha fin</label><input type="date" value="${st.eFechaFin}" oninput="st.eFechaFin=this.value;rBtn('bs4',empValida)"></div>
-      </div>
-    </div>
-    <div class="contrato-box">
-      <strong>CONDICIONES DEL SERVICIO — ONE2ONE PRO</strong><br><br>
-      ONE2ONE SOLUTIONS S.L. (CIF B19428846) presta un servicio de gestión del alta en la Seguridad Social y emisión de factura, exclusivamente para trabajos puntuales, esporádicos y no recurrentes.<br><br>
-      El Cliente declara expresamente que el trabajo tiene naturaleza puntual y no continuada, que no existe relación laboral estable entre el Cliente y el trabajador, y asume plena responsabilidad por la veracidad de los datos facilitados.<br><br>
-      One2One Pro tramita el alta en la Seguridad Social y emite la factura. El pago es condición previa imprescindible para iniciar cualquier gestión. Para cualquier controversia, las partes se someten a los Juzgados y Tribunales de Cádiz.
-    </div>
-    <label class="contrato-check">
-      <input type="checkbox" id="chk" onchange="st.condAceptadas=this.checked;rBtn('bs4',empValida)">
-      <span class="contrato-check-text">He leído y acepto las <a href="#">Condiciones del Servicio</a>. Declaro que el trabajo es puntual y no recurrente.</span>
-    </label>
-    <button class="btn-n" id="bs4" onclick="finalizarEmpresa()" ${!empValida()?'disabled':''}>Proceder al pago →</button>
-    <p class="legal">Al continuar será redirigido a la pasarela de pago. La aceptación queda registrada con fecha, hora e identificador.</p>`;
-  }
-}
+function aEscapeText(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
 
-function trabDatosValidos(){return st.tNombre&&st.tApellidos&&st.tDni&&st.tFechaNac&&st.tNacionalidad&&st.tDireccion&&st.tIban&&st.tEmail&&st.tTel}
-function empValida(){return st.eRazon&&st.eCif&&st.eDireccion&&st.eEmail&&st.eTel&&st.eFechaInicio&&st.eFechaFin&&st.condAceptadas}
-
-async function finalizarEmpresa(){
-  const r=calcular();
-  const expNum='O2O-'+Math.floor(Math.random()*90000+10000);
-
-  // Mostrar pantalla de espera
-  document.getElementById('sim-c').innerHTML=`<div class="exito">
-    <div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div>
-    <div class="exito-title">Procesando su solicitud...</div>
-    <div class="exito-sub">Estamos preparando su solicitud. Un momento por favor.</div>
-  </div>`;
-
-  // Datos completos a enviar a Make
-  const payload={
-    expediente: expNum,
-    fecha_solicitud: new Date().toLocaleDateString('es-ES'),
-    // Trabajo
-    actividad: st.act.label,
-    regimen: st.act.regimen,
-    ubicacion: st.ubic.label,
-    dias: st.dias,
-    fecha_inicio: st.eFechaInicio,
-    fecha_fin: st.eFechaFin,
-    // Importes
-    cache_acordado: parseFloat(st.imp),
-    seguridad_social: r.ss,
-    comision_one2one: r.com,
-    irpf: r.irpf,
-    neto_artista: r.neto,
-    base_imponible: r.cache,
-    iva: r.iva,
-    total_factura: r.totalPromotor,
-    total_factura_centimos: Math.round(r.totalPromotor * 100),
-    // Empresa
-    empresa_razon_social: st.eRazon,
-    empresa_cif: st.eCif,
-    empresa_direccion: st.eDireccion,
-    empresa_email: st.eEmail,
-    empresa_telefono: st.eTel,
-    // Trabajador
-    modo_datos_trabajador: st.modoTrabajador,
-    trabajador_email: st.tEmail||'',
-    trabajador_nombre: st.tNombre||'',
-    trabajador_apellidos: st.tApellidos||'',
-    trabajador_dni: st.tDni||'',
-    trabajador_fecha_nacimiento: st.tFechaNac||'',
-    trabajador_nacionalidad: st.tNacionalidad||'',
-    trabajador_direccion: st.tDireccion||'',
-    trabajador_naf: st.tNaf||'',
-    trabajador_iban: st.tIban||'',
-    trabajador_telefono: st.tTel||'',
-  };
-
-  try {
-    await fetch('https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
-
-    const modoTexto=st.modoTrabajador==='email'
-      ?`Le enviaremos un formulario a <strong>${st.tEmail}</strong> para que complete sus datos personales.`
-      :`Los datos del trabajador ya han sido facilitados.`;
-
-    document.getElementById('sim-c').innerHTML=`<div class="exito">
-      <div class="exito-icon">✓</div>
-      <div class="exito-title">Solicitud recibida</div>
-      <div class="exito-sub">Hemos recibido su solicitud. En breve recibirá un email en <strong>${st.eEmail}</strong> con el enlace de pago y el importe exacto. ${modoTexto}</div>
-      <div class="exito-exp">Nº de expediente: ${expNum}</div>
-      <p class="exito-note">En cuanto confirme el pago tramitamos el alta con la máxima agilidad.</p>
-    </div>`;
-  } catch(err){
-    document.getElementById('sim-c').innerHTML=`<div class="exito">
-      <div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div>
-      <div class="exito-title">Error de conexión</div>
-      <div class="exito-sub">No hemos podido procesar su solicitud. Por favor contáctenos directamente en <strong>info@one2onepro.es</strong> o por WhatsApp.</div>
-    </div>`;
-  }
-}
-
-/* ─── FLUJO TRABAJADOR ─── */
-function _renderTrabajadorSimulador(){
-  const c=document.getElementById('sim-c');
-  const STEPS=4;
-  if(st.step===0){
-    c.innerHTML=`${prog(STEPS)}<p class="sim-meta">Paso 1 de 4</p><p class="sim-q">¿Qué tipo de trabajo va a realizar?</p><p class="sim-hint">Seleccione la opción que mejor describe su actividad.</p>${oGrid(ACTS,'act')}<button class="btn-n" onclick="next()" ${!st.act?'disabled':''}>Continuar</button>`;
-  } else if(st.step===1){
-    c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</button><p class="sim-meta">Paso 2 de 4</p><p class="sim-q">¿Dónde se realiza el trabajo?</p><p class="sim-hint">Afecta a la cobertura por accidentes laborales.</p>${oGrid(UBICS,'ubic')}<button class="btn-n" onclick="next()" ${!st.ubic?'disabled':''}>Continuar</button>`;
-  } else if(st.step===2){
-    c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</button><p class="sim-meta">Paso 3 de 4</p><p class="sim-q">¿Cuál es el caché acordado con el promotor?</p><p class="sim-hint">El importe total que el promotor te va a pagar. Verás lo que cobrarás tú en limpio.</p>
-    <div class="inp-row">
-      <div class="inp-f hp"><label>Caché acordado (€)</label><div class="wr"><span class="pre">€</span><input class="grande" type="number" placeholder="0" value="${st.imp}" min="1" id="ii" oninput="st.imp=this.value;rBtn('bt2',()=>st.imp&&st.dias)"></div></div>
-      <div class="inp-f"><label>Días de trabajo</label><input class="grande" type="number" placeholder="0" value="${st.dias}" min="1" max="365" id="id" oninput="st.dias=this.value;rBtn('bt2',()=>st.imp&&st.dias)"></div>
-    </div>
-    <button class="btn-n" id="bt2" onclick="next()" ${!(st.imp&&st.dias)?'disabled':''}>Ver lo que cobro</button>`;
-  } else if(st.step===3){
-    const r=calcular();
-    c.innerHTML=`${prog(STEPS)}<button class="btn-b" onclick="back()">← Volver</button>
-    <div class="res">
-      <div class="res-tags"><span class="res-tag">${st.act.label}</span><span class="res-tag">${st.ubic.label}</span><span class="res-tag">${r.dias} día${r.dias>1?'s':''}</span><button class="res-edit" onclick="st.step=0;renderSim()">Modificar</button></div>
-      <span class="regimen-badge">${r.esA?'Régimen Especial de Artistas':'Régimen General'}</span>
-      <div class="res-trab-cobras"><div class="rtc-label">Estimación de lo que recibirás</div><div class="rtc-val">${fmt(r.neto)}</div><div class="rtc-sub">Estimación · ${r.dias} día${r.dias>1?'s':''} · Régimen Especial Artistas</div></div>
-      <div class="res-trab-info">
-        <div class="rti-row"><span class="rti-l">Caché acordado con el promotor</span><span class="rti-v">${fmt(r.cache)}</span></div>
-        <div class="rti-row"><span class="rti-l">Seguridad Social</span><span class="rti-v">-${fmt(r.ss)}</span></div>
-        <div class="rti-row"><span class="rti-l">Comisión One2One Pro (10%)</span><span class="rti-v">-${fmt(r.com)}</span></div>
-        <div class="rti-row"><span class="rti-l">IRPF retenido (15%)</span><span class="rti-v">-${fmt(r.irpf)}</span></div>
-        <div class="rti-row"><span class="rti-l" style="font-weight:600">Lo que recibirás</span><span class="rti-v" style="font-size:16px;font-weight:700;color:var(--verde)">${fmt(r.neto)}</span></div>
-      </div>
-      <div class="res-trab-aviso">Cálculo orientativo basado en las bases de cotización vigentes. El importe final puede variar ligeramente según la liquidación de la SS.</div>
-    </div>
-    <p class="sim-meta" style="margin-top:16px;margin-bottom:10px">Paso 4 de 4 — Sus datos</p>
-    <p class="sim-hint">¿Cómo prefiere facilitar sus datos personales?</p>
-    <div class="bifurcacion">
-      <div class="bif-card ${st.modoTrabajador==='ahora'?'sel':''}" onclick="st.modoTrabajador='ahora';renderSim()">
-        <span class="bif-card-icon">✎</span>
-        <div class="bif-card-title">Los facilito yo ahora</div>
-        <div class="bif-card-desc">Introduzco mis datos para que el enlace que envíe a la empresa ya llegue completo.</div>
-      </div>
-      <div class="bif-card ${st.modoTrabajador==='empresa'?'sel':''}" onclick="st.modoTrabajador='empresa';renderSim()">
-        <span class="bif-card-icon">🏢</span>
-        <div class="bif-card-title">La empresa los tiene y los introduce</div>
-        <div class="bif-card-desc">Ya le he dado mis datos a la empresa y prefiero que los rellene ella al tramitar el alta.</div>
-      </div>
-    </div>
-    ${st.modoTrabajador==='ahora'?`
-    <div class="form-section">
-      <div class="form-section-title">Sus datos personales</div>
-      <div class="form-grid">
-        <div class="form-field"><label>Nombre</label><input type="text" placeholder="Su nombre" value="${st.tNombre}" oninput="st.tNombre=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>Apellidos</label><input type="text" placeholder="Sus apellidos" value="${st.tApellidos}" oninput="st.tApellidos=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>DNI / NIE</label><input type="text" placeholder="12345678A" value="${st.tDni}" oninput="st.tDni=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>Fecha de nacimiento</label><input type="date" value="${st.tFechaNac}" oninput="st.tFechaNac=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>Nacionalidad</label><input type="text" placeholder="Española" value="${st.tNacionalidad}" oninput="st.tNacionalidad=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>Nº Afiliación SS (NAF)</label><input type="text" placeholder="Opcional" value="${st.tNaf}" oninput="st.tNaf=this.value"></div>
-        <div class="form-field full"><label>Dirección completa</label><input type="text" placeholder="Calle, número, municipio, provincia, CP" value="${st.tDireccion}" oninput="st.tDireccion=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>IBAN</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" value="${st.tIban}" oninput="st.tIban=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>Email</label><input type="email" placeholder="su@email.com" value="${st.tEmail}" oninput="st.tEmail=this.value;rBtn('bt3',trabDatosValidos)"></div>
-        <div class="form-field"><label>Teléfono</label><input type="tel" placeholder="+34 600 000 000" value="${st.tTel}" oninput="st.tTel=this.value;rBtn('bt3',trabDatosValidos)"></div>
-      </div>
-    </div>
-    <button class="btn-n" id="bt3" onclick="generarEnlace()" ${!trabDatosValidos()?'disabled':''}>Generar presupuesto para la empresa →</button>
-    <p class="legal">Sus datos se usan exclusivamente para tramitar el alta. Nunca se ceden a terceros.</p>`
-    :st.modoTrabajador==='empresa'?`
-    <div style="background:#fff;border:1px solid var(--gris-borde);padding:16px;margin-bottom:8px;font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6">
-      De acuerdo. El promotor introducirá tus datos al tramitar el alta. Asegúrate de haberle facilitado: <strong>nombre completo, DNI/NIE, fecha de nacimiento, nacionalidad, dirección, IBAN y número de afiliación a la SS</strong>.
-    </div>
-    <button class="btn-n" onclick="generarEnlaceSinDatos()">Generar presupuesto para la empresa →</button>`
-    :'<p class="legal" style="margin-top:8px">Seleccione una opción para continuar</p>'}`;
-  }
-}
-
-function generarEnlace(){
-  const r=calcular();
-  const msg=`Hola, te envío el presupuesto para tramitar mi alta a través de One2One Pro.\n\nActividad: ${st.act.label}\nImporte que cobro: ${fmt(r.imp)}\nDías: ${r.dias}\n\nMis datos ya están incluidos en el enlace. Solo tienes que añadir los datos de tu empresa, confirmar que es un trabajo puntual y pagar:\nhttps://one2onepro.es/?ref=presupuesto`;
-  mostrarCompartir(r,msg,'Mis datos ya están incluidos. La empresa solo tiene que añadir los suyos y pagar.');
-}
-
-function generarEnlaceSinDatos(){
-  const r=calcular();
-  const msg=`Hola, te envío el presupuesto para tramitar mi alta a través de One2One Pro.\n\nActividad: ${st.act.label}\nImporte que cobro: ${fmt(r.imp)}\nDías: ${r.dias}\n\nAl entrar al enlace necesitarás introducir mis datos personales (te los he facilitado por separado) y los de tu empresa:\nhttps://one2onepro.es/?ref=presupuesto`;
-  mostrarCompartir(r,msg,'La empresa deberá introducir tanto sus datos como los del trabajador al tramitar.');
-}
-
-function mostrarCompartir(r,msg,nota){
-  document.getElementById('sim-c').innerHTML=`<div class="res" style="animation:ru .3s ease">
-    <div class="res-trab-cobras" style="margin-bottom:8px">
-      <div class="rtc-label">Su presupuesto está listo</div>
-      <div class="rtc-val">${fmt(r.imp)}</div>
-      <div class="rtc-sub">Usted cobra · ${r.dias} día${r.dias>1?'s':''} · ${st.act.label}</div>
-    </div>
-    <div style="background:#fff;border:1px solid var(--gris-borde);padding:14px;margin-bottom:12px;font-size:12px;color:var(--gris-texto);font-weight:300;line-height:1.6">${nota}</div>
-    <div class="compartir-panel">
-      <div class="cp-title">Enviar a la empresa</div>
-      <div class="cp-btns">
-        <button class="cp-btn" onclick="compartirWA('${encodeURIComponent(msg)}')">
-          <div class="cp-btn-icon wa">W</div>
-          <div class="cp-btn-text"><strong>Enviar por WhatsApp</strong><span>Abre WhatsApp con el mensaje ya redactado</span></div>
-        </button>
-        <button class="cp-btn" onclick="compartirEmail('${encodeURIComponent(msg)}')">
-          <div class="cp-btn-icon em">@</div>
-          <div class="cp-btn-text"><strong>Enviar por email</strong><span>Abre su cliente de correo con el mensaje</span></div>
-        </button>
-        <button class="cp-btn" id="btn-copiar" onclick="copiarEnlace()">
-          <div class="cp-btn-icon lk">URL</div>
-          <div class="cp-btn-text"><strong>Copiar enlace</strong><span>Copia el enlace al portapapeles</span></div>
-        </button>
-      </div>
-    </div>
-    <p class="legal">Asegúrate de haber hablado con el promotor sobre el caché acordado. El promotor recibirá el enlace de pago y decidirá si procede.</p>
-  </div>`;
-}
-
-function compartirWA(msg){window.open(`https://wa.me/?text=${msg}`,'_blank')}
-function compartirEmail(msg){window.open(`mailto:?subject=Presupuesto One2One Pro&body=${msg}`,'_blank')}
-function copiarEnlace(){
-  navigator.clipboard.writeText('https://one2onepro.es/?ref=presupuesto').then(()=>{
-    const btn=document.getElementById('btn-copiar');
-    if(btn){btn.querySelector('strong').textContent='¡Enlace copiado!';setTimeout(()=>{if(btn)btn.querySelector('strong').textContent='Copiar enlace'},2000)}
-  })
-}
-
-/* ========================================================================
-   LOGIN OBLIGATORIO PARA ARTISTA / TÉCNICO — auth + perfil + dashboard
-   ======================================================================== */
+/* ──────────────────────────────────────────────────────────────────
+   AUTH + PERFIL + DASHBOARD + EXPEDIENTE — artista o promotor/empresa
+   Sin login no hay nada. La cuenta se decide al registrarse (artista
+   o empresa). El expediente es un flujo unificado con datos divergentes
+   en el paso 3 según el tipo de cuenta.
+   ────────────────────────────────────────────────────────────────── */
 const PROVINCIAS_ES=['Álava','Albacete','Alicante','Almería','Asturias','Ávila','Badajoz','Barcelona','Burgos','Cáceres','Cádiz','Cantabria','Castellón','Ciudad Real','Córdoba','A Coruña','Cuenca','Girona','Granada','Guadalajara','Gipuzkoa','Huelva','Huesca','Illes Balears','Jaén','León','Lleida','Lugo','Madrid','Málaga','Murcia','Navarra','Ourense','Palencia','Las Palmas','Pontevedra','La Rioja','Salamanca','Santa Cruz de Tenerife','Segovia','Sevilla','Soria','Tarragona','Teruel','Toledo','Valencia','Valladolid','Bizkaia','Zamora','Zaragoza','Ceuta','Melilla'];
 const TIPOS_VIA=['Calle','Avenida','Plaza','Paseo','Carretera','Ronda','Travesía','Camino','Pasaje','Glorieta','Vía','Bulevar','Polígono','Urbanización'];
-/* NOTA: el perfil del artista NO debe enviarse al webhook de empresa.
-   Solo el flujo de empresa (renderEmpresa) usa el webhook de pago.
-   Cuando exista un escenario de Make específico para el perfil del
-   artista, sustituir esta constante por la URL real y reactivar el
-   fetch comentado más abajo en submitArtProfile(). */
-const ART_WEBHOOK='';
 
-let artistAuth={view:'login',form:{},error:'',expedienteOpen:false};
+let artistAuth={view:'login',form:{},error:'',expedienteOpen:false,expedienteResult:null};
 
+/* ─── Almacén local ─── */
 function aGetUsers(){try{return JSON.parse(localStorage.getItem('o2o_users')||'{}')}catch(e){return{}}}
 function aSaveUsers(u){localStorage.setItem('o2o_users',JSON.stringify(u))}
 function aGetSessionEmail(){return localStorage.getItem('o2o_session')||null}
@@ -1082,12 +822,78 @@ function aSetSession(email){localStorage.setItem('o2o_session',email)}
 function aClearSession(){localStorage.removeItem('o2o_session')}
 function aGetCurrentUser(){const e=aGetSessionEmail();if(!e)return null;const u=aGetUsers();return u[e]?Object.assign({email:e},u[e]):null;}
 function aUpdateUser(email,patch){const u=aGetUsers();if(!u[email])return;u[email]=Object.assign({},u[email],patch);aSaveUsers(u);}
-function aEscape(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
-function aSwitchView(v){artistAuth.view=v;artistAuth.error='';renderTrabajador();}
+function aEscape(s){return aEscapeText(s);}
+
+/* ─── Validaciones de campos ─── */
+function aFormatIban(val){let clean=(val||'').replace(/\s/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'').substring(0,24);return clean.replace(/(.{4})/g,'$1 ').trim();}
+function aValidIbanES(v){return /^ES\d{22}$/.test((v||'').replace(/\s/g,'').toUpperCase());}
+function aValidDniNie(v){v=(v||'').toUpperCase();return /^\d{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(v)||/^[XYZ]\d{7}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(v);}
+function aValidTelES(v){return /^(\+34)?[6789]\d{8}$/.test((v||'').trim().replace(/\s/g,''));}
+function aValidEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((v||'').trim());}
+function aValidCifDniNie(v){v=(v||'').trim().toUpperCase();return /^[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]$/.test(v)||/^\d{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(v)||/^[XYZ]\d{7}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(v);}
+
+/* ─── Validaciones de fecha ─── */
+function aToday(){const d=new Date();d.setHours(0,0,0,0);return d;}
+function aParseDate(v){if(!v)return null;const d=new Date(v+'T00:00:00');return isNaN(d)?null:d;}
+function aFechaNacError(value){
+  const d=aParseDate(value);
+  if(!d)return 'Indica tu fecha de nacimiento.';
+  const today=aToday();
+  let age=today.getFullYear()-d.getFullYear();
+  const m=today.getMonth()-d.getMonth();
+  if(m<0||(m===0&&today.getDate()<d.getDate()))age--;
+  if(age<16)return 'Debes tener al menos 16 años.';
+  if(age>80)return 'La edad máxima permitida es 80 años.';
+  return null;
+}
+function aFechaCaducidadError(value){
+  const d=aParseDate(value);
+  if(!d)return 'Indica la fecha de caducidad.';
+  if(d<aToday())return 'Tu documento ha caducado.';
+  return null;
+}
+function aFechaExpedienteError(value){
+  const d=aParseDate(value);
+  if(!d)return 'Indica la fecha.';
+  const min=aToday();min.setDate(min.getDate()-7);
+  if(d<min)return 'La fecha no puede ser anterior a 7 días.';
+  return null;
+}
+function aFechaFinError(inicio,fin){
+  const di=aParseDate(inicio),df=aParseDate(fin);
+  if(!df)return 'Indica la fecha de fin.';
+  const expErr=aFechaExpedienteError(fin);
+  if(expErr)return expErr;
+  if(di&&df<di)return 'La fecha fin no puede ser anterior a la fecha inicio.';
+  return null;
+}
+
+function aShowFieldError(input,msg){
+  if(!input)return;
+  input.classList.toggle('invalid',!!msg);
+  input.classList.toggle('valid',!msg&&(input.value||'').length>0);
+  let next=input.parentElement?input.parentElement.querySelector('.field-error'):null;
+  if(next){
+    if(msg)next.textContent=msg;
+    next.classList.toggle('show',!!msg);
+  }
+}
+
+function aHandleFile(event,key){
+  const file=event.target.files[0];if(!file)return;
+  if(!['image/jpeg','image/png'].includes(file.type)){artistAuth.error='El archivo debe ser JPG o PNG.';renderSim();return;}
+  if(file.size>5*1024*1024){artistAuth.error='El archivo no puede superar 5 MB.';renderSim();return;}
+  const reader=new FileReader();
+  reader.onload=function(e){artistAuth.form[key]={name:file.name,size:file.size,type:file.type,data:e.target.result};renderSim();};
+  reader.readAsDataURL(file);
+}
+
+/* ─── Auth chrome ─── */
 function aTabs(active){return `<div class="auth-tabs">
 <button class="auth-tab ${active==='login'?'active':''}" onclick="aSwitchView('login')">Iniciar sesión</button>
 <button class="auth-tab ${active==='register'?'active':''}" onclick="aSwitchView('register')">Crear cuenta</button>
 </div>`;}
+function aSwitchView(v){artistAuth.view=v;artistAuth.error='';renderSim();}
 function aUpdatePassStrength(val){
   const el=document.getElementById('art-pass-strength');
   if(!el)return;
@@ -1096,103 +902,82 @@ function aUpdatePassStrength(val){
   else{el.className='password-strength weak';el.textContent='Mínimo 8 caracteres ('+val.length+'/8)';}
 }
 
-/* === Dispatcher de auth: sustituye al renderTrabajador original === */
-function renderTrabajador(){
-  const user=aGetCurrentUser();
-  if(!user){
-    if(artistAuth.view==='register')return renderArtRegister();
-    return renderArtLogin();
-  }
-  if(!user.verified)return renderArtPendingVerification(user);
-  if(!user.profile)return renderArtProfileForm(user);
-  if(user.profileStatus!=='validado')return renderArtProfileReview(user);
-  if(!artistAuth.expedienteOpen)return renderArtDashboard(user);
-  /* Usuario validado y dentro de un expediente: ejecutar el simulador original e inyectar un botón "Volver al panel" en el paso 0 */
-  _renderTrabajadorSimulador();
-  if(st.step===0){
-    const c=document.getElementById('sim-c');
-    if(c&&!c.querySelector('[data-back-dash]')){
-      const b=document.createElement('button');
-      b.className='btn-b';b.setAttribute('data-back-dash','1');b.textContent='← Volver al panel';
-      b.onclick=function(){artistAuth.expedienteOpen=false;renderTrabajador();};
-      c.insertBefore(b,c.firstChild);
-    }
-  }
-}
-
-function renderArtLogin(){
+/* ─── Pantallas de Login / Registro ─── */
+function renderAuthLogin(){
   const c=document.getElementById('sim-c');
   const f=artistAuth.form;
+  const isArt=perfil==='artista';
   c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">Soy artista o técnico</p>
+<p class="auth-eyebrow">${isArt?'Soy artista o técnico':'Soy promotor o empresa'}</p>
 <h2 class="auth-title">Accede a tu <em>cuenta</em></h2>
-<p class="auth-lead">Para crear y gestionar tus expedientes necesitas una cuenta verificada. Tus datos quedan protegidos y solo se utilizan para la tramitación legal.</p>
+<p class="auth-lead">${isArt?'Para gestionar tus altas y enviar presupuestos a promotores necesitas una cuenta verificada.':'Para contratar artistas con factura legal necesitas una cuenta de empresa verificada.'}</p>
 </div>
 ${aTabs('login')}
 ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:''}
 <div class="auth-card">
 <div class="form-grid">
 <div class="form-field full"><label>Email</label><input type="email" id="art-login-email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
-<div class="form-field full"><label>Contraseña</label><input type="password" id="art-login-pass" placeholder="Tu contraseña" autocomplete="current-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value" onkeydown="if(event.key==='Enter')doArtLogin()"></div>
+<div class="form-field full"><label>Contraseña</label><input type="password" id="art-login-pass" placeholder="Tu contraseña" autocomplete="current-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value" onkeydown="if(event.key==='Enter')doLogin()"></div>
 </div>
-<button class="btn-verde-full" onclick="doArtLogin()">Iniciar sesión</button>
+<button class="btn-verde-full" onclick="doLogin()">Iniciar sesión</button>
 </div>
-<p class="auth-footer">¿Aún no tienes cuenta? <button class="auth-link" onclick="aSwitchView('register')">Crear cuenta</button></p>`;
+<p class="auth-footer">¿Aún no tienes cuenta? <button class="auth-link" onclick="aSwitchView('register')">Crear cuenta de ${isArt?'artista':'empresa'}</button></p>`;
   artistAuth.error='';
 }
 
-function renderArtRegister(){
+function renderAuthRegister(){
   const c=document.getElementById('sim-c');
   const f=artistAuth.form;
+  const isArt=perfil==='artista';
   c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">Soy artista o técnico</p>
+<p class="auth-eyebrow">${isArt?'Cuenta de artista o técnico':'Cuenta de promotor o empresa'}</p>
 <h2 class="auth-title">Crea tu <em>cuenta</em></h2>
-<p class="auth-lead">Regístrate para empezar a generar expedientes de alta para tus trabajos puntuales. El proceso es 100% legal y conforme a la normativa laboral española.</p>
+<p class="auth-lead">${isArt?'Regístrate como artista para gestionar tus altas y enviar presupuestos a tus promotores.':'Regístrate como promotor o empresa para contratar artistas con factura legal y alta en SS.'}</p>
 </div>
 ${aTabs('register')}
 ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:''}
 <div class="auth-card">
 <div class="form-grid">
-<div class="form-field full"><label>Nombre</label><input type="text" placeholder="Tu nombre" autocomplete="given-name" maxlength="80" value="${aEscape(f.nombre||'')}" oninput="artistAuth.form.nombre=this.value"></div>
+<div class="form-field full"><label>Nombre</label><input type="text" placeholder="${isArt?'Tu nombre':'Nombre de contacto'}" autocomplete="given-name" maxlength="80" value="${aEscape(f.nombre||'')}" oninput="artistAuth.form.nombre=this.value"></div>
 <div class="form-field full"><label>Email</label><input type="email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
-<div class="form-field full"><label>Contraseña</label><input type="password" id="art-reg-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value)" onkeydown="if(event.key==='Enter')doArtRegister()"><span id="art-pass-strength" class="password-strength"></span></div>
+<div class="form-field full"><label>Contraseña</label><input type="password" id="art-reg-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value)" onkeydown="if(event.key==='Enter')doRegister()"><span id="art-pass-strength" class="password-strength"></span></div>
 </div>
-<button class="btn-verde-full" onclick="doArtRegister()">Crear cuenta</button>
+<button class="btn-verde-full" onclick="doRegister()">Crear cuenta de ${isArt?'artista':'empresa'}</button>
 </div>
 <p class="auth-footer">¿Ya tienes cuenta? <button class="auth-link" onclick="aSwitchView('login')">Iniciar sesión</button></p>`;
   artistAuth.error='';
   if((f.pass||'').length>0)setTimeout(()=>aUpdatePassStrength(f.pass),0);
 }
 
-function doArtLogin(){
+function doLogin(){
   const f=artistAuth.form||{};
   const email=(f.email||'').trim().toLowerCase();
   const pass=f.pass||'';
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){artistAuth.error='Introduce un email válido.';renderTrabajador();return;}
-  if(!pass){artistAuth.error='Introduce tu contraseña.';renderTrabajador();return;}
+  if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderSim();return;}
+  if(!pass){artistAuth.error='Introduce tu contraseña.';renderSim();return;}
   const users=aGetUsers();
-  if(!users[email]){artistAuth.error='No existe ninguna cuenta con ese email. Crea una cuenta primero.';renderTrabajador();return;}
-  if(users[email].password!==pass){artistAuth.error='Contraseña incorrecta.';renderTrabajador();return;}
-  aSetSession(email);artistAuth.form={};artistAuth.error='';artistAuth.view='login';
-  renderTrabajador();
+  if(!users[email]){artistAuth.error='No existe ninguna cuenta con ese email. Crea una cuenta primero.';renderSim();return;}
+  if(users[email].password!==pass){artistAuth.error='Contraseña incorrecta.';renderSim();return;}
+  aSetSession(email);artistAuth.form={};artistAuth.error='';artistAuth.view='login';artistAuth.expedienteOpen=false;
+  renderPasos();updateChromeUI();renderSim();
 }
 
-function doArtRegister(){
+function doRegister(){
   const f=artistAuth.form||{};
   const nombre=(f.nombre||'').trim();
   const email=(f.email||'').trim().toLowerCase();
   const pass=f.pass||'';
-  if(nombre.length<2){artistAuth.error='Indica tu nombre.';renderTrabajador();return;}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){artistAuth.error='Introduce un email válido.';renderTrabajador();return;}
-  if(pass.length<8){artistAuth.error='La contraseña debe tener al menos 8 caracteres.';renderTrabajador();return;}
+  if(nombre.length<2){artistAuth.error='Indica tu nombre.';renderSim();return;}
+  if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderSim();return;}
+  if(pass.length<8){artistAuth.error='La contraseña debe tener al menos 8 caracteres.';renderSim();return;}
   const users=aGetUsers();
-  if(users[email]){artistAuth.error='Ya existe una cuenta con ese email. Inicia sesión.';renderTrabajador();return;}
-  users[email]={nombre:nombre,password:pass,verified:false,createdAt:new Date().toISOString(),profile:null,profileStatus:'pendiente'};
-  aSaveUsers(users);aSetSession(email);artistAuth.form={};artistAuth.error='';artistAuth.view='login';
-  renderTrabajador();
+  if(users[email]){artistAuth.error='Ya existe una cuenta con ese email. Inicia sesión.';renderSim();return;}
+  users[email]={nombre:nombre,password:pass,accountType:perfil,verified:false,createdAt:new Date().toISOString(),profile:null,profileStatus:'pendiente'};
+  aSaveUsers(users);aSetSession(email);artistAuth.form={};artistAuth.error='';artistAuth.view='login';artistAuth.expedienteOpen=false;
+  renderPasos();updateChromeUI();renderSim();
 }
 
-function renderArtPendingVerification(user){
+function renderPendingVerification(user){
   const c=document.getElementById('sim-c');
   c.innerHTML=`<div class="auth-hero">
 <p class="auth-eyebrow">Verificación pendiente</p>
@@ -1201,12 +986,20 @@ function renderArtPendingVerification(user){
 <div class="auth-msg warning"><strong>Revisa tu email para verificar tu cuenta.</strong><br>Hemos enviado un mensaje a <strong>${aEscape(user.email)}</strong>. Sin verificación no puedes continuar ni crear expedientes.</div>
 <div class="auth-msg info">Si no encuentras el correo, revisa tu carpeta de spam o promociones. El enlace de verificación caduca a las 24 horas.</div>
 <div class="dev-tools">Modo demo (sin backend de email): <button onclick="aSimularVerificacion()">Simular click en email de verificación</button></div>
-<button class="logout-link" onclick="doArtLogout()">Cerrar sesión</button>`;
+<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
 }
 
-function aSimularVerificacion(){const u=aGetCurrentUser();if(!u)return;aUpdateUser(u.email,{verified:true,verifiedAt:new Date().toISOString()});renderTrabajador();}
-function doArtLogout(){aClearSession();artistAuth.view='login';artistAuth.form={};artistAuth.error='';artistAuth.expedienteOpen=false;renderTrabajador();}
+function aSimularVerificacion(){const u=aGetCurrentUser();if(!u)return;aUpdateUser(u.email,{verified:true,verifiedAt:new Date().toISOString()});renderSim();}
+function doLogout(){
+  const u=aGetCurrentUser();
+  if(u)perfil=u.accountType;
+  aClearSession();
+  artistAuth={view:'login',form:{},error:'',expedienteOpen:false,expedienteResult:null};
+  resetExpedienteState();
+  renderPasos();updateChromeUI();renderSim();
+}
 
+/* ─── PERFIL ARTISTA ─── */
 function renderArtProfileForm(user){
   const c=document.getElementById('sim-c');
   const p=artistAuth.form;
@@ -1219,7 +1012,7 @@ function renderArtProfileForm(user){
   const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${p.tipoVia===v?'selected':''}>${v}</option>`).join('');
   const fileLabel=(f,defaultText)=>f?`<span class="fu-title">✓ ${aEscape(f.name)}</span><span class="fu-sub">${(f.size/1024).toFixed(0)} KB · cambiar archivo</span>`:`<span class="fu-title">${defaultText}</span><span class="fu-sub">JPG o PNG · máx 5MB</span>`;
   c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">Paso 2 de 3 — Completa tu perfil</p>
+<p class="auth-eyebrow">Completa tu perfil de artista</p>
 <h2 class="auth-title">Datos personales y <em>documentación</em></h2>
 <p class="auth-lead">Necesitamos estos datos para tramitar tus altas en la Seguridad Social. Sin perfil completo y verificado no podrás crear expedientes.</p>
 </div>
@@ -1229,8 +1022,8 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 <div class="form-grid">
 <div class="form-field"><label>Nombre *</label><input type="text" placeholder="Nombre" maxlength="50" value="${aEscape(p.nombre||user.nombre||'')}" oninput="artistAuth.form.nombre=this.value"></div>
 <div class="form-field"><label>Apellidos *</label><input type="text" placeholder="Apellidos" maxlength="80" value="${aEscape(p.apellidos||'')}" oninput="artistAuth.form.apellidos=this.value"></div>
-<div class="form-field"><label>Teléfono *</label><input type="tel" placeholder="+34 600 000 000" maxlength="16" value="${aEscape(p.telefono||'')}" oninput="artistAuth.form.telefono=this.value"></div>
-<div class="form-field"><label>Fecha de nacimiento *</label><input type="date" value="${aEscape(p.fechaNac||'')}" oninput="artistAuth.form.fechaNac=this.value"></div>
+<div class="form-field"><label>Teléfono *</label><input type="tel" placeholder="+34 600 000 000" maxlength="16" value="${aEscape(p.telefono||'')}" oninput="artistAuth.form.telefono=this.value" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido (ej: +34 6XXXXXXXX)')"><div class="field-error"></div></div>
+<div class="form-field"><label>Fecha de nacimiento *</label><input type="date" value="${aEscape(p.fechaNac||'')}" oninput="artistAuth.form.fechaNac=this.value" onblur="aShowFieldError(this,aFechaNacError(this.value))"><div class="field-error"></div></div>
 <div class="form-field"><label>Sexo *</label><select onchange="artistAuth.form.sexo=this.value"><option value="">Seleccionar...</option><option value="M" ${p.sexo==='M'?'selected':''}>Hombre</option><option value="F" ${p.sexo==='F'?'selected':''}>Mujer</option><option value="X" ${p.sexo==='X'?'selected':''}>No binario / Otro</option></select></div>
 <div class="form-field"><label>Nacionalidad *</label><input type="text" placeholder="Española" maxlength="50" value="${aEscape(p.nacionalidad||'')}" oninput="artistAuth.form.nacionalidad=this.value"></div>
 </div>
@@ -1239,8 +1032,8 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 <div class="form-section-title">Documento identificativo</div>
 <div class="form-grid">
 <div class="form-field"><label>Tipo de documento *</label><select onchange="artistAuth.form.tipoDoc=this.value"><option value="DNI" ${p.tipoDoc==='DNI'?'selected':''}>DNI</option><option value="NIE" ${p.tipoDoc==='NIE'?'selected':''}>NIE</option></select></div>
-<div class="form-field"><label>Número de documento *</label><input type="text" placeholder="12345678A / X1234567A" maxlength="9" value="${aEscape(p.numDoc||'')}" oninput="artistAuth.form.numDoc=this.value.toUpperCase();this.value=artistAuth.form.numDoc"></div>
-<div class="form-field full"><label>Fecha de caducidad *</label><input type="date" value="${aEscape(p.fechaCaducidad||'')}" oninput="artistAuth.form.fechaCaducidad=this.value"></div>
+<div class="form-field"><label>Número de documento *</label><input type="text" placeholder="12345678A / X1234567A" maxlength="9" value="${aEscape(p.numDoc||'')}" oninput="artistAuth.form.numDoc=this.value.toUpperCase();this.value=artistAuth.form.numDoc" onblur="aShowFieldError(this,aValidDniNie(this.value)?null:'DNI o NIE inválido')"><div class="field-error"></div></div>
+<div class="form-field full"><label>Fecha de caducidad *</label><input type="date" value="${aEscape(p.fechaCaducidad||'')}" oninput="artistAuth.form.fechaCaducidad=this.value" onblur="aShowFieldError(this,aFechaCaducidadError(this.value))"><div class="field-error"></div></div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
 <div class="file-upload"><label class="file-upload-btn ${p.dniAnverso?'has-file':''}" for="art-dni-anverso">${fileLabel(p.dniAnverso,'📄 Foto DNI / NIE anverso *')}</label><input type="file" id="art-dni-anverso" accept="image/jpeg,image/png" onchange="aHandleFile(event,'dniAnverso')"></div>
@@ -1254,7 +1047,7 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 <div class="form-field"><label>Nombre de la vía *</label><input type="text" placeholder="Gran Vía" maxlength="120" value="${aEscape(p.calle||'')}" oninput="artistAuth.form.calle=this.value"></div>
 <div class="form-field"><label>Número *</label><input type="text" placeholder="15" maxlength="10" value="${aEscape(p.numero||'')}" oninput="artistAuth.form.numero=this.value"></div>
 <div class="form-field"><label>Piso / puerta (opcional)</label><input type="text" placeholder="3ºA" maxlength="20" value="${aEscape(p.piso||'')}" oninput="artistAuth.form.piso=this.value"></div>
-<div class="form-field"><label>Código Postal *</label><input type="text" placeholder="28001" maxlength="5" value="${aEscape(p.cp||'')}" oninput="artistAuth.form.cp=this.value.replace(/\\D/g,'').substring(0,5);this.value=artistAuth.form.cp"></div>
+<div class="form-field"><label>Código Postal *</label><input type="text" placeholder="28001" maxlength="5" value="${aEscape(p.cp||'')}" oninput="artistAuth.form.cp=this.value.replace(/\D/g,'').substring(0,5);this.value=artistAuth.form.cp"></div>
 <div class="form-field"><label>Municipio *</label><input type="text" placeholder="Madrid" maxlength="80" value="${aEscape(p.municipio||'')}" oninput="artistAuth.form.municipio=this.value"></div>
 <div class="form-field full"><label>Provincia *</label><select class="prov-sel" onchange="artistAuth.form.provincia=this.value"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
 </div>
@@ -1262,41 +1055,27 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 <div class="form-section">
 <div class="form-section-title">Datos profesionales y bancarios</div>
 <div class="form-grid">
-<div class="form-field full"><label>IBAN *</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" maxlength="29" value="${aEscape(p.iban||'')}" oninput="artistAuth.form.iban=aFormatIban(this.value);this.value=artistAuth.form.iban"></div>
-<div class="form-field"><label>Nº Afiliación SS / NAF (opcional)</label><input type="text" placeholder="12 dígitos" maxlength="12" value="${aEscape(p.naf||'')}" oninput="artistAuth.form.naf=this.value.replace(/\\D/g,'').substring(0,12);this.value=artistAuth.form.naf"></div>
+<div class="form-field full"><label>IBAN *</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" maxlength="29" value="${aEscape(p.iban||'')}" oninput="artistAuth.form.iban=aFormatIban(this.value);this.value=artistAuth.form.iban" onblur="aShowFieldError(this,aValidIbanES(this.value)?null:'IBAN español inválido (ES + 22 dígitos)')"><div class="field-error"></div></div>
+<div class="form-field"><label>Nº Afiliación SS / NAF (opcional)</label><input type="text" placeholder="12 dígitos" maxlength="12" value="${aEscape(p.naf||'')}" oninput="artistAuth.form.naf=this.value.replace(/\D/g,'').substring(0,12);this.value=artistAuth.form.naf"></div>
 <div class="form-field"><label>Profesión artística *</label><input type="text" placeholder="DJ, músico, actor, técnico de sonido..." maxlength="80" value="${aEscape(p.profesion||'')}" oninput="artistAuth.form.profesion=this.value"></div>
 </div>
 </div>
 <button class="btn-verde-full" onclick="submitArtProfile()">Enviar perfil a revisión</button>
-<button class="logout-link" onclick="doArtLogout()">Cerrar sesión</button>`;
+<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
   artistAuth.error='';
 }
 
-function aFormatIban(val){let clean=(val||'').replace(/\s/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'').substring(0,24);return clean.replace(/(.{4})/g,'$1 ').trim();}
-function aValidIbanES(v){return /^ES\d{22}$/.test((v||'').replace(/\s/g,'').toUpperCase());}
-function aValidDniNie(v){v=(v||'').toUpperCase();return /^\d{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(v)||/^[XYZ]\d{7}[TRWAGMYFPDXBNJZSQVHLCKE]$/.test(v);}
-function aValidTelES(v){return /^(\+34)?[6789]\d{8}$/.test((v||'').trim().replace(/\s/g,''));}
-
-function aHandleFile(event,key){
-  const file=event.target.files[0];if(!file)return;
-  if(!['image/jpeg','image/png'].includes(file.type)){artistAuth.error='El archivo debe ser JPG o PNG.';renderTrabajador();return;}
-  if(file.size>5*1024*1024){artistAuth.error='El archivo no puede superar 5 MB.';renderTrabajador();return;}
-  const reader=new FileReader();
-  reader.onload=function(e){artistAuth.form[key]={name:file.name,size:file.size,type:file.type,data:e.target.result};renderTrabajador();};
-  reader.readAsDataURL(file);
-}
-
-function profileValido(){
+function profileArtValido(){
   const p=artistAuth.form||{};
   if(!p.nombre||p.nombre.trim().length<2)return 'Indica tu nombre.';
   if(!p.apellidos||p.apellidos.trim().length<2)return 'Indica tus apellidos.';
   if(!aValidTelES(p.telefono))return 'Introduce un teléfono español válido.';
-  if(!p.fechaNac)return 'Indica tu fecha de nacimiento.';
+  const errNac=aFechaNacError(p.fechaNac);if(errNac)return errNac;
   if(!p.sexo)return 'Selecciona el sexo.';
   if(!p.nacionalidad||p.nacionalidad.trim().length<2)return 'Indica tu nacionalidad.';
   if(!p.tipoDoc)return 'Selecciona el tipo de documento.';
   if(!aValidDniNie(p.numDoc))return 'El DNI/NIE no es válido.';
-  if(!p.fechaCaducidad)return 'Indica la fecha de caducidad del documento.';
+  const errCad=aFechaCaducidadError(p.fechaCaducidad);if(errCad)return errCad;
   if(!p.dniAnverso)return 'Sube la foto del DNI/NIE anverso.';
   if(!p.dniReverso)return 'Sube la foto del DNI/NIE reverso.';
   if(!p.tipoVia)return 'Selecciona el tipo de vía.';
@@ -1311,53 +1090,122 @@ function profileValido(){
 }
 
 function submitArtProfile(){
-  const err=profileValido();
-  if(err){artistAuth.error=err;renderTrabajador();const simEl=document.getElementById('sim');if(simEl)window.scrollTo({top:simEl.offsetTop,behavior:'smooth'});return;}
+  const err=profileArtValido();
+  if(err){artistAuth.error=err;renderSim();const simEl=document.getElementById('sim');if(simEl)window.scrollTo({top:simEl.offsetTop,behavior:'smooth'});return;}
   const user=aGetCurrentUser();if(!user)return;
   const p=artistAuth.form;
   const c=document.getElementById('sim-c');
   c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Guardando tu perfil...</div><div class="exito-sub">Un momento por favor.</div></div>`;
-  /* IMPORTANTE: el perfil del artista NO se envía a ningún webhook por ahora.
-     El webhook ...9h9rjffs4t6tl2yw789d0cnihf8mqjku es exclusivo del flujo
-     de empresa (pago del promotor). Cuando exista un escenario de Make
-     específico para validar perfiles, fijar ART_WEBHOOK y reactivar el
-     bloque siguiente:
-
-       const direccion=[p.tipoVia,p.calle,p.numero,p.piso].filter(Boolean).join(' ');
-       const payload={ tipo_envio:'perfil_artista', ...todos los campos del perfil... };
-       if(ART_WEBHOOK){
-         try{ await fetch(ART_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); }
-         catch(e){}
-       }
-  */
+  /* El perfil del artista NO se envía a ningún webhook. Stripe sólo se
+     dispara desde el flujo de empresa (pago del promotor). */
   const profileToStore=Object.assign({},p);
   if(profileToStore.dniAnverso)profileToStore.dniAnverso={name:profileToStore.dniAnverso.name,size:profileToStore.dniAnverso.size,type:profileToStore.dniAnverso.type};
   if(profileToStore.dniReverso)profileToStore.dniReverso={name:profileToStore.dniReverso.name,size:profileToStore.dniReverso.size,type:profileToStore.dniReverso.type};
   aUpdateUser(user.email,{profile:profileToStore,profileStatus:'en_revision',profileSubmittedAt:new Date().toISOString()});
   artistAuth.form={};artistAuth.error='';
-  renderTrabajador();
+  renderSim();
 }
 
-function renderArtProfileReview(user){
+/* ─── PERFIL EMPRESA ─── */
+function renderEmpresaProfileForm(user){
+  const c=document.getElementById('sim-c');
+  const p=artistAuth.form;
+  if(!p.tipoVia)p.tipoVia='Calle';
+  if(!p.provincia)p.provincia='';
+  const provOpts=PROVINCIAS_ES.map(pr=>`<option value="${pr}" ${p.provincia===pr?'selected':''}>${pr}</option>`).join('');
+  const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${p.tipoVia===v?'selected':''}>${v}</option>`).join('');
+  c.innerHTML=`<div class="auth-hero">
+<p class="auth-eyebrow">Completa tu perfil de empresa</p>
+<h2 class="auth-title">Datos de tu <em>empresa</em></h2>
+<p class="auth-lead">Necesitamos los datos fiscales de tu empresa para emitir facturas legales. Sin perfil completo y verificado no podrás crear expedientes.</p>
+</div>
+${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:''}
+<div class="form-section">
+<div class="form-section-title">Persona de contacto</div>
+<div class="form-grid">
+<div class="form-field"><label>Nombre de contacto *</label><input type="text" placeholder="Nombre y apellidos" maxlength="100" value="${aEscape(p.contacto||user.nombre||'')}" oninput="artistAuth.form.contacto=this.value"></div>
+<div class="form-field"><label>Teléfono *</label><input type="tel" placeholder="+34 600 000 000" maxlength="16" value="${aEscape(p.telefono||'')}" oninput="artistAuth.form.telefono=this.value" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido')"><div class="field-error"></div></div>
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">Identificación fiscal</div>
+<div class="form-grid">
+<div class="form-field"><label>Razón social *</label><input type="text" placeholder="Empresa S.L." maxlength="120" value="${aEscape(p.razonSocial||'')}" oninput="artistAuth.form.razonSocial=this.value"></div>
+<div class="form-field"><label>CIF *</label><input type="text" placeholder="B12345678 / 12345678A" maxlength="9" value="${aEscape(p.cif||'')}" oninput="artistAuth.form.cif=this.value.toUpperCase();this.value=artistAuth.form.cif" onblur="aShowFieldError(this,aValidCifDniNie(this.value)?null:'CIF, DNI o NIE inválido')"><div class="field-error"></div></div>
+<div class="form-field full"><label>Email de facturación *</label><input type="email" placeholder="facturacion@empresa.com" value="${aEscape(p.emailFact||'')}" oninput="artistAuth.form.emailFact=this.value.trim().toLowerCase()" onblur="aShowFieldError(this,aValidEmail(this.value)?null:'Email inválido')"><div class="field-error"></div></div>
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">Dirección fiscal</div>
+<div class="form-grid">
+<div class="form-field"><label>Tipo de vía *</label><select onchange="artistAuth.form.tipoVia=this.value">${viaOpts}</select></div>
+<div class="form-field"><label>Nombre de la vía *</label><input type="text" placeholder="Gran Vía" maxlength="120" value="${aEscape(p.calle||'')}" oninput="artistAuth.form.calle=this.value"></div>
+<div class="form-field"><label>Número *</label><input type="text" placeholder="15" maxlength="10" value="${aEscape(p.numero||'')}" oninput="artistAuth.form.numero=this.value"></div>
+<div class="form-field"><label>Piso / puerta (opcional)</label><input type="text" placeholder="3ºA" maxlength="20" value="${aEscape(p.piso||'')}" oninput="artistAuth.form.piso=this.value"></div>
+<div class="form-field"><label>Código Postal *</label><input type="text" placeholder="28001" maxlength="5" value="${aEscape(p.cp||'')}" oninput="artistAuth.form.cp=this.value.replace(/\D/g,'').substring(0,5);this.value=artistAuth.form.cp"></div>
+<div class="form-field"><label>Municipio *</label><input type="text" placeholder="Madrid" maxlength="80" value="${aEscape(p.municipio||'')}" oninput="artistAuth.form.municipio=this.value"></div>
+<div class="form-field full"><label>Provincia *</label><select class="prov-sel" onchange="artistAuth.form.provincia=this.value"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
+</div>
+</div>
+<button class="btn-verde-full" onclick="submitEmpresaProfile()">Enviar perfil a revisión</button>
+<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
+  artistAuth.error='';
+}
+
+function profileEmpresaValido(){
+  const p=artistAuth.form||{};
+  if(!p.contacto||p.contacto.trim().length<2)return 'Indica el nombre de contacto.';
+  if(!aValidTelES(p.telefono))return 'Introduce un teléfono español válido.';
+  if(!p.razonSocial||p.razonSocial.trim().length<2)return 'Indica la razón social.';
+  if(!aValidCifDniNie(p.cif))return 'CIF, DNI o NIE inválido.';
+  if(!aValidEmail(p.emailFact))return 'Introduce un email de facturación válido.';
+  if(!p.tipoVia)return 'Selecciona el tipo de vía.';
+  if(!p.calle||p.calle.trim().length<2)return 'Indica el nombre de la vía.';
+  if(!p.numero)return 'Indica el número.';
+  if(!/^\d{5}$/.test((p.cp||'').trim()))return 'El CP debe tener 5 dígitos.';
+  if(!p.municipio||p.municipio.trim().length<2)return 'Indica el municipio.';
+  if(!p.provincia)return 'Selecciona la provincia.';
+  return null;
+}
+
+function submitEmpresaProfile(){
+  const err=profileEmpresaValido();
+  if(err){artistAuth.error=err;renderSim();const simEl=document.getElementById('sim');if(simEl)window.scrollTo({top:simEl.offsetTop,behavior:'smooth'});return;}
+  const user=aGetCurrentUser();if(!user)return;
+  const p=artistAuth.form;
+  const c=document.getElementById('sim-c');
+  c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Guardando tu perfil...</div><div class="exito-sub">Un momento por favor.</div></div>`;
+  /* El perfil de empresa tampoco va al webhook — Stripe se dispara
+     sólo cuando se procede al pago en un expediente concreto. */
+  const profileToStore=Object.assign({},p);
+  aUpdateUser(user.email,{profile:profileToStore,profileStatus:'en_revision',profileSubmittedAt:new Date().toISOString()});
+  artistAuth.form={};artistAuth.error='';
+  renderSim();
+}
+
+/* ─── PERFIL EN REVISIÓN ─── */
+function renderProfileReview(user){
   const c=document.getElementById('sim-c');
   const submittedDate=user.profileSubmittedAt?new Date(user.profileSubmittedAt).toLocaleDateString('es-ES'):'';
+  const tipo=user.accountType==='empresa'?'empresa':'artista';
   c.innerHTML=`<div class="auth-hero">
 <p class="auth-eyebrow">Estado de tu cuenta</p>
 <h2 class="auth-title">Perfil en <em>revisión</em></h2>
 </div>
 <div class="dashboard-card">
 <div class="dashboard-welcome">Hola, <strong>${aEscape(user.nombre)}</strong></div>
-<div class="dashboard-sub">Tu perfil está siendo revisado por nuestro equipo.</div>
+<div class="dashboard-sub">Tu perfil de ${tipo} está siendo revisado por nuestro equipo.</div>
 <span class="status-badge revision">Perfil en revisión</span>
 </div>
 <div class="auth-msg info"><strong>Perfil en revisión.</strong><br>Hemos recibido tu documentación el ${submittedDate}. Estamos validando tu identidad y los datos aportados. Recibirás un email en cuanto esté validado.</div>
 <div class="auth-msg warning">Hasta que tu perfil esté validado <strong>no puedes crear expedientes</strong>. El proceso de validación suele tardar entre 24 y 48 horas laborables.</div>
 <div class="dev-tools">Modo demo (sin backoffice de validación): <button onclick="aSimularValidacion()">Simular validación manual</button></div>
-<button class="logout-link" onclick="doArtLogout()">Cerrar sesión</button>`;
+<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
 }
 
-function aSimularValidacion(){const u=aGetCurrentUser();if(!u)return;aUpdateUser(u.email,{profileStatus:'validado',profileValidatedAt:new Date().toISOString()});renderTrabajador();}
+function aSimularValidacion(){const u=aGetCurrentUser();if(!u)return;aUpdateUser(u.email,{profileStatus:'validado',profileValidatedAt:new Date().toISOString()});renderSim();}
 
+/* ─── DASHBOARDS ─── */
 function renderArtDashboard(user){
   const c=document.getElementById('sim-c');
   const p=user.profile||{};
@@ -1373,19 +1221,308 @@ function renderArtDashboard(user){
 </div>
 <div class="dashboard-card">
 <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:10px">Crea un nuevo expediente</div>
-<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Calcula el caché de un trabajo puntual y genera el presupuesto para el promotor que te contrata.</p>
-<button class="btn-verde-full" style="margin-top:0" onclick="aIrSimulador()">+ Nuevo expediente</button>
+<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Define el caché de un trabajo puntual y genera el enlace de pago para enviárselo al promotor.</p>
+<button class="btn-verde-full" style="margin-top:0" onclick="iniciarExpediente()">+ Nuevo expediente</button>
 </div>
-<button class="logout-link" onclick="doArtLogout()">Cerrar sesión</button>`;
+<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
 }
 
-function aIrSimulador(){
-  artistAuth.expedienteOpen=true;
-  st.step=0;st.act=null;st.ubic=null;st.imp='';st.dias='';st.modoTrabajador=null;
-  renderTrabajador();
+function renderEmpresaDashboard(user){
+  const c=document.getElementById('sim-c');
+  const p=user.profile||{};
+  c.innerHTML=`<div class="auth-hero">
+<p class="auth-eyebrow">Panel de empresa</p>
+<h2 class="auth-title">Tu <em>cuenta</em></h2>
+</div>
+<div class="dashboard-card">
+<div class="dashboard-welcome">Bienvenido, <strong>${aEscape(p.contacto||user.nombre)}</strong></div>
+<div class="dashboard-sub">${aEscape(p.razonSocial||'')} · CIF ${aEscape(p.cif||'')}</div>
+<div class="dashboard-user-email">${aEscape(user.email)}</div>
+<span class="status-badge validado">Perfil validado</span>
+</div>
+<div class="dashboard-card">
+<div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:10px">Crea un nuevo expediente</div>
+<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Contrata a un artista para un trabajo puntual. Introduce sus datos y procede al pago seguro.</p>
+<button class="btn-verde-full" style="margin-top:0" onclick="iniciarExpediente()">+ Nuevo expediente</button>
+</div>
+<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
 }
 
-function renderSim(){if(perfil==='empresa')renderEmpresa();else renderTrabajador()}
+function iniciarExpediente(){artistAuth.expedienteOpen=true;artistAuth.expedienteResult=null;resetExpedienteState();renderSim();}
+function cerrarExpediente(){artistAuth.expedienteOpen=false;artistAuth.expedienteResult=null;resetExpedienteState();renderSim();}
+
+/* ─── EXPEDIENTE — pasos comunes 0/1/2 + divergencia 3/4 ─── */
+function updateBreakdown(){
+  const el=document.getElementById('live-breakdown');
+  if(!el)return;
+  if(!st.act||!st.ubic||!st.imp||!st.dias||parseFloat(st.imp)<=0||parseInt(st.dias)<=0){el.innerHTML='';return;}
+  const r=calcular();
+  const user=aGetCurrentUser();
+  if(user&&user.accountType==='empresa')el.innerHTML=resumenEmpresa(r);
+  else el.innerHTML=resumenArtista(r);
+}
+
+function expFechasValidas(){
+  const e1=aFechaExpedienteError(st.fechaInicio);if(e1)return e1;
+  const e2=aFechaFinError(st.fechaInicio,st.fechaFin);if(e2)return e2;
+  return null;
+}
+
+function renderExpedienteCommon(user,STEPS,labels){
+  const c=document.getElementById('sim-c');
+  const tipo=user.accountType;
+  if(st.step===0){
+    c.innerHTML=`<button class="btn-b" onclick="cerrarExpediente()">← Volver al panel</button>
+${prog(STEPS)}<p class="sim-meta">Paso 1 de ${STEPS} — ${labels.paso1Meta}</p>
+<p class="sim-q">${labels.paso1Q}</p>
+<p class="sim-hint">${labels.paso1Hint}</p>
+${oGrid(ACTS,'act')}
+<button class="btn-n" onclick="next()" ${!st.act?'disabled':''}>Continuar</button>`;
+  } else if(st.step===1){
+    c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
+${prog(STEPS)}<p class="sim-meta">Paso 2 de ${STEPS}</p>
+<p class="sim-q">¿Dónde se realiza el trabajo?</p>
+<p class="sim-hint">Afecta a la cobertura por accidentes laborales.</p>
+${oGrid(UBICS,'ubic')}
+<button class="btn-n" onclick="next()" ${!st.ubic?'disabled':''}>Continuar</button>`;
+  } else if(st.step===2){
+    /* Caché + días + fechas, con desglose live */
+    setTimeout(updateBreakdown,0);
+    c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
+${prog(STEPS)}<p class="sim-meta">Paso 3 de ${STEPS} — Caché, días y fechas</p>
+<p class="sim-q">${labels.paso3Q}</p>
+<p class="sim-hint">${labels.paso3Hint}</p>
+<div class="inp-row">
+<div class="inp-f hp"><label>Caché acordado (€)</label><div class="wr"><span class="pre">€</span><input class="grande" type="number" placeholder="0" value="${aEscape(st.imp)}" min="1" oninput="st.imp=this.value;updateBreakdown();rBtn('exp-bs2',()=>st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&!expFechasValidas())"></div></div>
+<div class="inp-f"><label>Días de trabajo</label><input class="grande" type="number" placeholder="0" value="${aEscape(st.dias)}" min="1" max="365" oninput="st.dias=this.value;updateBreakdown();rBtn('exp-bs2',()=>st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&!expFechasValidas())"></div>
+</div>
+<div class="form-grid" style="margin-top:14px">
+<div class="form-field"><label>Fecha inicio *</label><input type="date" value="${aEscape(st.fechaInicio)}" oninput="st.fechaInicio=this.value;rBtn('exp-bs2',()=>st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&!expFechasValidas())" onblur="aShowFieldError(this,aFechaExpedienteError(this.value))"><div class="field-error"></div></div>
+<div class="form-field"><label>Fecha fin *</label><input type="date" value="${aEscape(st.fechaFin)}" oninput="st.fechaFin=this.value;rBtn('exp-bs2',()=>st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&!expFechasValidas())" onblur="aShowFieldError(this,aFechaFinError(st.fechaInicio,this.value))"><div class="field-error"></div></div>
+</div>
+<div id="live-breakdown" style="margin-top:16px"></div>
+<button class="btn-n" id="exp-bs2" onclick="continueFromCache()" ${!(st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&!expFechasValidas())?'disabled':''}>${labels.paso3Btn}</button>`;
+  }
+}
+
+function continueFromCache(){
+  const err=expFechasValidas();
+  if(err){artistAuth.error=err;alert(err);return;}
+  if(!st.imp||parseFloat(st.imp)<=0){alert('Indica un caché válido.');return;}
+  if(!st.dias||parseInt(st.dias)<=0){alert('Indica los días de trabajo.');return;}
+  next();
+}
+
+function renderExpedienteArtista(user){
+  const STEPS=5;
+  const labels={
+    paso1Meta:'Tipo de actividad',
+    paso1Q:'¿Qué tipo de trabajo vas a realizar?',
+    paso1Hint:'Selecciona la opción que mejor describe tu actividad.',
+    paso3Q:'¿Cuál es el caché acordado con el promotor?',
+    paso3Hint:'Verás lo que recibirás aproximadamente, sin contar IRPF.',
+    paso3Btn:'Continuar a datos del promotor →'
+  };
+  renderExpedienteCommon(user,STEPS,labels);
+  if(st.step<3)return;
+  const c=document.getElementById('sim-c');
+  if(st.step===3){
+    const r=calcular();
+    c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
+${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del promotor</p>
+<p class="sim-q">Datos del promotor que te contrata</p>
+<p class="sim-hint">Le mandaremos un enlace personalizado con el importe exacto que tiene que pagar.</p>
+<div class="res" style="margin-bottom:14px">${resumenArtista(r)}</div>
+<div class="form-section">
+<div class="form-section-title">Promotor / Empresa contratante</div>
+<div class="form-grid">
+<div class="form-field full"><label>Nombre o razón social *</label><input type="text" placeholder="Empresa S.L. / Nombre del promotor" maxlength="120" value="${aEscape(st.pNombre)}" oninput="st.pNombre=this.value;rBtn('exp-bs3',promotorDatosValidos)"></div>
+<div class="form-field"><label>CIF / DNI *</label><input type="text" placeholder="B12345678 / 12345678A" maxlength="9" value="${aEscape(st.pCif)}" oninput="st.pCif=this.value.toUpperCase();this.value=st.pCif;rBtn('exp-bs3',promotorDatosValidos)" onblur="aShowFieldError(this,aValidCifDniNie(this.value)?null:'CIF, DNI o NIE inválido')"><div class="field-error"></div></div>
+<div class="form-field"><label>Email del promotor *</label><input type="email" placeholder="promotor@empresa.com" value="${aEscape(st.pEmail)}" oninput="st.pEmail=this.value.trim().toLowerCase();rBtn('exp-bs3',promotorDatosValidos)" onblur="aShowFieldError(this,aValidEmail(this.value)?null:'Email inválido')"><div class="field-error"></div></div>
+</div>
+</div>
+<button class="btn-n" id="exp-bs3" onclick="generarEnlaceArtista()" ${!promotorDatosValidos()?'disabled':''}>Generar enlace de pago →</button>`;
+  } else if(st.step===4){
+    const res=artistAuth.expedienteResult||{};
+    const r=calcular();
+    const msg=`Hola ${st.pNombre}, te paso el presupuesto para tramitar mi alta como artista a través de One2One Pro.
+
+Actividad: ${st.act.label}
+Caché acordado: ${fmt(r.cache)}
+Días: ${r.dias} (${st.fechaInicio} → ${st.fechaFin})
+Total a pagar (IVA 21% incluido): ${fmt(r.totalPromotor)}
+
+Enlace de pago seguro: ${res.url||''}
+
+Una vez confirmes el pago, One2One Pro me dará de alta en la Seguridad Social. Tú recibirás factura legal y deducible.`;
+    c.innerHTML=`<button class="btn-b" onclick="cerrarExpediente()">← Volver al panel</button>
+${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Enlace listo</p>
+<div class="exito" style="text-align:left;padding:16px 0">
+<div class="exito-icon" style="margin:0 auto 14px">✓</div>
+<div class="exito-title" style="text-align:center">Enlace de pago generado</div>
+<div class="exito-sub" style="text-align:center">Envíaselo al promotor por WhatsApp o email. Cuando lo abra, podrá pagar de forma segura.</div>
+<div class="exito-exp" style="margin-top:14px">Nº de expediente: ${res.code||''}</div>
+</div>
+<div class="compartir-panel">
+<div class="cp-title">Enviar a ${aEscape(st.pNombre)}</div>
+<div class="cp-btns">
+<button class="cp-btn" onclick="compartirWA(${JSON.stringify(msg).replace(/"/g,'&quot;')})"><div class="cp-btn-icon wa">W</div><div class="cp-btn-text"><strong>Enviar por WhatsApp</strong><span>Abre WhatsApp con el mensaje ya redactado</span></div></button>
+<button class="cp-btn" onclick="compartirEmail(${JSON.stringify(msg).replace(/"/g,'&quot;')},${JSON.stringify('Presupuesto One2One Pro').replace(/"/g,'&quot;')})"><div class="cp-btn-icon em">@</div><div class="cp-btn-text"><strong>Enviar por email</strong><span>Abre tu cliente de correo</span></div></button>
+<button class="cp-btn" id="btn-copiar" onclick="copiarEnlace(${JSON.stringify(res.url||'').replace(/"/g,'&quot;')})"><div class="cp-btn-icon lk">URL</div><div class="cp-btn-text"><strong>Copiar enlace</strong><span>Copia el enlace al portapapeles</span></div></button>
+</div>
+</div>
+<p class="legal">El enlace está vinculado a este expediente. El promotor sólo tiene que pinchar y pagar — sin registro.</p>`;
+  }
+}
+
+function promotorDatosValidos(){
+  if(!st.pNombre||st.pNombre.trim().length<2)return false;
+  if(!aValidCifDniNie(st.pCif))return false;
+  if(!aValidEmail(st.pEmail))return false;
+  return true;
+}
+
+function generarEnlaceArtista(){
+  if(!promotorDatosValidos())return;
+  const code='O2O-'+Math.floor(Math.random()*90000+10000);
+  const url='https://one2onepro.es/pagar?exp='+encodeURIComponent(code);
+  artistAuth.expedienteResult={code:code,url:url,createdAt:new Date().toISOString()};
+  next();
+}
+
+function renderExpedienteEmpresa(user){
+  const STEPS=5;
+  const labels={
+    paso1Meta:'Tipo de actividad',
+    paso1Q:'¿Qué tipo de trabajo va a realizar el artista?',
+    paso1Hint:'Selecciona la opción que mejor describe la actividad.',
+    paso3Q:'¿Cuál es el caché acordado con el artista?',
+    paso3Hint:'Verás el importe total que pagas (IVA incluido).',
+    paso3Btn:'Continuar a datos del artista →'
+  };
+  renderExpedienteCommon(user,STEPS,labels);
+  if(st.step<3)return;
+  const c=document.getElementById('sim-c');
+  if(st.step===3){
+    const r=calcular();
+    c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
+${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del artista</p>
+<p class="sim-q">Datos del artista que contratas</p>
+<p class="sim-hint">Introduce los datos que te ha facilitado el artista para tramitar su alta en la Seguridad Social.</p>
+<div class="res" style="margin-bottom:14px">${resumenEmpresa(r)}</div>
+<div class="form-section">
+<div class="form-section-title">Datos personales del artista</div>
+<div class="form-grid">
+<div class="form-field"><label>Nombre *</label><input type="text" placeholder="Nombre" maxlength="50" value="${aEscape(st.aNombre)}" oninput="st.aNombre=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
+<div class="form-field"><label>Apellidos *</label><input type="text" placeholder="Apellidos" maxlength="80" value="${aEscape(st.aApellidos)}" oninput="st.aApellidos=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
+<div class="form-field"><label>DNI / NIE *</label><input type="text" placeholder="12345678A" maxlength="9" value="${aEscape(st.aDni)}" oninput="st.aDni=this.value.toUpperCase();this.value=st.aDni;rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aValidDniNie(this.value)?null:'DNI o NIE inválido')"><div class="field-error"></div></div>
+<div class="form-field"><label>Fecha de nacimiento *</label><input type="date" value="${aEscape(st.aFechaNac)}" oninput="st.aFechaNac=this.value;rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aFechaNacError(this.value))"><div class="field-error"></div></div>
+<div class="form-field"><label>Nacionalidad *</label><input type="text" placeholder="Española" maxlength="50" value="${aEscape(st.aNacionalidad)}" oninput="st.aNacionalidad=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
+<div class="form-field"><label>Teléfono *</label><input type="tel" placeholder="+34 600 000 000" maxlength="16" value="${aEscape(st.aTel)}" oninput="st.aTel=this.value;rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido')"><div class="field-error"></div></div>
+<div class="form-field full"><label>Dirección completa *</label><input type="text" placeholder="Calle, número, CP, municipio, provincia" maxlength="200" value="${aEscape(st.aDireccion)}" oninput="st.aDireccion=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
+<div class="form-field"><label>IBAN *</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" maxlength="29" value="${aEscape(st.aIban)}" oninput="st.aIban=aFormatIban(this.value);this.value=st.aIban;rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aValidIbanES(this.value)?null:'IBAN español inválido')"><div class="field-error"></div></div>
+<div class="form-field"><label>NAF (opcional)</label><input type="text" placeholder="12 dígitos" maxlength="12" value="${aEscape(st.aNaf)}" oninput="st.aNaf=this.value.replace(/\D/g,'').substring(0,12);this.value=st.aNaf"></div>
+</div>
+</div>
+<button class="btn-n" id="exp-bs3" onclick="next()" ${!artistaDatosValidos()?'disabled':''}>Continuar a confirmación →</button>`;
+  } else if(st.step===4){
+    const r=calcular();
+    c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
+${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Confirmación y pago</p>
+<p class="sim-q">Revisa y procede al pago</p>
+<div class="res" style="margin-bottom:12px">${resumenEmpresa(r)}</div>
+<div class="contrato-box">
+<strong>CONDICIONES DEL SERVICIO — ONE2ONE PRO</strong><br><br>
+ONE2ONE SOLUTIONS S.L. (CIF B19428846) presta un servicio de gestión del alta en la Seguridad Social y emisión de factura, exclusivamente para trabajos puntuales, esporádicos y no recurrentes.<br><br>
+El Cliente declara expresamente que el trabajo tiene naturaleza puntual y no continuada, que no existe relación laboral estable entre el Cliente y el artista, y asume plena responsabilidad por la veracidad de los datos facilitados.<br><br>
+One2One Pro tramita el alta y emite la factura. El pago es condición previa imprescindible. Para cualquier controversia, las partes se someten a los Juzgados y Tribunales de Cádiz.
+</div>
+<label class="contrato-check">
+<input type="checkbox" ${st.condAceptadas?'checked':''} onchange="st.condAceptadas=this.checked;rBtn('exp-bs4',()=>st.condAceptadas)">
+<span class="contrato-check-text">He leído y acepto las <strong>Condiciones del Servicio</strong>. Declaro que el trabajo es puntual y no recurrente.</span>
+</label>
+<button class="btn-n" id="exp-bs4" onclick="finalizarExpedienteEmpresa()" ${!st.condAceptadas?'disabled':''}>Proceder al pago →</button>
+<p class="legal">Al continuar serás redirigido a la pasarela de pago seguro. La aceptación queda registrada con fecha, hora e identificador.</p>`;
+  }
+}
+
+function artistaDatosValidos(){
+  if(!st.aNombre||st.aNombre.trim().length<2)return false;
+  if(!st.aApellidos||st.aApellidos.trim().length<2)return false;
+  if(!aValidDniNie(st.aDni))return false;
+  if(aFechaNacError(st.aFechaNac))return false;
+  if(!st.aNacionalidad||st.aNacionalidad.trim().length<2)return false;
+  if(!aValidTelES(st.aTel))return false;
+  if(!st.aDireccion||st.aDireccion.trim().length<5)return false;
+  if(!aValidIbanES(st.aIban))return false;
+  return true;
+}
+
+async function finalizarExpedienteEmpresa(){
+  const user=aGetCurrentUser();if(!user)return;
+  const r=calcular();
+  const expNum='O2O-'+Math.floor(Math.random()*90000+10000);
+  const profile=user.profile||{};
+  const empresaDir=[profile.tipoVia,profile.calle,profile.numero,profile.piso].filter(Boolean).join(' ')+', '+(profile.cp||'')+' '+(profile.municipio||'')+', '+(profile.provincia||'');
+  document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Procesando su solicitud...</div><div class="exito-sub">Estamos preparando su enlace de pago. Un momento por favor.</div></div>`;
+  const payload={
+    expediente:expNum,
+    fecha_solicitud:new Date().toLocaleDateString('es-ES'),
+    actividad:st.act.label,
+    regimen:st.act.regimen,
+    ubicacion:st.ubic.label,
+    dias:st.dias,
+    fecha_inicio:st.fechaInicio,
+    fecha_fin:st.fechaFin,
+    cache_acordado:parseFloat(st.imp),
+    seguridad_social:r.ss,
+    comision_one2one:r.com,
+    neto_artista:r.neto,
+    base_imponible:r.cache,
+    iva:r.iva,
+    total_factura:r.totalPromotor,
+    total_factura_centimos:Math.round(r.totalPromotor*100),
+    /* Empresa (de su perfil) */
+    empresa_email:profile.emailFact||user.email,
+    empresa_razon_social:profile.razonSocial||'',
+    empresa_cif:profile.cif||'',
+    empresa_direccion:empresaDir,
+    empresa_telefono:profile.telefono||'',
+    empresa_contacto:profile.contacto||user.nombre||'',
+    /* Artista (del expediente) */
+    modo_datos_trabajador:'manual',
+    trabajador_email:'',
+    trabajador_nombre:st.aNombre,
+    trabajador_apellidos:st.aApellidos,
+    trabajador_dni:st.aDni,
+    trabajador_fecha_nacimiento:st.aFechaNac,
+    trabajador_nacionalidad:st.aNacionalidad,
+    trabajador_direccion:st.aDireccion,
+    trabajador_naf:st.aNaf||'',
+    trabajador_iban:(st.aIban||'').replace(/\s/g,'').toUpperCase(),
+    trabajador_telefono:st.aTel
+  };
+  try{
+    await fetch(EMPRESA_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    document.getElementById('sim-c').innerHTML=`<div class="exito">
+<div class="exito-icon">✓</div>
+<div class="exito-title">Solicitud recibida</div>
+<div class="exito-sub">Hemos recibido su solicitud. En breve recibirá un email en <strong>${aEscape(payload.empresa_email)}</strong> con el enlace de pago y el importe exacto.</div>
+<div class="exito-exp">Nº de expediente: ${expNum}</div>
+<p class="exito-note">En cuanto confirme el pago tramitamos el alta del artista con la máxima agilidad.</p>
+<button class="btn-n" style="margin-top:18px" onclick="cerrarExpediente()">Volver al panel</button>
+</div>`;
+  }catch(err){
+    document.getElementById('sim-c').innerHTML=`<div class="exito">
+<div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div>
+<div class="exito-title">Error de conexión</div>
+<div class="exito-sub">No hemos podido procesar su solicitud. Contáctenos en <strong>info@one2onepro.es</strong>.</div>
+<button class="btn-n" style="margin-top:18px" onclick="cerrarExpediente()">Volver al panel</button>
+</div>`;
+  }
+}
+
+/* ─── Misc utilidades ─── */
 function pick(k,v){st[k]=v;renderSim()}
 function next(){st.step++;renderSim()}
 function back(){st.step--;renderSim()}
@@ -1396,13 +1533,50 @@ function toggleDesglose(el){
   const arrow=el.querySelector('.desglose-arrow');
   body.classList.toggle('show');
   arrow.classList.toggle('open');
-  el.querySelector('span:first-child').textContent=body.classList.contains('show')?'Ocultar desglose':'¿En qué se desglosa?';
+  el.querySelector('span:first-child').textContent=body.classList.contains('show')?'Ocultar desglose':'Ver desglose';
 }
 function toggleFaq(el){const o=el.classList.contains('open');document.querySelectorAll('.faq').forEach(f=>f.classList.remove('open'));if(!o)el.classList.add('open')}
 function enviarContacto(e){e.preventDefault();e.target.innerHTML='<p style="font-size:14px;font-weight:300;color:rgba(255,255,255,.5);padding:20px 0;line-height:1.75">Mensaje recibido. Le responderemos en breve.</p>'}
+function compartirWA(msg){window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank')}
+function compartirEmail(msg,subj){window.open('mailto:?subject='+encodeURIComponent(subj||'Presupuesto One2One Pro')+'&body='+encodeURIComponent(msg),'_blank')}
+function copiarEnlace(url){
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn=document.getElementById('btn-copiar');
+    if(btn){btn.querySelector('strong').textContent='¡Enlace copiado!';setTimeout(()=>{if(btn)btn.querySelector('strong').textContent='Copiar enlace'},2000)}
+  })
+}
 
-renderPasos();
-renderSim();
+/* ─── Dispatcher central ─── */
+function renderSim(){
+  const user=aGetCurrentUser();
+  if(!user){
+    if(artistAuth.view==='register')return renderAuthRegister();
+    return renderAuthLogin();
+  }
+  perfil=user.accountType;
+  updateChromeUI();
+  if(!user.verified)return renderPendingVerification(user);
+  if(!user.profile){
+    if(user.accountType==='empresa')return renderEmpresaProfileForm(user);
+    return renderArtProfileForm(user);
+  }
+  if(user.profileStatus!=='validado')return renderProfileReview(user);
+  if(!artistAuth.expedienteOpen){
+    if(user.accountType==='empresa')return renderEmpresaDashboard(user);
+    return renderArtDashboard(user);
+  }
+  if(user.accountType==='empresa')return renderExpedienteEmpresa(user);
+  return renderExpedienteArtista(user);
+}
+
+/* ─── Init ─── */
+(function(){
+  const u=aGetCurrentUser();
+  if(u)perfil=u.accountType;
+  updateChromeUI();
+  renderPasos();
+  renderSim();
+})();
 </script>
 </body>
 </html>
