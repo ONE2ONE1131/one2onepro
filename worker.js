@@ -121,7 +121,7 @@ async function handleUploadDrive(request, env, cors) {
   // Generate signature
   const strToSign = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
   const msgBuffer = new TextEncoder().encode(strToSign);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', msgBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
