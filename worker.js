@@ -71,13 +71,16 @@ export default {
 /* ─── CORS / response helpers ──────────────────────────────────────────── */
 
 function corsHeaders(origin) {
-  const allow = ALLOWED_ORIGINS.indexOf(origin) >= 0 ? origin : ALLOWED_ORIGINS[0];
+  const allowed = [
+    'https://one2onepro.es',
+    'https://www.one2onepro.es',
+    'http://localhost'
+  ];
+  const o = allowed.includes(origin) ? origin : allowed[0];
   return {
-    'Access-Control-Allow-Origin': allow,
-    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+    'Access-Control-Allow-Origin': o,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-    'Vary': 'Origin'
   };
 }
 
