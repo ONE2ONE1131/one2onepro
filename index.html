@@ -517,7 +517,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
     <li><a href="#contacto">Contacto</a></li>
   </ul>
   <div class="nav-right" id="nav-right">
-    <button class="nav-cta" onclick="document.getElementById('sim').scrollIntoView({behavior:'smooth'})">Gestiona tu alta</button>
+    <button class="nav-cta" onclick="navCtaClick()">Gestiona tu alta</button>
   </div>
 </nav>
 
@@ -895,16 +895,31 @@ function resetExpedienteState(){
 
 function setPerfil(p){
   const user=aGetCurrentUser();
-  if(user){return;} /* logueado: las pestañas no cambian nada */
-  /* Una vez elegido el tipo de cuenta queda bloqueado para esta sesión:
-     evita que el usuario alterne entre flujos artista ↔ empresa después de
-     empezar a rellenar el formulario y se le borren los datos. Para
-     desbloquearlo basta recargar la página (logo). */
-  if(perfil&&perfil!==p)return;
+  /* Cuenta ya registrada: el tipo (artista/empresa) es inmutable porque
+     determina el flujo de validación y los webhooks. Las pestañas no hacen
+     nada en este caso. Antes del registro el usuario puede cambiar libremente
+     entre "artista o técnico" y "promotor o empresa" sin perder nada porque
+     resetExpedienteState() limpia el state del simulador en cada cambio. */
+  if(user){return;}
+  if(perfil===p)return; /* ya en ese perfil; nada que hacer */
   perfil=p;
   artistAuth.view='login';artistAuth.form={};artistAuth.error='';artistAuth.expedienteOpen=false;
   resetExpedienteState();
   updateChromeUI();renderPasos();renderSim();
+}
+
+/* CTA del nav: lleva al usuario a la zona del simulador y, si todavía no ha
+   elegido perfil, abre por defecto el flujo de "artista o técnico" (caso más
+   común en visitantes). Si ya está logueado, simplemente hace scroll. */
+function navCtaClick(){
+  const user=aGetCurrentUser();
+  const sim=document.getElementById('sim');
+  if(sim)sim.scrollIntoView({behavior:'smooth',block:'start'});
+  if(!user && !perfil){
+    /* Pequeño delay para que el scroll termine antes de pintar el formulario;
+       evita saltos visuales. */
+    setTimeout(function(){setPerfil('artista');},120);
+  }
 }
 
 function updateChromeUI(){
@@ -921,13 +936,18 @@ function updateChromeUI(){
   if(sel)sel.style.display='grid';
   if(lbl)lbl.style.display='block';
   const emp=document.getElementById('pb-emp'),trab=document.getElementById('pb-trab');
+  /* Antes del registro, el usuario puede alternar entre los dos perfiles
+     libremente: ambos botones quedan siempre habilitados; solo cambia cuál
+     tiene la clase `.act`. El "bloqueo" definitivo se materializa cuando se
+     crea la cuenta: a partir de ahí aGetCurrentUser() devuelve un user con
+     accountType fijo y setPerfil() ignora los clicks. */
   if(emp){
     emp.classList.toggle('act',perfil==='empresa');
-    emp.disabled = !!perfil && perfil!=='empresa';
+    emp.disabled=false;
   }
   if(trab){
     trab.classList.toggle('act',perfil==='artista');
-    trab.disabled = !!perfil && perfil!=='artista';
+    trab.disabled=false;
   }
   /* Sin perfil elegido todavía: limpiamos #sim-c para que la primera pantalla
      sea solo el selector. En cuanto se elija un perfil, renderSim() vuelve a
@@ -944,7 +964,7 @@ function renderNavRight(){
   if(!nr)return;
   const user=aGetCurrentUser();
   if(!user){
-    nr.innerHTML='<button class="nav-cta" onclick="document.getElementById(\'sim\').scrollIntoView({behavior:\'smooth\'})">Gestiona tu alta</button>';
+    nr.innerHTML='<button class="nav-cta" onclick="navCtaClick()">Gestiona tu alta</button>';
     return;
   }
   const isEmp=user.accountType==='empresa';
