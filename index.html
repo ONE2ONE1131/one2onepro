@@ -28,6 +28,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;ali
 .nav-links a:hover{color:#fff}
 .nav-cta{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;background:var(--verde);color:#fff;border:none;padding:10px 20px;cursor:pointer;transition:opacity .2s}
 .nav-cta:hover{opacity:.85}
+.nav-right{display:flex;align-items:center;gap:14px}
+.nav-user{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:500;color:#fff;white-space:nowrap}
+.nav-badge{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;background:rgba(0,168,107,.18);color:var(--verde);padding:4px 9px;border-radius:99px;border:1px solid rgba(0,168,107,.35)}
+.nav-badge.empresa{background:rgba(232,240,254,.14);color:#cfe2ff;border-color:rgba(207,226,255,.32)}
+.nav-logout{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:#dc2626;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;transition:background .15s;font-family:inherit}
+.nav-logout:hover{background:#b91c1c}
+.perfil-btn:disabled{cursor:not-allowed;opacity:.45;background:transparent;color:var(--gris-suave)}
+.perfil-btn.act:disabled{opacity:1;cursor:default}
 
 /* HERO — sin altura fija, se adapta al contenido */
 .hero{display:grid;grid-template-columns:1fr 1fr;padding-top:60px}
@@ -399,13 +407,14 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 .contador{background:#091d3d;padding:72px 6%;position:relative;overflow:hidden;border-top:1px solid rgba(255,255,255,.05)}
 .contador::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.06) 1px,transparent 0);background-size:32px 32px;pointer-events:none}
 .contador::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:80%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,168,107,.5),transparent)}
-.contador-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:60px;text-align:center;position:relative;z-index:1}
-.cont-stat{position:relative;padding:0 20px}
-.cont-stat:not(:last-child)::after{content:'';position:absolute;right:-30px;top:50%;transform:translateY(-50%);width:1px;height:60px;background:rgba(255,255,255,.1)}
-.cont-num{font-family:'Playfair Display',serif;font-size:clamp(46px,5.5vw,68px);font-weight:700;color:var(--verde);line-height:1;letter-spacing:-2px;margin-bottom:14px;display:block}
+.contador-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:40px;text-align:center;position:relative;z-index:1}
+.cont-stat{position:relative;padding:0 14px}
+.cont-stat:not(:last-child)::after{content:'';position:absolute;right:-20px;top:50%;transform:translateY(-50%);width:1px;height:60px;background:rgba(255,255,255,.1)}
+.cont-num{font-family:'Playfair Display',serif;font-size:clamp(40px,4.8vw,60px);font-weight:700;color:var(--verde);line-height:1;letter-spacing:-2px;margin-bottom:14px;display:block}
 .cont-suffix{font-size:.7em;color:rgba(0,168,107,.85);margin-left:4px;font-weight:600;letter-spacing:-1px}
 .cont-label{font-size:12px;font-weight:400;color:rgba(255,255,255,.55);letter-spacing:1.2px;text-transform:uppercase}
-@media(max-width:700px){.contador-inner{grid-template-columns:1fr;gap:40px}.cont-stat:not(:last-child)::after{display:none}}
+@media(max-width:900px){.contador-inner{grid-template-columns:repeat(2,1fr);gap:36px 20px}.cont-stat:nth-child(2n)::after{display:none}}
+@media(max-width:480px){.contador-inner{grid-template-columns:1fr;gap:32px}.cont-stat::after{display:none!important}}
 
 /* ─────────────────────────────────────────────
    QUIÉNES SOMOS — visual block con stats e icons
@@ -498,7 +507,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 <body>
 
 <nav>
-  <a href="#" class="logo">One2One<em>Pro</em></a>
+  <a href="/" class="logo" onclick="navLogoClick(event)">One2One<em>Pro</em></a>
   <ul class="nav-links">
     <li><a href="#quienes">Quiénes somos</a></li>
     <li><a href="#como">Cómo funciona</a></li>
@@ -507,7 +516,9 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
     <li><a href="#faq">Preguntas frecuentes</a></li>
     <li><a href="#contacto">Contacto</a></li>
   </ul>
-  <button class="nav-cta" onclick="document.getElementById('sim').scrollIntoView({behavior:'smooth'})">Calcular lo que cobro</button>
+  <div class="nav-right" id="nav-right">
+    <button class="nav-cta" onclick="document.getElementById('sim').scrollIntoView({behavior:'smooth'})">Gestiona tu alta</button>
+  </div>
 </nav>
 
 <section class="hero">
@@ -537,11 +548,11 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
     <div class="perfil-sel" id="perfil-sel">
       <button class="perfil-btn" id="pb-trab" onclick="setPerfil('artista')">
         <span class="pb-main">Soy artista o técnico</span>
-        <span class="pb-sub">Gestiona tu alta y envía presupuestos a tus promotores</span>
+        <span class="pb-sub">Músico, DJ, técnico de sonido, bailarín, actor…</span>
       </button>
-      <button class="perfil-btn act" id="pb-emp" onclick="setPerfil('empresa')">
+      <button class="perfil-btn" id="pb-emp" onclick="setPerfil('empresa')">
         <span class="pb-main">Soy promotor o empresa</span>
-        <span class="pb-sub">Contrata a un artista con factura y alta legal</span>
+        <span class="pb-sub">Sala, festival, agencia, empresa privada, particular…</span>
       </button>
     </div>
     <div id="sim-c"></div>
@@ -560,15 +571,19 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
   <div class="contador-inner">
     <div class="cont-stat">
       <span class="cont-num" data-count="1247" data-suffix="">0</span>
-      <div class="cont-label">Artistas registrados</div>
+      <div class="cont-label">Profesionales registrados</div>
     </div>
     <div class="cont-stat">
       <span class="cont-num" data-count="3891" data-suffix="">0</span>
       <div class="cont-label">Expedientes tramitados</div>
     </div>
     <div class="cont-stat">
+      <span class="cont-num" data-count="15" data-suffix="+">0</span>
+      <div class="cont-label">Profesionales en gestoría</div>
+    </div>
+    <div class="cont-stat">
       <span class="cont-num" data-count="10" data-suffix="%">0</span>
-      <div class="cont-label">Comisión única y transparente</div>
+      <div class="cont-label">Comisión única</div>
     </div>
   </div>
 </section>
@@ -850,7 +865,7 @@ const COM=0.10;
 const EMPRESA_WEBHOOK='https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku';
 /* perfil = "artista" o "empresa". Antes del login indica qué pestaña ha pulsado el usuario.
    Después del login se sobreescribe con user.accountType en cada renderSim(). */
-let perfil='empresa';
+let perfil=null;
 let st={
   step:0,act:null,ubic:null,imp:'',dias:'',
   fechaInicio:'',fechaFin:'',
@@ -881,6 +896,11 @@ function resetExpedienteState(){
 function setPerfil(p){
   const user=aGetCurrentUser();
   if(user){return;} /* logueado: las pestañas no cambian nada */
+  /* Una vez elegido el tipo de cuenta queda bloqueado para esta sesión:
+     evita que el usuario alterne entre flujos artista ↔ empresa después de
+     empezar a rellenar el formulario y se le borren los datos. Para
+     desbloquearlo basta recargar la página (logo). */
+  if(perfil&&perfil!==p)return;
   perfil=p;
   artistAuth.view='login';artistAuth.form={};artistAuth.error='';artistAuth.expedienteOpen=false;
   resetExpedienteState();
@@ -891,16 +911,79 @@ function updateChromeUI(){
   const user=aGetCurrentUser();
   const sel=document.getElementById('perfil-sel');
   const lbl=document.getElementById('sim-label-top');
+  const simC=document.getElementById('sim-c');
   if(user){
     if(sel)sel.style.display='none';
     if(lbl)lbl.style.display='none';
+    renderNavRight();
     return;
   }
   if(sel)sel.style.display='grid';
   if(lbl)lbl.style.display='block';
   const emp=document.getElementById('pb-emp'),trab=document.getElementById('pb-trab');
-  if(emp)emp.classList.toggle('act',perfil==='empresa');
-  if(trab)trab.classList.toggle('act',perfil==='artista');
+  if(emp){
+    emp.classList.toggle('act',perfil==='empresa');
+    emp.disabled = !!perfil && perfil!=='empresa';
+  }
+  if(trab){
+    trab.classList.toggle('act',perfil==='artista');
+    trab.disabled = !!perfil && perfil!=='artista';
+  }
+  /* Sin perfil elegido todavía: limpiamos #sim-c para que la primera pantalla
+     sea solo el selector. En cuanto se elija un perfil, renderSim() vuelve a
+     pintar login/register debajo. */
+  if(!perfil && simC) simC.innerHTML='';
+  renderNavRight();
+}
+
+/* Genera el bloque de la derecha del nav. Sin sesión: CTA verde. Con sesión:
+   nombre abreviado + badge ("Profesional"/"Empresa") + botón rojo de cerrar
+   sesión SIEMPRE visible (nunca oculto). */
+function renderNavRight(){
+  const nr=document.getElementById('nav-right');
+  if(!nr)return;
+  const user=aGetCurrentUser();
+  if(!user){
+    nr.innerHTML='<button class="nav-cta" onclick="document.getElementById(\'sim\').scrollIntoView({behavior:\'smooth\'})">Gestiona tu alta</button>';
+    return;
+  }
+  const isEmp=user.accountType==='empresa';
+  const tipoLabel=isEmp?'Empresa':'Profesional';
+  const badgeCls=isEmp?'nav-badge empresa':'nav-badge';
+  nr.innerHTML=
+    '<span class="nav-user">'+aEscape(abbrevName(user))+
+    ' <span class="'+badgeCls+'">'+tipoLabel+'</span></span>'+
+    '<button class="nav-logout" onclick="doLogout()">Cerrar sesión</button>';
+}
+
+/* "Juan García López" → "Juan G." · prioriza profile.nombre/apellidos para
+   cuentas artista (datos reales del perfil), cae a user.nombre. */
+function abbrevName(user){
+  if(!user)return '';
+  let firstName='', firstLast='';
+  if(user.accountType==='artista' && user.profile){
+    firstName=(user.profile.nombre||user.nombre||'').trim().split(/\s+/)[0]||'';
+    firstLast=(user.profile.apellidos||'').trim().split(/\s+/)[0]||'';
+  } else {
+    const parts=(user.nombre||user.email||'').trim().split(/\s+/);
+    firstName=parts[0]||'';
+    if(parts.length>=2) firstLast=parts[1];
+  }
+  if(!firstName) return user.email||'';
+  return firstName + (firstLast ? ' '+firstLast.charAt(0).toUpperCase()+'.' : '');
+}
+
+/* Click en el logo: recarga la página entera (window.location.href='/').
+   Si hay sesión activa, pregunta antes para no perder lo que estuviera
+   rellenando. NUNCA cierra sesión automáticamente. */
+function navLogoClick(e){
+  if(e&&e.preventDefault)e.preventDefault();
+  const u=aGetCurrentUser();
+  if(u){
+    if(!confirm('¿Quieres volver al inicio?'))return false;
+  }
+  window.location.href='/';
+  return false;
 }
 
 function renderPasos(){
@@ -967,12 +1050,12 @@ function resumenEmpresa(r){
     <div class="desglose-wrap">
       <div class="desglose-head" onclick="toggleDesglose(this)"><span>Ver desglose</span><span class="desglose-arrow">↓</span></div>
       <div class="desglose-body">
-        <div class="d-row"><span class="dl">Caché acordado con el artista</span><span class="dv">${fmt(r.cache)}</span></div>
+        <div class="d-row"><span class="dl">Caché acordado con el profesional</span><span class="dv">${fmt(r.cache)}</span></div>
         <div class="d-row diva"><span class="dl">IVA (21%) — deducible al 100%</span><span class="dv">${fmt(r.iva)}</span></div>
         <div class="d-row dtot"><span class="dl">Total que pagas</span><span class="dv">${fmt(r.totalPromotor)}</span></div>
       </div>
     </div>
-    <div class="res-trab-aviso">Sobre el caché, One2One Pro asume las cuotas de Seguridad Social y aplica el 10% de comisión. El artista cobra en limpio.</div>`;
+    <div class="res-trab-aviso">Sobre el caché, One2One Pro asume las cuotas de Seguridad Social y aplica el 10% de comisión. Tú cobras en limpio.</div>`;
 }
 
 function aEscapeText(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
@@ -1095,7 +1178,7 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 </div>
 <button class="btn-verde-full" onclick="doLogin()">Iniciar sesión</button>
 </div>
-<p class="auth-footer">¿Aún no tienes cuenta? <button class="auth-link" onclick="aSwitchView('register')">Crear cuenta de ${isArt?'artista':'empresa'}</button></p>`;
+<p class="auth-footer">¿Aún no tienes cuenta? <button class="auth-link" onclick="aSwitchView('register')">Crear cuenta ${isArt?'como profesional':'de empresa'}</button></p>`;
   artistAuth.error='';
 }
 
@@ -1116,7 +1199,7 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 <div class="form-field full"><label>Email</label><input type="email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
 <div class="form-field full"><label>Contraseña</label><input type="password" id="art-reg-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value)" onkeydown="if(event.key==='Enter')doRegister()"><span id="art-pass-strength" class="password-strength"></span></div>
 </div>
-<button class="btn-verde-full" onclick="doRegister()">Crear cuenta de ${isArt?'artista':'empresa'}</button>
+<button class="btn-verde-full" onclick="doRegister()">Crear cuenta ${isArt?'como profesional':'de empresa'}</button>
 </div>
 <p class="auth-footer">¿Ya tienes cuenta? <button class="auth-link" onclick="aSwitchView('login')">Iniciar sesión</button></p>`;
   artistAuth.error='';
@@ -1161,8 +1244,7 @@ function renderPendingVerification(user){
 </div>
 <div class="auth-msg warning"><strong>Revisa tu email para verificar tu cuenta.</strong><br>Hemos enviado un mensaje a <strong>${aEscape(user.email)}</strong>. Sin verificación no puedes continuar ni crear expedientes.</div>
 <div class="auth-msg info">Si no encuentras el correo, revisa tu carpeta de spam o promociones. El enlace de verificación caduca a las 24 horas.</div>
-<div class="dev-tools">Modo demo (sin backend de email): <button onclick="aSimularVerificacion()">Simular click en email de verificación</button></div>
-<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
+<div class="dev-tools">Modo demo (sin backend de email): <button onclick="aSimularVerificacion()">Simular click en email de verificación</button></div>`;
 }
 
 function aSimularVerificacion(){const u=aGetCurrentUser();if(!u)return;aUpdateUser(u.email,{verified:true,verifiedAt:new Date().toISOString()});renderSim();}
@@ -1192,7 +1274,7 @@ function renderArtProfileForm(user){
   const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${p.tipoVia===v?'selected':''}>${v}</option>`).join('');
   const fileLabel=(f,defaultText)=>f?`<span class="fu-title">✓ ${aEscape(f.name)}</span><span class="fu-sub">${(f.size/1024).toFixed(0)} KB · cambiar archivo</span>`:`<span class="fu-title">${defaultText}</span><span class="fu-sub">JPG o PNG · máx 5MB</span>`;
   c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">Completa tu perfil de artista</p>
+<p class="auth-eyebrow">Completa tu perfil</p>
 <h2 class="auth-title">Datos personales y <em>documentación</em></h2>
 <p class="auth-lead">Necesitamos estos datos para tramitar tus altas en la Seguridad Social. Sin perfil completo y verificado no podrás crear expedientes.</p>
 </div>
@@ -1240,8 +1322,7 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 <div class="form-field"><label>Profesión artística *</label><input type="text" placeholder="DJ, músico, actor, técnico de sonido..." maxlength="80" value="${aEscape(p.profesion||'')}" oninput="artistAuth.form.profesion=this.value"></div>
 </div>
 </div>
-<button class="btn-verde-full" onclick="submitArtProfile()">Enviar perfil a revisión</button>
-<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
+<button class="btn-verde-full" onclick="submitArtProfile()">Enviar perfil a revisión</button>`;
   artistAuth.error='';
 }
 
@@ -1326,20 +1407,18 @@ function submitArtProfile(){
 function renderProfileReview(user){
   const c=document.getElementById('sim-c');
   const submittedDate=user.profileSubmittedAt?new Date(user.profileSubmittedAt).toLocaleDateString('es-ES'):'';
-  const tipo=user.accountType==='empresa'?'empresa':'artista';
   c.innerHTML=`<div class="auth-hero">
 <p class="auth-eyebrow">Estado de tu cuenta</p>
 <h2 class="auth-title">Perfil en <em>revisión</em></h2>
 </div>
 <div class="dashboard-card">
 <div class="dashboard-welcome">Hola, <strong>${aEscape(user.nombre)}</strong></div>
-<div class="dashboard-sub">Tu perfil de ${tipo} está siendo revisado por nuestro equipo.</div>
+<div class="dashboard-sub">Tu perfil está siendo revisado por nuestro equipo.</div>
 <span class="status-badge revision">Perfil en revisión</span>
 </div>
 <div class="auth-msg info"><strong>Perfil en revisión.</strong><br>Hemos recibido tu documentación el ${submittedDate}. Estamos validando tu identidad y los datos aportados. Recibirás un email en cuanto esté validado.</div>
 <div class="auth-msg warning">Hasta que tu perfil esté validado <strong>no puedes crear expedientes</strong>. El proceso de validación suele tardar entre 24 y 48 horas laborables.</div>
-<div class="dev-tools">Modo demo (sin backoffice de validación): <button onclick="aSimularValidacion()">Simular validación manual</button></div>
-<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
+<div class="dev-tools">Modo demo (sin backoffice de validación): <button onclick="aSimularValidacion()">Simular validación manual</button></div>`;
 }
 
 function aSimularValidacion(){const u=aGetCurrentUser();if(!u)return;aUpdateUser(u.email,{profileStatus:'validado',profileValidatedAt:new Date().toISOString()});renderSim();}
@@ -1349,11 +1428,11 @@ function renderArtDashboard(user){
   const c=document.getElementById('sim-c');
   const p=user.profile||{};
   c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">Panel del artista</p>
+<p class="auth-eyebrow">Mi panel</p>
 <h2 class="auth-title">Tu <em>cuenta</em></h2>
 </div>
 <div class="dashboard-card">
-<div class="dashboard-welcome">Bienvenido, <strong>${aEscape(p.nombre||user.nombre)} ${aEscape(p.apellidos||'')}</strong></div>
+<div class="dashboard-welcome">Hola, <strong>${aEscape(p.nombre||user.nombre)} ${aEscape(p.apellidos||'')}</strong></div>
 <div class="dashboard-sub">${aEscape(p.profesion||'')}</div>
 <div class="dashboard-user-email">${aEscape(user.email)}</div>
 <span class="status-badge validado">Perfil validado</span>
@@ -1362,27 +1441,25 @@ function renderArtDashboard(user){
 <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:10px">Crea un nuevo expediente</div>
 <p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Define el caché de un trabajo puntual y genera el enlace de pago para enviárselo al promotor.</p>
 <button class="btn-verde-full" style="margin-top:0" onclick="iniciarExpediente()">+ Nuevo expediente</button>
-</div>
-<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
+</div>`;
 }
 
 function renderEmpresaDashboard(user){
   const c=document.getElementById('sim-c');
   c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">Panel de empresa</p>
+<p class="auth-eyebrow">Mi panel</p>
 <h2 class="auth-title">Tu <em>cuenta</em></h2>
 </div>
 <div class="dashboard-card">
-<div class="dashboard-welcome">Bienvenido, <strong>${aEscape(user.nombre)}</strong></div>
+<div class="dashboard-welcome">Hola, <strong>${aEscape(user.nombre)}</strong></div>
 <div class="dashboard-user-email">${aEscape(user.email)}</div>
 <span class="status-badge validado">Cuenta activa</span>
 </div>
 <div class="dashboard-card">
 <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:10px">Crea un nuevo expediente</div>
-<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Contrata a un artista para un trabajo puntual. Introducirás los datos fiscales de tu empresa (razón social, CIF, dirección fiscal, email de facturación) al crear el expediente.</p>
+<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Contrata a un profesional para un trabajo puntual. Introducirás los datos fiscales de tu empresa (razón social, CIF, dirección fiscal, email de facturación) al crear el expediente.</p>
 <button class="btn-verde-full" style="margin-top:0" onclick="iniciarExpediente()">+ Nuevo expediente</button>
-</div>
-<button class="logout-link" onclick="doLogout()">Cerrar sesión</button>`;
+</div>`;
 }
 
 function iniciarExpediente(){artistAuth.expedienteOpen=true;artistAuth.expedienteResult=null;resetExpedienteState();renderSim();}
@@ -1568,12 +1645,12 @@ function renderExpedienteEmpresa(user){
   if(st.step===3){
     const r=calcular();
     c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
-${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del artista</p>
-<p class="sim-q">Datos del artista que contratas</p>
-<p class="sim-hint">Introduce los datos que te ha facilitado el artista para tramitar su alta en la Seguridad Social.</p>
+${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del profesional</p>
+<p class="sim-q">Datos del profesional que contratas</p>
+<p class="sim-hint">Introduce los datos que te ha facilitado el profesional para tramitar su alta en la Seguridad Social.</p>
 <div class="res" style="margin-bottom:14px">${resumenEmpresa(r)}</div>
 <div class="form-section">
-<div class="form-section-title">Datos personales del artista</div>
+<div class="form-section-title">Datos personales del profesional</div>
 <div class="form-grid">
 <div class="form-field"><label>Nombre *</label><input type="text" placeholder="Nombre" maxlength="50" value="${aEscape(st.aNombre)}" oninput="st.aNombre=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
 <div class="form-field"><label>Apellidos *</label><input type="text" placeholder="Apellidos" maxlength="80" value="${aEscape(st.aApellidos)}" oninput="st.aApellidos=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
@@ -1777,7 +1854,7 @@ async function finalizarExpedienteEmpresa(){
 <div class="exito-title">Solicitud recibida</div>
 <div class="exito-sub">Hemos recibido su solicitud. En breve recibirá un email en <strong>${aEscape(payload.empresa_email)}</strong> con el enlace de pago y el importe exacto.</div>
 <div class="exito-exp">Nº de expediente: ${expNum}</div>
-<p class="exito-note">En cuanto confirme el pago tramitamos el alta del artista con la máxima agilidad.</p>
+<p class="exito-note">En cuanto confirme el pago tramitamos el alta del profesional con la máxima agilidad.</p>
 <button class="btn-n" style="margin-top:18px" onclick="cerrarExpediente()">Volver al panel</button>
 </div>`;
   }catch(err){
@@ -1818,6 +1895,14 @@ function copiarEnlace(url){
 function renderSim(){
   const user=aGetCurrentUser();
   if(!user){
+    /* El selector de tipo de cuenta es la primera pantalla. Hasta que no
+       se elija un perfil, no pintamos ningún formulario debajo. */
+    if(!perfil){
+      const c=document.getElementById('sim-c');
+      if(c)c.innerHTML='';
+      updateChromeUI();
+      return;
+    }
     if(artistAuth.view==='register')return renderAuthRegister();
     return renderAuthLogin();
   }
