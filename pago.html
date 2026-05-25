@@ -8,7 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230f2d5e'/%3E%3Ctext x='50' y='65' font-family='Playfair Display,serif' font-size='52' font-weight='700' fill='%2300a86b' text-anchor='middle'%3EO%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon.svg">
+<meta name="theme-color" content="#0f2d5e">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -20,8 +22,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--fondo);color:var(--azul);
 body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 25% 20%,rgba(15,45,94,.04) 0%,transparent 50%),radial-gradient(circle at 75% 80%,rgba(0,168,107,.04) 0%,transparent 50%);pointer-events:none;z-index:0}
 
 nav{position:sticky;top:0;left:0;right:0;z-index:10;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(15,45,94,.97);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)}
-.logo{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:#fff;text-decoration:none}
-.logo em{font-style:italic;font-weight:400;color:rgba(255,255,255,.5)}
+.logo{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:10px;line-height:1}
+.logo em{font-style:italic;font-weight:400;color:rgba(255,255,255,.5);padding-left:2px}
+.brand-logo{display:inline-block;width:auto;flex-shrink:0;vertical-align:middle}
+.brand-logo .bar{fill:currentColor}
+.brand-logo .curve{fill:none;stroke:#00a86b;stroke-width:5;stroke-linecap:round}
+.logo .brand-logo{height:28px;color:#fff}
 .nav-tag{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45)}
 
 main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:48px 20px 64px;position:relative;z-index:1}
@@ -79,7 +85,7 @@ footer a:hover{color:var(--azul)}
 </head>
 <body>
 <nav>
-  <a href="https://one2onepro.es" class="logo">One2One<em> Pro</em></a>
+  <a href="https://one2onepro.es" class="logo" aria-label="One2One Pro"><svg class="brand-logo" viewBox="0 0 49 56" aria-hidden="true"><rect class="bar" x="0" y="0" width="9" height="56" rx="4.5"/><path class="curve" d="M13 0 C13 0 22 0 22 28 C22 56 31 56 31 56"/><rect class="bar" x="40" y="0" width="9" height="56" rx="4.5"/></svg><span>One2One<em>Pro</em></span></a>
   <span class="nav-tag">Pago seguro</span>
 </nav>
 
