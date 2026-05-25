@@ -382,6 +382,117 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 .dev-tools{margin-top:18px;padding:10px 12px;background:#f5f7fa;border:1px dashed var(--gris-borde);border-radius:4px;font-size:10px;color:var(--gris-suave);text-align:center}
 .dev-tools button{font-size:10px;color:var(--azul-medio);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;padding:0;margin-left:4px}
 .form-field select.prov-sel{padding:8px 0;cursor:pointer}
+
+/* ─────────────────────────────────────────────
+   HERO REFUERZO VISUAL — pattern + más densidad
+   ───────────────────────────────────────────── */
+.hero-l{padding:100px 5% 100px 6%}
+.hero-l-content{max-width:560px}
+.hero-pattern{position:absolute;inset:0;pointer-events:none;opacity:.07;background-image:radial-gradient(circle at 1px 1px,#fff 1px,transparent 0);background-size:24px 24px;z-index:0}
+.hero-h1{margin-bottom:28px}
+.hero-desc{margin-bottom:44px;font-size:17px;max-width:480px}
+.hero-stats{gap:48px;padding-top:32px}
+
+/* ─────────────────────────────────────────────
+   CONTADOR ANIMADO — banda entre hero y quienes
+   ───────────────────────────────────────────── */
+.contador{background:#091d3d;padding:72px 6%;position:relative;overflow:hidden;border-top:1px solid rgba(255,255,255,.05)}
+.contador::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.06) 1px,transparent 0);background-size:32px 32px;pointer-events:none}
+.contador::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:80%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,168,107,.5),transparent)}
+.contador-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:60px;text-align:center;position:relative;z-index:1}
+.cont-stat{position:relative;padding:0 20px}
+.cont-stat:not(:last-child)::after{content:'';position:absolute;right:-30px;top:50%;transform:translateY(-50%);width:1px;height:60px;background:rgba(255,255,255,.1)}
+.cont-num{font-family:'Playfair Display',serif;font-size:clamp(46px,5.5vw,68px);font-weight:700;color:var(--verde);line-height:1;letter-spacing:-2px;margin-bottom:14px;display:block}
+.cont-suffix{font-size:.7em;color:rgba(0,168,107,.85);margin-left:4px;font-weight:600;letter-spacing:-1px}
+.cont-label{font-size:12px;font-weight:400;color:rgba(255,255,255,.55);letter-spacing:1.2px;text-transform:uppercase}
+@media(max-width:700px){.contador-inner{grid-template-columns:1fr;gap:40px}.cont-stat:not(:last-child)::after{display:none}}
+
+/* ─────────────────────────────────────────────
+   QUIÉNES SOMOS — visual block con stats e icons
+   ───────────────────────────────────────────── */
+.quienes-visual{background:linear-gradient(135deg,var(--azul) 0%,var(--azul-medio) 100%);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding:60px 8%;min-height:560px}
+.quienes-visual::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(0,168,107,.3) 0%,transparent 60%);pointer-events:none}
+.quienes-visual::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.04) 1px,transparent 0);background-size:24px 24px;pointer-events:none}
+.qv-eyebrow{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--verde);margin-bottom:24px;position:relative;z-index:1}
+.qv-quote{font-family:'Playfair Display',serif;font-size:clamp(20px,2.4vw,28px);font-weight:400;font-style:italic;color:rgba(255,255,255,.92);line-height:1.4;margin-bottom:28px;position:relative;z-index:1}
+.qv-quote::before{content:'"';font-size:80px;line-height:0;display:block;margin-bottom:12px;color:var(--verde);opacity:.4;font-style:normal}
+.qv-author{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:40px;position:relative;z-index:1}
+.qv-mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:24px;position:relative;z-index:1;padding-top:28px;border-top:1px solid rgba(255,255,255,.1)}
+.qv-mini-stat .qv-n{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:#fff;letter-spacing:-1px;display:block;margin-bottom:4px}
+.qv-mini-stat .qv-l{font-size:11px;color:rgba(255,255,255,.45);font-weight:300;line-height:1.4}
+
+/* ─────────────────────────────────────────────
+   CÓMO FUNCIONA — números grandes Playfair
+   ───────────────────────────────────────────── */
+.paso{grid-template-columns:80px 1fr;gap:28px;padding:32px 0;transition:background .2s;align-items:flex-start}
+.paso:hover{background:rgba(15,45,94,.02)}
+.paso-n{font-family:'Playfair Display',serif;font-size:48px;font-weight:700;color:var(--verde);padding-top:0;line-height:.9;letter-spacing:-2px;opacity:.85}
+.paso-t{font-size:17px;font-weight:600;color:var(--azul);margin-bottom:8px}
+.paso-d{font-size:14px;line-height:1.75}
+@media(max-width:500px){.paso{grid-template-columns:60px 1fr;gap:18px}.paso-n{font-size:36px}}
+
+/* ─────────────────────────────────────────────
+   POR QUÉ — iconos circulares en .dif-item
+   ───────────────────────────────────────────── */
+.dif-item{grid-template-columns:40px 1fr;gap:18px;padding:22px 0}
+.dif-icon{width:36px;height:36px;border-radius:50%;background:rgba(0,168,107,.12);border:1px solid rgba(0,168,107,.25);display:flex;align-items:center;justify-content:center;color:var(--verde);font-size:14px;flex-shrink:0}
+.dif-it{font-size:15px}
+.dif-id{font-size:13px;margin-top:5px}
+
+/* ─────────────────────────────────────────────
+   QUIENES PUNTOS — refinamiento visual
+   ───────────────────────────────────────────── */
+.punto{padding:10px 0;border-bottom:1px solid rgba(15,45,94,.05)}
+.punto:last-child{border-bottom:none}
+
+/* ─────────────────────────────────────────────
+   CONFIANZA — más densidad, mejor jerarquía
+   ───────────────────────────────────────────── */
+.confianza{padding:80px 6%}
+.conf-item{padding:0 20px;border-right:1px solid var(--gris-borde);text-align:center}
+.conf-item:last-child{border-right:none}
+.conf-num{font-size:clamp(40px,4.5vw,56px)}
+@media(max-width:900px){.conf-item{border-right:none;padding:24px 0;border-bottom:1px solid var(--gris-borde)}.conf-item:last-child{border-bottom:none}}
+
+/* ─────────────────────────────────────────────
+   ASISTENTE IA — chat embebido inline
+   ───────────────────────────────────────────── */
+.asistente-sec{padding:100px 6%;background:#fff;border-top:1px solid var(--gris-borde);border-bottom:1px solid var(--gris-borde)}
+.asistente-inner{max-width:760px;margin:0 auto}
+.asistente-head{text-align:center;margin-bottom:36px}
+.asistente-head .section-eyebrow{margin-bottom:14px}
+.asistente-head h2{margin-bottom:14px}
+.asistente-head p{font-size:14px;color:var(--gris-texto);font-weight:300;line-height:1.7;max-width:520px;margin:0 auto}
+.chat-box{background:var(--fondo);border:1px solid var(--gris-borde);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;height:520px;box-shadow:0 10px 32px rgba(15,45,94,.08)}
+.chat-msgs{flex:1;overflow-y:auto;padding:24px 22px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+.chat-msgs::-webkit-scrollbar{width:6px}
+.chat-msgs::-webkit-scrollbar-track{background:transparent}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--gris-borde);border-radius:99px}
+.chat-msg{display:flex;gap:11px;max-width:88%;animation:chatIn .3s ease}
+@keyframes chatIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.chat-msg.user{align-self:flex-end;flex-direction:row-reverse}
+.chat-avatar{width:34px;height:34px;border-radius:50%;background:var(--verde);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;letter-spacing:.3px;box-shadow:0 2px 8px rgba(0,168,107,.25)}
+.chat-msg.user .chat-avatar{background:var(--azul);box-shadow:0 2px 8px rgba(15,45,94,.2)}
+.chat-bubble{background:#fff;border:1px solid var(--gris-borde);padding:12px 16px;border-radius:14px;font-size:13.5px;line-height:1.6;color:var(--gris-texto);font-weight:400;white-space:pre-wrap}
+.chat-msg.user .chat-bubble{background:var(--azul);color:#fff;border-color:var(--azul)}
+.chat-msg.user .chat-bubble{border-bottom-right-radius:4px}
+.chat-msg.bot .chat-bubble{border-bottom-left-radius:4px}
+.chat-typing{display:flex;gap:4px;padding:14px 16px;align-items:center}
+.chat-typing span{width:6px;height:6px;border-radius:50%;background:var(--gris-suave);animation:typing 1.4s infinite}
+.chat-typing span:nth-child(2){animation-delay:.2s}
+.chat-typing span:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+.chat-input-wrap{display:flex;gap:8px;padding:14px 16px;border-top:1px solid var(--gris-borde);background:#fff}
+.chat-input{flex:1;padding:12px 18px;border:1.5px solid var(--gris-borde);border-radius:99px;outline:none;font-family:inherit;font-size:14px;color:var(--azul);transition:border-color .15s}
+.chat-input:focus{border-color:var(--azul)}
+.chat-input::placeholder{color:var(--gris-suave)}
+.chat-send{padding:0 24px;background:var(--verde);color:#fff;border:none;border-radius:99px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:1.2px;text-transform:uppercase;transition:opacity .15s;flex-shrink:0}
+.chat-send:hover{opacity:.88}
+.chat-send:disabled{opacity:.45;cursor:not-allowed}
+.chat-error{background:#fef3c7;color:#92400e;border-left:3px solid #f59e0b;padding:10px 14px;font-size:12px;line-height:1.5;border-radius:6px;margin:0 4px}
+
+/* Section dividers — más densidad visual */
+.section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--gris-borde),transparent);max-width:1100px;margin:0 auto}
 </style>
 </head>
 <body>
@@ -392,6 +503,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
     <li><a href="#quienes">Quiénes somos</a></li>
     <li><a href="#como">Cómo funciona</a></li>
     <li><a href="#sectores">Sectores</a></li>
+    <li><a href="#asistente">Asistente</a></li>
     <li><a href="#faq">Preguntas frecuentes</a></li>
     <li><a href="#contacto">Contacto</a></li>
   </ul>
@@ -400,6 +512,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 
 <section class="hero">
   <div class="hero-l">
+    <div class="hero-pattern"></div>
     <div class="hero-l-content">
       <p class="hero-eyebrow">Régimen Especial de Artistas · España</p>
       <h1 class="hero-h1">Gestión laboral<br><em>para artistas.</em></h1>
@@ -442,8 +555,40 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
   <div class="gal-item" style="background-image:url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80')"></div>
 </div>
 
+<!-- ─── BANDA DE CONTADORES ANIMADOS ─── -->
+<section class="contador" id="contador">
+  <div class="contador-inner">
+    <div class="cont-stat">
+      <span class="cont-num" data-count="1247" data-suffix="">0</span>
+      <div class="cont-label">Artistas registrados</div>
+    </div>
+    <div class="cont-stat">
+      <span class="cont-num" data-count="3891" data-suffix="">0</span>
+      <div class="cont-label">Expedientes tramitados</div>
+    </div>
+    <div class="cont-stat">
+      <span class="cont-num" data-count="10" data-suffix="%">0</span>
+      <div class="cont-label">Comisión única y transparente</div>
+    </div>
+  </div>
+</section>
+
 <section class="quienes" id="quienes">
-  <div class="quienes-img"></div>
+  <div class="quienes-visual">
+    <p class="qv-eyebrow">Nuestra filosofía</p>
+    <p class="qv-quote">Hacemos que los artistas puedan dedicarse a lo que realmente importa: subirse al escenario.</p>
+    <p class="qv-author">— Equipo One2One Pro</p>
+    <div class="qv-mini-stats">
+      <div class="qv-mini-stat">
+        <span class="qv-n">15+</span>
+        <div class="qv-l">Profesionales de gestoría laboral en el equipo</div>
+      </div>
+      <div class="qv-mini-stat">
+        <span class="qv-n">24-48h</span>
+        <div class="qv-l">Plazo medio de tramitación tras confirmación del pago</div>
+      </div>
+    </div>
+  </div>
   <div class="quienes-content">
     <p class="section-eyebrow">Quiénes somos</p>
     <h2 class="section-title">Gestoría laboral<br><em>especializada en artistas.</em></h2>
@@ -499,13 +644,13 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
       <p class="dif-desc">One2One Pro asume la contratación y actúa como empresa contratante ante la Seguridad Social. El artista presta sus servicios bajo el Régimen Especial de Artistas regulado por el Real Decreto 1435/1985.</p>
     </div>
     <div class="dif-items">
-      <div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Relación laboral especial de artistas</div><div class="dif-id">El Real Decreto 1435/1985 regula específicamente la relación laboral entre artistas y empresas organizadoras de espectáculos. One2One Pro opera exclusivamente bajo este marco legal.</div></div></div>
-      <div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Amplia cobertura sectorial</div><div class="dif-id">Artistas, tecnología, hostelería puntual, logística, formación y más.</div></div></div>
-      <div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Presupuesto en segundos</div><div class="dif-id">Sin esperas ni llamadas. El coste exacto —Seguridad Social incluida— al instante.</div></div></div>
-      <div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Más rápido que los demás</div><div class="dif-id">Tramitamos el alta en la Seguridad Social con la máxima agilidad posible desde la confirmación del pago. Siempre antes de tu actuación.</div></div></div>
-      <div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Sin cuotas fijas</div><div class="dif-id">Solo pagas cuando actúas. Sin permanencia, sin tarifas mensuales, sin letra pequeña.</div></div></div>
-      <div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Comisión única y transparente</div><div class="dif-id">Solo cobramos un 10% sobre el caché acordado. El desglose completo aparece antes de proceder — sin sorpresas.</div></div></div>
-      <div class="dif-item"><div class="dif-dash">+</div><div><div class="dif-it">Respaldo legal y laboral real</div><div class="dif-id">One2One Pro actúa como empresa contratante ante la Seguridad Social. Un equipo de más de 15 profesionales gestiona cada alta, cada baja y cada liquidación. No eres un número en un sistema — hay personas reales detrás de cada expediente.</div></div></div>
+      <div class="dif-item"><div class="dif-icon">⚖</div><div><div class="dif-it">Relación laboral especial de artistas</div><div class="dif-id">El Real Decreto 1435/1985 regula específicamente la relación laboral entre artistas y empresas organizadoras de espectáculos. One2One Pro opera exclusivamente bajo este marco legal.</div></div></div>
+      <div class="dif-item"><div class="dif-icon">🎭</div><div><div class="dif-it">Amplia cobertura sectorial</div><div class="dif-id">Músicos, DJs, técnicos de sonido y luz, actores, bailarines, presentadores y artistas de circo.</div></div></div>
+      <div class="dif-item"><div class="dif-icon">⚡</div><div><div class="dif-it">Presupuesto en segundos</div><div class="dif-id">Sin esperas ni llamadas. El coste exacto —Seguridad Social incluida— al instante.</div></div></div>
+      <div class="dif-item"><div class="dif-icon">🚀</div><div><div class="dif-it">Más rápido que los demás</div><div class="dif-id">Tramitamos el alta en la Seguridad Social con la máxima agilidad posible desde la confirmación del pago. Siempre antes de tu actuación.</div></div></div>
+      <div class="dif-item"><div class="dif-icon">💸</div><div><div class="dif-it">Sin cuotas fijas</div><div class="dif-id">Solo pagas cuando actúas. Sin permanencia, sin tarifas mensuales, sin letra pequeña.</div></div></div>
+      <div class="dif-item"><div class="dif-icon">📊</div><div><div class="dif-it">Comisión única y transparente</div><div class="dif-id">Solo cobramos un 10% sobre el caché acordado. El desglose completo aparece antes de proceder — sin sorpresas.</div></div></div>
+      <div class="dif-item"><div class="dif-icon">🛡</div><div><div class="dif-it">Respaldo legal y laboral real</div><div class="dif-id">One2One Pro actúa como empresa contratante ante la Seguridad Social. Un equipo de más de 15 profesionales gestiona cada alta, cada baja y cada liquidación. No eres un número en un sistema — hay personas reales detrás de cada expediente.</div></div></div>
     </div>
   </div>
 </section>
@@ -576,6 +721,29 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
     </div>
   </div>
 </section>
+<!-- ─── ASISTENTE IA EMBEBIDO ─── -->
+<section class="asistente-sec" id="asistente">
+  <div class="asistente-inner">
+    <div class="asistente-head">
+      <p class="section-eyebrow">Pregunta a nuestro asistente</p>
+      <h2 class="section-title" style="font-size:clamp(28px,3vw,40px)">¿Tienes una <em>duda concreta?</em></h2>
+      <p>Habla con el asistente virtual de One2One Pro. Resuelve dudas sobre el Régimen Especial de Artistas, cómo funciona el servicio, cachés, IRPF y altas en la Seguridad Social.</p>
+    </div>
+    <div class="chat-box">
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="chat-msg bot">
+          <div class="chat-avatar">O2O</div>
+          <div class="chat-bubble">Hola, soy el asistente de One2One Pro. ¿Tienes alguna duda sobre el servicio o el Régimen Especial de Artistas?</div>
+        </div>
+      </div>
+      <form class="chat-input-wrap" id="chat-form" onsubmit="event.preventDefault();chatSend();return false">
+        <input type="text" class="chat-input" id="chat-input" placeholder="Escribe tu pregunta..." autocomplete="off" maxlength="500">
+        <button type="submit" class="chat-send" id="chat-send">Enviar</button>
+      </form>
+    </div>
+  </div>
+</section>
+
 <section class="faq-sec" id="faq">
   <div class="faq-inner">
     <div class="faq-l">
@@ -1658,6 +1826,125 @@ function renderSim(){
       }
     },true);
   }
+
+  /* ──────────────────────────────────────────────────
+     CONTADORES ANIMADOS (count-up con IntersectionObserver)
+     ────────────────────────────────────────────────── */
+  function animateCounter(el){
+    const target=parseInt(el.dataset.count)||0;
+    const suffix=el.dataset.suffix||'';
+    const duration=1800;
+    const start=performance.now();
+    function tick(now){
+      const t=Math.min(1,(now-start)/duration);
+      const eased=1-Math.pow(1-t,3);
+      const value=Math.floor(eased*target);
+      el.innerHTML=value.toLocaleString('es-ES')+(suffix?'<span class="cont-suffix">'+suffix+'</span>':'');
+      if(t<1)requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  if('IntersectionObserver' in window){
+    const counterObserver=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          animateCounter(entry.target);
+          counterObserver.unobserve(entry.target);
+        }
+      });
+    },{threshold:0.4});
+    document.querySelectorAll('.cont-num[data-count]').forEach(function(el){counterObserver.observe(el);});
+  } else {
+    document.querySelectorAll('.cont-num[data-count]').forEach(animateCounter);
+  }
+
+  /* ──────────────────────────────────────────────────
+     ASISTENTE IA — Claude API directo desde frontend
+     ──────────────────────────────────────────────────
+     Funciona en dos modos:
+       1) Dentro de un artifact de Claude → usa window.claude.complete
+       2) En la web pública → requiere que window.ANTHROPIC_API_KEY esté
+          definido (típicamente vía un <script> separado que NO subes al
+          repo público). Sin clave, el chat muestra un mensaje amable.   */
+  const CHAT_SYSTEM=`Eres el asistente virtual de One2One Pro, una empresa española especializada en gestión laboral para artistas y técnicos de espectáculos bajo el Régimen Especial de Artistas (Real Decreto 1435/1985).
+
+Responde siempre en español. Sé conciso, claro y profesional. Solo respondes preguntas relacionadas con: altas en la Seguridad Social para artistas, el Régimen Especial de Artistas, cachés, IRPF para artistas, cómo funciona One2One Pro, expedientes, pagos, y dudas legales básicas del sector musical y de espectáculos.
+
+Si alguien pregunta algo fuera de este ámbito, diles amablemente que solo puedes ayudar con temas relacionados con One2One Pro y el sector artístico.
+
+One2One Pro cobra una comisión del 10% sobre el caché acordado. Opera exclusivamente bajo el RD 1435/1985. No gestiona hostelería ni otros sectores. El promotor paga el caché más IVA 21%. Los costes de SS se descuentan del caché junto con la comisión.`;
+  const chatHistory=[];
+
+  function chatEscape(s){return String(s).replace(/[<>&"']/g,function(c){return({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'})[c];});}
+
+  async function callClaude(userMsg){
+    chatHistory.push({role:'user',content:userMsg});
+    /* Modo 1: artifact de Claude */
+    if(window.claude&&typeof window.claude.complete==='function'){
+      const prompt=CHAT_SYSTEM+'\n\nHistorial de la conversación:\n'+chatHistory.map(function(m){return (m.role==='user'?'Usuario':'Asistente')+': '+m.content;}).join('\n\n')+'\n\nResponde ahora como Asistente:';
+      return await window.claude.complete(prompt);
+    }
+    /* Modo 2: Claude API directa (requiere window.ANTHROPIC_API_KEY) */
+    if(window.ANTHROPIC_API_KEY){
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':window.ANTHROPIC_API_KEY,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:800,
+          system:CHAT_SYSTEM,
+          messages:chatHistory
+        })
+      });
+      if(!r.ok){const e=await r.text();throw new Error('HTTP '+r.status+' '+e.substring(0,200));}
+      const data=await r.json();
+      return data.content[0].text;
+    }
+    throw new Error('NO_API');
+  }
+
+  window.chatSend=async function chatSend(){
+    const inp=document.getElementById('chat-input');
+    const btn=document.getElementById('chat-send');
+    const msgs=document.getElementById('chat-msgs');
+    if(!inp||!btn||!msgs)return;
+    const text=inp.value.trim();
+    if(!text)return;
+    msgs.insertAdjacentHTML('beforeend','<div class="chat-msg user"><div class="chat-avatar">TÚ</div><div class="chat-bubble">'+chatEscape(text)+'</div></div>');
+    inp.value='';
+    inp.disabled=true;
+    btn.disabled=true;
+    msgs.scrollTop=msgs.scrollHeight;
+    const typingId='ty_'+Date.now();
+    msgs.insertAdjacentHTML('beforeend','<div class="chat-msg bot" id="'+typingId+'"><div class="chat-avatar">O2O</div><div class="chat-bubble" style="padding:10px 14px"><div class="chat-typing"><span></span><span></span><span></span></div></div></div>');
+    msgs.scrollTop=msgs.scrollHeight;
+    try{
+      const resp=await callClaude(text);
+      chatHistory.push({role:'assistant',content:resp});
+      const t=document.getElementById(typingId);if(t)t.remove();
+      msgs.insertAdjacentHTML('beforeend','<div class="chat-msg bot"><div class="chat-avatar">O2O</div><div class="chat-bubble">'+chatEscape(resp)+'</div></div>');
+    }catch(e){
+      const t=document.getElementById(typingId);if(t)t.remove();
+      let errHtml;
+      if(e.message==='NO_API'){
+        errHtml='<div class="chat-error">El asistente todavía no está conectado a la API en este entorno. Mientras tanto, puedes consultar las <a href="#faq" style="color:inherit;text-decoration:underline">preguntas frecuentes</a> o escribirnos a <a href="mailto:administracion@one2onepro.es" style="color:inherit;text-decoration:underline">administracion@one2onepro.es</a>.</div>';
+      } else {
+        errHtml='<div class="chat-error">Lo siento, ha habido un error procesando tu pregunta. Inténtalo de nuevo en unos segundos.</div>';
+      }
+      msgs.insertAdjacentHTML('beforeend',errHtml);
+      console.error('[asistente]',e);
+    }finally{
+      inp.disabled=false;
+      btn.disabled=false;
+      inp.focus();
+      msgs.scrollTop=msgs.scrollHeight;
+    }
+  };
 })();
 </script>
 </body>
