@@ -463,6 +463,43 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 @media(max-width:480px){.contador-inner{grid-template-columns:1fr;gap:32px}.cont-stat::after{display:none!important}}
 
 /* ─────────────────────────────────────────────
+   COMPARATIVA — Autónomo vs One2One Pro vs Nómina interna
+   ───────────────────────────────────────────── */
+.comparativa{padding:96px 6%;background:var(--fondo);border-top:1px solid var(--gris-borde);border-bottom:1px solid var(--gris-borde)}
+.comparativa-inner{max-width:1100px;margin:0 auto}
+.comparativa-head{text-align:center;margin-bottom:48px}
+.comparativa-head .section-eyebrow{margin-bottom:14px}
+.comparativa-head h2{margin-bottom:14px}
+.comparativa-head p{font-size:14px;color:var(--gris-texto);font-weight:300;line-height:1.7;max-width:560px;margin:0 auto}
+.comparativa-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -6%;padding:0 6%}
+.comparativa-table{width:100%;min-width:720px;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--gris-borde);border-radius:12px;overflow:hidden;font-family:'DM Sans',sans-serif}
+.comparativa-table thead th{padding:24px 18px 18px;font-size:12px;font-weight:600;color:var(--azul);text-align:left;background:#fff;border-bottom:1px solid var(--gris-borde);vertical-align:bottom}
+.comparativa-table thead th.col-concepto{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:var(--gris-suave);font-weight:600}
+.comparativa-table thead th.col-recom{position:relative;background:rgba(0,168,107,.08);border-top:3px solid var(--verde);text-align:center}
+.comparativa-table thead th.col-recom .col-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--azul);letter-spacing:-.5px;line-height:1.15}
+.comparativa-table thead th.col-other{text-align:center}
+.comparativa-table thead th.col-other .col-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:400;color:var(--gris-texto);letter-spacing:-.3px}
+.col-badge{display:inline-block;background:var(--verde);color:#fff;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;padding:4px 10px;border-radius:99px;margin-bottom:10px}
+.comparativa-table tbody td{padding:18px 18px;font-size:13px;line-height:1.55;color:var(--gris-texto);font-weight:400;border-bottom:1px solid var(--gris-borde);vertical-align:top}
+.comparativa-table tbody tr:last-child td{border-bottom:none}
+.comparativa-table tbody td.td-concepto{font-weight:600;color:var(--azul);background:#fafbfd;font-size:12.5px;letter-spacing:.2px;border-right:1px solid var(--gris-borde);width:24%}
+.comparativa-table tbody td.td-recom{background:rgba(0,168,107,.06)}
+.comparativa-table tbody tr:last-child td.td-recom{border-bottom-color:transparent}
+.cmp-ico{display:inline-flex;width:22px;height:22px;border-radius:50%;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin-right:9px;flex-shrink:0;vertical-align:-5px}
+.cmp-ico.yes{background:rgba(0,168,107,.14);color:#00a86b}
+.cmp-ico.no{background:rgba(220,38,38,.12);color:#dc2626}
+.cmp-ico.meh{background:rgba(245,158,11,.16);color:#f59e0b}
+.cmp-row{display:flex;align-items:flex-start;gap:0}
+.cmp-text{flex:1}
+@media(max-width:700px){
+  .comparativa{padding:64px 6%}
+  .comparativa-table thead th{padding:18px 12px 14px}
+  .comparativa-table tbody td{padding:14px 12px;font-size:12.5px}
+  .comparativa-table thead th.col-recom .col-title{font-size:16px}
+  .comparativa-table thead th.col-other .col-title{font-size:14px}
+}
+
+/* ─────────────────────────────────────────────
    QUIÉNES SOMOS — visual block con stats e icons
    ───────────────────────────────────────────── */
 .quienes-visual{background:linear-gradient(135deg,var(--azul) 0%,var(--azul-medio) 100%);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding:60px 8%;min-height:560px}
@@ -793,6 +830,75 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
         <input type="text" class="chat-input" id="chat-input" placeholder="Escribe tu pregunta..." autocomplete="off" maxlength="500">
         <button type="submit" class="chat-send" id="chat-send">Enviar</button>
       </form>
+    </div>
+  </div>
+</section>
+
+<!-- ─── COMPARATIVA — Autónomo vs One2One Pro vs Nómina interna ────────
+     No tiene anchor en el nav a propósito: es contenido de apoyo justo
+     antes del FAQ. -->
+<section class="comparativa">
+  <div class="comparativa-inner">
+    <div class="comparativa-head">
+      <p class="section-eyebrow">Comparativa</p>
+      <h2 class="section-title">Por qué <em>One2One Pro</em></h2>
+      <p>Cómo se compara contratar a un profesional a través de One2One Pro frente a las dos alternativas habituales: que facture como autónomo o que entre en nómina interna.</p>
+    </div>
+    <div class="comparativa-scroll">
+      <table class="comparativa-table" role="table" aria-label="Comparativa entre autónomo, One2One Pro y nómina interna">
+        <thead>
+          <tr>
+            <th scope="col" class="col-concepto">Concepto</th>
+            <th scope="col" class="col-other"><div class="col-title">Autónomo</div></th>
+            <th scope="col" class="col-recom"><span class="col-badge">Recomendado</span><div class="col-title">One2One Pro</div></th>
+            <th scope="col" class="col-other"><div class="col-title">Nómina interna</div></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-concepto">Coste fijo mensual</td>
+            <td><span class="cmp-row"><span class="cmp-ico no" aria-label="No">×</span><span class="cmp-text">Cuota RETA + gestoría</span></span></td>
+            <td class="td-recom"><span class="cmp-row"><span class="cmp-ico yes" aria-label="Sí">✓</span><span class="cmp-text">0€ — solo pagas si contratas</span></span></td>
+            <td><span class="cmp-row"><span class="cmp-ico no" aria-label="No">×</span><span class="cmp-text">Salario fijo + SS + gestoría</span></span></td>
+          </tr>
+          <tr>
+            <td class="td-concepto">Tramitación</td>
+            <td><span class="cmp-row"><span class="cmp-ico no" aria-label="No">×</span><span class="cmp-text">Días o semanas</span></span></td>
+            <td class="td-recom"><span class="cmp-row"><span class="cmp-ico yes" aria-label="Sí">✓</span><span class="cmp-text">Ágil, por profesionales</span></span></td>
+            <td><span class="cmp-row"><span class="cmp-ico no" aria-label="No">×</span><span class="cmp-text">Alta CCC, contrato y nómina</span></span></td>
+          </tr>
+          <tr>
+            <td class="td-concepto">Burocracia para la empresa</td>
+            <td><span class="cmp-row"><span class="cmp-ico meh" aria-label="Parcial">~</span><span class="cmp-text">Recibe factura del autónomo</span></span></td>
+            <td class="td-recom"><span class="cmp-row"><span class="cmp-ico yes" aria-label="Sí">✓</span><span class="cmp-text">Una sola factura, todo gestionado</span></span></td>
+            <td><span class="cmp-row"><span class="cmp-ico no" aria-label="No">×</span><span class="cmp-text">Alta SS, retenciones, nóminas</span></span></td>
+          </tr>
+          <tr>
+            <td class="td-concepto">Burocracia para el profesional</td>
+            <td><span class="cmp-row"><span class="cmp-ico no" aria-label="No">×</span><span class="cmp-text">Alta RETA, IVA, IRPF, modelos</span></span></td>
+            <td class="td-recom"><span class="cmp-row"><span class="cmp-ico yes" aria-label="Sí">✓</span><span class="cmp-text">Solo DNI, SS e IBAN</span></span></td>
+            <td><span class="cmp-row"><span class="cmp-ico meh" aria-label="Parcial">~</span><span class="cmp-text">Contrato gestionado por la empresa</span></span></td>
+          </tr>
+          <tr>
+            <td class="td-concepto">Ideal para trabajos puntuales</td>
+            <td><span class="cmp-row"><span class="cmp-ico no" aria-label="No">×</span><span class="cmp-text">Penaliza si son pocos días</span></span></td>
+            <td class="td-recom"><span class="cmp-row"><span class="cmp-ico yes" aria-label="Sí">✓</span><span class="cmp-text">Pensado exactamente para esto</span></span></td>
+            <td><span class="cmp-row"><span class="cmp-ico meh" aria-label="Parcial">~</span><span class="cmp-text">Sobrecoste si es puntual</span></span></td>
+          </tr>
+          <tr>
+            <td class="td-concepto">Factura para la empresa</td>
+            <td><span class="cmp-row"><span class="cmp-ico yes" aria-label="Sí">✓</span><span class="cmp-text">Sí</span></span></td>
+            <td class="td-recom"><span class="cmp-row"><span class="cmp-ico yes" aria-label="Sí">✓</span><span class="cmp-text">Emitida por One2One Pro</span></span></td>
+            <td><span class="cmp-row"><span class="cmp-ico yes" aria-label="Sí">✓</span><span class="cmp-text">Sí</span></span></td>
+          </tr>
+          <tr>
+            <td class="td-concepto">Cobro legal para el profesional</td>
+            <td><span class="cmp-row"><span class="cmp-ico yes" aria-label="Sí">✓</span><span class="cmp-text">Sí</span></span></td>
+            <td class="td-recom"><span class="cmp-row"><span class="cmp-ico yes" aria-label="Sí">✓</span><span class="cmp-text">Dado de alta en la SS</span></span></td>
+            <td><span class="cmp-row"><span class="cmp-ico yes" aria-label="Sí">✓</span><span class="cmp-text">Sí</span></span></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </section>
