@@ -43,7 +43,7 @@ export default {
     const corsBase = corsHeaders(origin);
 
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: corsBase });
+      return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } });
     }
 
     const url = new URL(request.url);
@@ -84,10 +84,15 @@ function corsHeaders(origin) {
   };
 }
 
-function jsonResponse(data, status, extraHeaders) {
+function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
-    status: status || 200,
-    headers: Object.assign({ 'Content-Type': 'application/json; charset=utf-8' }, extraHeaders || {})
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    }
   });
 }
 
