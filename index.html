@@ -1696,6 +1696,21 @@ async function finalizarExpedienteEmpresa(){
   const r=calcular();
   const expNum='O2O-'+Math.floor(Math.random()*90000+10000);
   const empresaDir=[st.eTipoVia,st.eCalle,st.eNumero,st.ePiso].filter(Boolean).join(' ')+', '+(st.eCp||'')+' '+(st.eMunicipio||'')+', '+(st.eProvincia||'');
+  /* Guard defensivo final: el módulo Stripe (Make scenario 5779346, módulo 14)
+     pone este valor en `customer_email`. Si llegase vacío Stripe responde
+     [email_invalid] y aborta el checkout. Saneamos y validamos formato como
+     última línea de defensa por si validación previa fue bypassed (autofill,
+     queue stale, race condition entre render y submit). */
+  const empresaEmail=((st.eEmailFact||'').trim().toLowerCase())||((user.email||'').trim().toLowerCase());
+  if(!aValidEmail(empresaEmail)){
+    document.getElementById('sim-c').innerHTML=`<div class="exito">
+<div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div>
+<div class="exito-title">Email de facturación requerido</div>
+<div class="exito-sub">No hemos podido procesar la solicitud porque el email de facturación es inválido o está vacío. Vuelve al panel y revísalo antes de continuar.</div>
+<button class="btn-n" style="margin-top:18px" onclick="cerrarExpediente()">Volver al panel</button>
+</div>`;
+    return;
+  }
   document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Procesando su solicitud...</div><div class="exito-sub">Estamos preparando su enlace de pago. Un momento por favor.</div></div>`;
   const payload={
     expediente:expNum,
@@ -1714,8 +1729,8 @@ async function finalizarExpedienteEmpresa(){
     iva:r.iva,
     total_factura:r.totalPromotor,
     total_factura_centimos:Math.round(r.totalPromotor*100),
-    /* Empresa (recogida en este expediente) */
-    empresa_email:st.eEmailFact||user.email,
+    /* Empresa (recogida en este expediente). empresa_email ya saneado y validado arriba. */
+    empresa_email:empresaEmail,
     empresa_razon_social:st.eRazon,
     empresa_cif:st.eCif,
     empresa_direccion:empresaDir,
