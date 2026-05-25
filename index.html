@@ -866,6 +866,43 @@ const EMPRESA_WEBHOOK='https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjk
 /* perfil = "artista" o "empresa". Antes del login indica qué pestaña ha pulsado el usuario.
    Después del login se sobreescribe con user.accountType en cada renderSim(). */
 let perfil=null;
+
+/* ─── Cloudflare Worker (proxy seguro a Drive + Anthropic) ─────────────────
+   Despliega `worker.js` siguiendo DEPLOY.md y SUSTITUYE USUARIO por tu
+   subdominio de Cloudflare Workers (sale tras `wrangler deploy`). Sin esta
+   URL apuntando a un worker desplegado: la subida del DNI a Drive, la
+   validación con IA y el asistente NO funcionarán. */
+const WORKER_URL='https://one2one-worker.USUARIO.workers.dev';
+
+/* Sube un fileObj {name,size,type,data:'data:...;base64,...'} al endpoint
+   /upload-drive del worker y devuelve la URL pública de Drive. */
+async function o2oUploadToDrive(fileObj){
+  if(!fileObj||!fileObj.data)throw new Error('Missing file data');
+  const r=await fetch(WORKER_URL+'/upload-drive',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({filename:fileObj.name||'',mimeType:fileObj.type||'',base64:fileObj.data})
+  });
+  if(!r.ok){const t=await r.text().catch(()=>''); throw new Error('upload-drive HTTP '+r.status+' '+t.substring(0,200));}
+  const data=await r.json();
+  if(!data.url)throw new Error('upload-drive: no URL in response');
+  return data.url;
+}
+
+/* Llama a /validate-dni del worker (Claude vision) para comprobar que los
+   datos introducidos coinciden con el documento. Devuelve null si la IA no
+   pudo extraer un JSON parseable; si pudo, {valido, confianza, discrepancias[],
+   mensaje}. */
+async function o2oValidateDni(payload){
+  const r=await fetch(WORKER_URL+'/validate-dni',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  });
+  if(!r.ok){const t=await r.text().catch(()=>''); throw new Error('validate-dni HTTP '+r.status+' '+t.substring(0,200));}
+  const data=await r.json();
+  return data.result||null;
+}
 let st={
   step:0,act:null,ubic:null,imp:'',dias:'',
   fechaInicio:'',fechaFin:'',
@@ -887,6 +924,7 @@ function resetExpedienteState(){
   st.pNombre='';st.pCif='';st.pEmail='';
   st.aNombre='';st.aApellidos='';st.aDni='';st.aFechaNac='';st.aNacionalidad='';
   st.aDireccion='';st.aIban='';st.aNaf='';st.aTel='';
+  st.aDniAnverso=null;st.aDniReverso=null;
   st.eContacto='';st.eTel='';st.eRazon='';st.eCif='';st.eEmailFact='';
   st.eTipoVia='Calle';st.eCalle='';st.eNumero='';st.ePiso='';
   st.eCp='';st.eMunicipio='';st.eProvincia='';
@@ -1165,6 +1203,22 @@ function aHandleFile(event,key){
   reader.readAsDataURL(file);
 }
 
+/* Hermano de aHandleFile pero para el flujo empresa: guarda el archivo en
+   `st.aDniAnverso` / `st.aDniReverso` (en lugar de en artistAuth.form). */
+function aHandleEmpFile(event,key){
+  const file=event.target.files[0];if(!file)return;
+  if(!['image/jpeg','image/png'].includes(file.type)){alert('El archivo debe ser JPG o PNG.');return;}
+  if(file.size>5*1024*1024){alert('El archivo no puede superar 5 MB.');return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    st[key]={name:file.name,size:file.size,type:file.type,data:e.target.result};
+    renderSim();
+    /* Re-evaluar el botón "Continuar" tras la subida */
+    rBtn('exp-bs3',artistaDatosValidos);
+  };
+  reader.readAsDataURL(file);
+}
+
 /* ─── Auth chrome ─── */
 function aTabs(active){return `<div class="auth-tabs">
 <button class="auth-tab ${active==='login'?'active':''}" onclick="aSwitchView('login')">Iniciar sesión</button>
@@ -1370,21 +1424,47 @@ function profileArtValido(){
   return null;
 }
 
-function submitArtProfile(){
+async function submitArtProfile(){
   aSyncFormFromDOM();
   const err=profileArtValido();
   if(err){artistAuth.error=err;renderSim();const simEl=document.getElementById('sim');if(simEl)window.scrollTo({top:simEl.offsetTop,behavior:'smooth'});return;}
   const user=aGetCurrentUser();if(!user)return;
   const p=artistAuth.form;
   const c=document.getElementById('sim-c');
-  c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Guardando tu perfil...</div><div class="exito-sub">Un momento por favor.</div></div>`;
-  /* Envío del perfil al webhook de Make. Fire-and-forget: no bloquea la UX
-     si el webhook falla. NOTA: las fotos del DNI (base64) NO se envían aquí
-     porque hacen que el payload supere el límite del webhook (HTTP 413).
-     Las fotos quedan guardadas solo en localStorage por ahora; cuando haya
-     un store de blobs (Cloudinary/S3/Airtable Attachments via signed URL)
-     se enviará una URL pública en lugar del base64. */
+  c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Subiendo fotos del DNI...</div><div class="exito-sub">Un momento por favor.</div></div>`;
   try{
+    /* 1) Subida de las dos fotos del DNI a Google Drive vía el Worker. Ambas
+       en paralelo para minimizar latencia. El base64 NO viaja a Make: el
+       payload de webhook llevará las URLs públicas devueltas por el Worker. */
+    const [dniAnversoURL,dniReversoURL]=await Promise.all([
+      o2oUploadToDrive(p.dniAnverso),
+      o2oUploadToDrive(p.dniReverso)
+    ]);
+    /* 2) Validación con IA: Claude vision compara el documento con los datos
+       introducidos. Si detecta discrepancias serias, abortamos y se lo
+       contamos al usuario en lenguaje natural. */
+    c.innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Validando tu identidad...</div><div class="exito-sub">Comparando las fotos con los datos del perfil.</div></div>`;
+    const val=await o2oValidateDni({
+      nombre:p.nombre||'',
+      apellidos:p.apellidos||'',
+      dni:p.numDoc||'',
+      fechaNacimiento:p.fechaNac||'',
+      anversoBase64:p.dniAnverso.data,
+      reversoBase64:p.dniReverso.data
+    });
+    if(val && val.valido===false){
+      c.innerHTML=`<div class="exito">
+<div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div>
+<div class="exito-title">Revisa tu documentación</div>
+<div class="exito-sub">Hemos detectado una discrepancia en tu documentación. Revisa que las fotos del DNI sean legibles y que los datos introducidos coincidan exactamente.</div>
+${(val.discrepancias&&val.discrepancias.length)?'<ul style="text-align:left;margin:14px auto;max-width:380px;padding-left:20px;font-size:13px;color:var(--gris-texto)">'+val.discrepancias.map(d=>'<li style=\"margin-bottom:6px\">'+aEscape(String(d))+'</li>').join('')+'</ul>':''}
+<button class="btn-n" style="margin-top:16px" onclick="artistAuth.error='';renderSim()">Volver al formulario</button>
+</div>`;
+      return;
+    }
+    /* 3) Envío a Make: payload con URLs de Drive en lugar de base64. Awaited
+       en lugar de fire-and-forget porque el éxito condiciona la transición
+       a "perfil en revisión". */
     const webhookPayload={
       email:user.email,
       nombre:p.nombre||'',
@@ -1406,17 +1486,30 @@ function submitArtProfile(){
       iban:p.iban||'',
       naf:p.naf||'',
       profesionArtistica:p.profesion||'',
+      dniAnversoURL:dniAnversoURL,
+      dniReversoURL:dniReversoURL,
+      validacionIA:val||null,
       submittedAt:new Date().toISOString()
     };
-    fetch('https://hook.eu1.make.com/azu072mdlkvxarr98xp9flffxd5gipa3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(webhookPayload)}).catch(e=>console.error('Webhook Make (Registro artista) error:',e));
-  }catch(e){console.error('Webhook Make (Registro artista) error:',e);}
-  /* Persistencia local: guardamos el perfil completo incluyendo el base64
-     de las fotos del DNI (campo `.data`). Necesario para revisión local del
-     usuario y para reenviar cuando exista el store de blobs definitivo. */
-  const profileToStore=Object.assign({},p);
-  aUpdateUser(user.email,{profile:profileToStore,profileStatus:'en_revision',profileSubmittedAt:new Date().toISOString()});
-  artistAuth.form={};artistAuth.error='';
-  renderSim();
+    await fetch('https://hook.eu1.make.com/azu072mdlkvxarr98xp9flffxd5gipa3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(webhookPayload)});
+    /* 4) Persistencia local: guardamos las URLs de Drive (NO las base64,
+       que ya viven en Drive). Esto evita reventar el quota de localStorage
+       con imágenes pesadas. */
+    const profileToStore=Object.assign({},p);
+    if(profileToStore.dniAnverso)profileToStore.dniAnverso={name:profileToStore.dniAnverso.name,size:profileToStore.dniAnverso.size,type:profileToStore.dniAnverso.type,url:dniAnversoURL};
+    if(profileToStore.dniReverso)profileToStore.dniReverso={name:profileToStore.dniReverso.name,size:profileToStore.dniReverso.size,type:profileToStore.dniReverso.type,url:dniReversoURL};
+    aUpdateUser(user.email,{profile:profileToStore,profileStatus:'en_revision',profileSubmittedAt:new Date().toISOString()});
+    artistAuth.form={};artistAuth.error='';
+    renderSim();
+  }catch(e){
+    console.error('submitArtProfile error:',e);
+    c.innerHTML=`<div class="exito">
+<div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div>
+<div class="exito-title">Error procesando tu perfil</div>
+<div class="exito-sub">No hemos podido completar el envío. Inténtalo en unos minutos. Si persiste, escríbenos a <strong>administracion@one2onepro.es</strong>.</div>
+<button class="btn-n" style="margin-top:16px" onclick="artistAuth.error='';renderSim()">Volver al formulario</button>
+</div>`;
+  }
 }
 
 /* PERFIL EMPRESA eliminado — la cuenta empresa va directa de la verificación
@@ -1683,6 +1776,12 @@ ${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del profesional</
 <div class="form-field"><label>NAF (opcional)</label><input type="text" placeholder="12 dígitos" maxlength="12" value="${aEscape(st.aNaf)}" oninput="st.aNaf=this.value.replace(/\D/g,'').substring(0,12);this.value=st.aNaf"></div>
 </div>
 </div>
+<div class="form-section">
+<div class="form-section-title">Documento de identidad del profesional</div>
+<p style="font-size:12px;color:var(--gris-suave);margin-bottom:12px;font-weight:300;line-height:1.55">Sube las dos caras del DNI o NIE del profesional. Validaremos automáticamente que los datos coinciden con las fotos.</p>
+<div class="file-upload"><label class="file-upload-btn ${st.aDniAnverso?'has-file':''}" for="emp-dni-anverso">${st.aDniAnverso?'<span class="fu-title">✓ '+aEscape(st.aDniAnverso.name)+'</span><span class="fu-sub">'+(st.aDniAnverso.size/1024).toFixed(0)+' KB · cambiar archivo</span>':'<span class="fu-title">📄 Foto DNI / NIE anverso *</span><span class="fu-sub">JPG o PNG · máx 5MB</span>'}</label><input type="file" id="emp-dni-anverso" accept="image/jpeg,image/png" onchange="aHandleEmpFile(event,'aDniAnverso')"></div>
+<div class="file-upload"><label class="file-upload-btn ${st.aDniReverso?'has-file':''}" for="emp-dni-reverso">${st.aDniReverso?'<span class="fu-title">✓ '+aEscape(st.aDniReverso.name)+'</span><span class="fu-sub">'+(st.aDniReverso.size/1024).toFixed(0)+' KB · cambiar archivo</span>':'<span class="fu-title">📄 Foto DNI / NIE reverso *</span><span class="fu-sub">JPG o PNG · máx 5MB</span>'}</label><input type="file" id="emp-dni-reverso" accept="image/jpeg,image/png" onchange="aHandleEmpFile(event,'aDniReverso')"></div>
+</div>
 <button class="btn-n" id="exp-bs3" onclick="continueEmpresaPaso3()" ${!artistaDatosValidos()?'disabled':''}>Continuar a confirmación →</button>`;
   } else if(st.step===4){
     /* Pre-rellenar el contacto con el nombre de la cuenta si está vacío */
@@ -1799,6 +1898,8 @@ function artistaDatosValidos(){
   if(!aValidTelES(st.aTel))return false;
   if(!st.aDireccion||st.aDireccion.trim().length<5)return false;
   if(!aValidIbanES(st.aIban))return false;
+  if(!st.aDniAnverso||!st.aDniAnverso.data)return false;
+  if(!st.aDniReverso||!st.aDniReverso.data)return false;
   return true;
 }
 
@@ -1828,6 +1929,46 @@ async function finalizarExpedienteEmpresa(){
 </div>`;
     return;
   }
+  document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Subiendo documentación del profesional...</div><div class="exito-sub">Un momento por favor.</div></div>`;
+  let trabajadorDniAnversoURL='', trabajadorDniReversoURL='', validacionIA=null;
+  try{
+    /* Subida del DNI del profesional a Drive (paralela) */
+    const uploaded=await Promise.all([
+      o2oUploadToDrive(st.aDniAnverso),
+      o2oUploadToDrive(st.aDniReverso)
+    ]);
+    trabajadorDniAnversoURL=uploaded[0];
+    trabajadorDniReversoURL=uploaded[1];
+    /* Validación con IA */
+    document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Validando documentación...</div><div class="exito-sub">Comprobando que las fotos coinciden con los datos.</div></div>`;
+    validacionIA=await o2oValidateDni({
+      nombre:st.aNombre||'',
+      apellidos:st.aApellidos||'',
+      dni:st.aDni||'',
+      fechaNacimiento:st.aFechaNac||'',
+      anversoBase64:st.aDniAnverso.data,
+      reversoBase64:st.aDniReverso.data
+    });
+    if(validacionIA && validacionIA.valido===false){
+      document.getElementById('sim-c').innerHTML=`<div class="exito">
+<div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div>
+<div class="exito-title">Revisa la documentación del profesional</div>
+<div class="exito-sub">Hemos detectado una discrepancia entre las fotos del DNI y los datos introducidos. Revisa que las fotos sean legibles y que el nombre, apellidos, DNI y fecha de nacimiento coincidan exactamente con el documento.</div>
+${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="text-align:left;margin:14px auto;max-width:380px;padding-left:20px;font-size:13px;color:var(--gris-texto)">'+validacionIA.discrepancias.map(d=>'<li style=\"margin-bottom:6px\">'+aEscape(String(d))+'</li>').join('')+'</ul>':''}
+<button class="btn-n" style="margin-top:16px" onclick="st.step=3;renderSim()">Volver a editar</button>
+</div>`;
+      return;
+    }
+  }catch(e){
+    console.error('Empresa expediente upload/validate error:',e);
+    document.getElementById('sim-c').innerHTML=`<div class="exito">
+<div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div>
+<div class="exito-title">No hemos podido procesar la documentación</div>
+<div class="exito-sub">Ha habido un error subiendo o validando las fotos del DNI. Inténtalo en unos minutos o contacta a <strong>administracion@one2onepro.es</strong>.</div>
+<button class="btn-n" style="margin-top:16px" onclick="cerrarExpediente()">Volver al panel</button>
+</div>`;
+    return;
+  }
   document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Procesando su solicitud...</div><div class="exito-sub">Estamos preparando su enlace de pago. Un momento por favor.</div></div>`;
   const payload={
     expediente:expNum,
@@ -1854,7 +1995,10 @@ async function finalizarExpedienteEmpresa(){
     empresa_telefono:st.eTel,
     empresa_contacto:st.eContacto||user.nombre||'',
     empresa_usuario_email:user.email,
-    /* Artista (del expediente) */
+    /* Profesional (del expediente). Las fotos del DNI viajan como URL pública
+       de Google Drive — el base64 NO se envía a Make (HTTP 413 garantizado).
+       Las URLs las generó el Worker tras subir los archivos a la carpeta
+       "DNIs One2One Pro". */
     modo_datos_trabajador:'manual',
     trabajador_email:'',
     trabajador_nombre:st.aNombre,
@@ -1865,7 +2009,10 @@ async function finalizarExpedienteEmpresa(){
     trabajador_direccion:st.aDireccion,
     trabajador_naf:st.aNaf||'',
     trabajador_iban:(st.aIban||'').replace(/\s/g,'').toUpperCase(),
-    trabajador_telefono:st.aTel
+    trabajador_telefono:st.aTel,
+    trabajador_dniAnversoURL:trabajadorDniAnversoURL,
+    trabajador_dniReversoURL:trabajadorDniReversoURL,
+    trabajador_validacionIA:validacionIA||null
   };
   try{
     await fetch(EMPRESA_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -1999,53 +2146,39 @@ function renderSim(){
   }
 
   /* ──────────────────────────────────────────────────
-     ASISTENTE IA — Claude API directo desde frontend
-     ──────────────────────────────────────────────────
-     Funciona en dos modos:
-       1) Dentro de un artifact de Claude → usa window.claude.complete
-       2) En la web pública → requiere que window.ANTHROPIC_API_KEY esté
-          definido (típicamente vía un <script> separado que NO subes al
-          repo público). Sin clave, el chat muestra un mensaje amable.   */
-  const CHAT_SYSTEM=`Eres el asistente virtual de One2One Pro, una empresa española especializada en gestión laboral para artistas y técnicos de espectáculos bajo el Régimen Especial de Artistas (Real Decreto 1435/1985).
-
-Responde siempre en español. Sé conciso, claro y profesional. Solo respondes preguntas relacionadas con: altas en la Seguridad Social para artistas, el Régimen Especial de Artistas, cachés, IRPF para artistas, cómo funciona One2One Pro, expedientes, pagos, y dudas legales básicas del sector musical y de espectáculos.
-
-Si alguien pregunta algo fuera de este ámbito, diles amablemente que solo puedes ayudar con temas relacionados con One2One Pro y el sector artístico.
-
-One2One Pro cobra una comisión del 10% sobre el caché acordado. Opera exclusivamente bajo el RD 1435/1985. No gestiona hostelería ni otros sectores. El promotor paga el caché más IVA 21%. Los costes de SS se descuentan del caché junto con la comisión.`;
+     ASISTENTE IA — vía Cloudflare Worker (no llamamos a Anthropic desde
+     el navegador para no exponer la API key).
+     El system prompt vive en `worker.js`; aquí solo enviamos message+history.
+     ────────────────────────────────────────────────── */
   const chatHistory=[];
 
   function chatEscape(s){return String(s).replace(/[<>&"']/g,function(c){return({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'})[c];});}
 
   async function callClaude(userMsg){
-    chatHistory.push({role:'user',content:userMsg});
-    /* Modo 1: artifact de Claude */
+    /* Fallback: si seguimos dentro de un artifact de Claude y existe
+       window.claude.complete, lo usamos. Útil para previsualizar el chat
+       en entornos de desarrollo sin worker desplegado. */
     if(window.claude&&typeof window.claude.complete==='function'){
-      const prompt=CHAT_SYSTEM+'\n\nHistorial de la conversación:\n'+chatHistory.map(function(m){return (m.role==='user'?'Usuario':'Asistente')+': '+m.content;}).join('\n\n')+'\n\nResponde ahora como Asistente:';
+      chatHistory.push({role:'user',content:userMsg});
+      const fakeSystem='Eres el asistente virtual de One2One Pro. Responde siempre en español, conciso y profesional, solo sobre temas del Régimen Especial de Artistas, gestión laboral y One2One Pro.';
+      const prompt=fakeSystem+'\n\nHistorial:\n'+chatHistory.map(m=>(m.role==='user'?'Usuario':'Asistente')+': '+m.content).join('\n\n')+'\n\nResponde ahora como Asistente:';
       return await window.claude.complete(prompt);
     }
-    /* Modo 2: Claude API directa (requiere window.ANTHROPIC_API_KEY) */
-    if(window.ANTHROPIC_API_KEY){
-      const r=await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'x-api-key':window.ANTHROPIC_API_KEY,
-          'anthropic-version':'2023-06-01',
-          'anthropic-dangerous-direct-browser-access':'true'
-        },
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:800,
-          system:CHAT_SYSTEM,
-          messages:chatHistory
-        })
-      });
-      if(!r.ok){const e=await r.text();throw new Error('HTTP '+r.status+' '+e.substring(0,200));}
-      const data=await r.json();
-      return data.content[0].text;
+    /* Modo producción: POST al worker. */
+    const r=await fetch(WORKER_URL+'/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:userMsg,history:chatHistory})
+    });
+    if(!r.ok){
+      if(r.status===404||r.status===0)throw new Error('NO_API');
+      const e=await r.text();
+      throw new Error('HTTP '+r.status+' '+e.substring(0,200));
     }
-    throw new Error('NO_API');
+    const data=await r.json();
+    if(!data.text)throw new Error('Empty response from worker');
+    chatHistory.push({role:'user',content:userMsg});
+    return data.text;
   }
 
   window.chatSend=async function chatSend(){
