@@ -1530,7 +1530,24 @@ function generarEnlaceArtista(){
   aSyncFormFromDOM();
   if(!promotorDatosValidos()){alert('Revisa los datos del promotor.');return;}
   const code='O2O-'+Math.floor(Math.random()*90000+10000);
-  const url='https://one2onepro.es/pagar?exp='+encodeURIComponent(code);
+  /* Construye el enlace que el artista enviará al promotor. Apunta a
+     /pago.html con un resumen completo del expediente en la URL para que
+     la página pueda renderizar sin backend. El parámetro `stripe` se
+     añade más tarde (cuando Make cree la sesión de Stripe Checkout)
+     y reescriba el enlace; mientras tanto pago.html mostrará el resumen
+     con el botón deshabilitado y un aviso de "Esperando enlace de pago". */
+  const r=calcular();
+  const params=new URLSearchParams({
+    expediente:code,
+    artista:[st.aNombre,st.aApellidos].filter(Boolean).join(' '),
+    actividad:(st.act&&st.act.label)||'',
+    fechaInicio:st.fechaInicio||'',
+    fechaFin:st.fechaFin||'',
+    baseImponible:r.cache.toFixed(2),
+    iva:r.iva.toFixed(2),
+    total:r.totalPromotor.toFixed(2)
+  });
+  const url='https://one2onepro.es/pago.html?'+params.toString();
   artistAuth.expedienteResult={code:code,url:url,createdAt:new Date().toISOString()};
   next();
 }

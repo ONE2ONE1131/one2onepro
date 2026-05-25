@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Pago seguro · One2One Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230f2d5e'/%3E%3Ctext x='50' y='65' font-family='Playfair Display,serif' font-size='52' font-weight='700' fill='%2300a86b' text-anchor='middle'%3EO%3C/text%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --azul:#0f2d5e;--azul-medio:#1a4a8a;--azul-claro:#e8f0fe;
+  --verde:#00a86b;--fondo:#f5f7fa;
+  --gris-texto:#4a6080;--gris-borde:#d0dae8;--gris-suave:#8899aa;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--fondo);color:var(--azul);min-height:100vh;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 25% 20%,rgba(15,45,94,.04) 0%,transparent 50%),radial-gradient(circle at 75% 80%,rgba(0,168,107,.04) 0%,transparent 50%);pointer-events:none;z-index:0}
+
+nav{position:sticky;top:0;left:0;right:0;z-index:10;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(15,45,94,.97);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)}
+.logo{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:#fff;text-decoration:none}
+.logo em{font-style:italic;font-weight:400;color:rgba(255,255,255,.5)}
+.nav-tag{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45)}
+
+main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:48px 20px 64px;position:relative;z-index:1}
+.pago-card{width:100%;max-width:540px;background:#fff;border:1px solid var(--gris-borde);border-radius:12px;box-shadow:0 8px 32px rgba(15,45,94,.06),0 2px 8px rgba(15,45,94,.04);overflow:hidden}
+
+.pago-head{padding:32px 36px 24px;background:linear-gradient(135deg,var(--azul) 0%,var(--azul-medio) 100%);color:#fff;position:relative;overflow:hidden}
+.pago-head::after{content:'';position:absolute;top:-80px;right:-80px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(0,168,107,.25) 0%,transparent 70%);pointer-events:none}
+.pago-eyebrow{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:10px;position:relative;z-index:1}
+.pago-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1.15;letter-spacing:-.5px;position:relative;z-index:1}
+
+.pago-body{padding:28px 36px 32px}
+.meta{display:grid;gap:14px;margin-bottom:26px}
+.meta-row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;border-bottom:1px solid var(--gris-borde);padding-bottom:14px}
+.meta-row:last-child{border-bottom:none;padding-bottom:0}
+.meta-l{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave)}
+.meta-r{font-size:15px;font-weight:500;color:var(--azul);text-align:right}
+
+.totales{background:var(--fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:20px 22px;margin-bottom:28px}
+.lin{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;font-size:14px;color:var(--gris-texto)}
+.lin strong{font-weight:500;color:var(--azul);font-variant-numeric:tabular-nums}
+.sep{height:1px;background:var(--gris-borde);margin:10px 0}
+.lin.tot{padding-top:8px}
+.lin.tot span{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--azul)}
+.lin.tot strong{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--azul);letter-spacing:-.5px}
+
+.btn-pagar{width:100%;padding:18px;background:var(--verde);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-pagar:hover{opacity:.9}
+.btn-pagar:active{transform:translateY(1px)}
+.btn-pagar:disabled{background:var(--gris-borde);color:var(--gris-suave);cursor:not-allowed;opacity:1}
+.btn-pagar:disabled:hover{opacity:1}
+
+.legal{margin-top:18px;font-size:12px;color:var(--gris-suave);text-align:center;line-height:1.6;font-weight:300}
+.legal .lock{color:var(--verde);font-weight:500}
+
+.aviso{margin-top:14px;background:#fff8e6;border:1px solid #f7d488;border-radius:6px;padding:12px 14px;font-size:12px;color:#8a6300;line-height:1.55;display:none}
+.aviso.show{display:block}
+
+.error-state{padding:48px 36px;text-align:center}
+.error-state .ico{width:56px;height:56px;border-radius:50%;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px;font-weight:700}
+.error-state h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:10px}
+.error-state p{font-size:14px;color:var(--gris-texto);line-height:1.6;font-weight:300}
+
+footer{padding:24px 5%;text-align:center;font-size:11px;color:var(--gris-suave);font-weight:300;position:relative;z-index:1}
+footer a{color:var(--gris-suave);text-decoration:none}
+footer a:hover{color:var(--azul)}
+
+@media(max-width:560px){
+  .pago-head{padding:26px 22px 20px}
+  .pago-body{padding:22px 22px 26px}
+  .pago-title{font-size:24px}
+  .meta-r{font-size:14px}
+  .lin.tot strong{font-size:24px}
+}
+</style>
+</head>
+<body>
+<nav>
+  <a href="https://one2onepro.es" class="logo">One2One<em> Pro</em></a>
+  <span class="nav-tag">Pago seguro</span>
+</nav>
+
+<main>
+  <div class="pago-card" id="card">
+    <div class="pago-head">
+      <p class="pago-eyebrow">Régimen Especial de Artistas · RD 1435/1985</p>
+      <h1 class="pago-title">Solicitud de alta laboral</h1>
+    </div>
+    <div class="pago-body">
+      <div class="meta">
+        <div class="meta-row"><span class="meta-l">Expediente</span><span class="meta-r" id="m-exp">—</span></div>
+        <div class="meta-row"><span class="meta-l">Artista</span><span class="meta-r" id="m-art">—</span></div>
+        <div class="meta-row"><span class="meta-l">Actividad</span><span class="meta-r" id="m-act">—</span></div>
+        <div class="meta-row"><span class="meta-l">Período</span><span class="meta-r" id="m-per">—</span></div>
+      </div>
+      <div class="totales">
+        <div class="lin"><span>Base imponible</span><strong id="t-base">—</strong></div>
+        <div class="lin"><span>IVA (21%)</span><strong id="t-iva">—</strong></div>
+        <div class="sep"></div>
+        <div class="lin tot"><span>Total a pagar</span><strong id="t-total">—</strong></div>
+      </div>
+      <button class="btn-pagar" id="btnPagar">Pagar ahora →</button>
+      <div class="aviso" id="aviso"></div>
+      <p class="legal"><span class="lock">🔒</span> Pago seguro · One2One Pro gestiona el alta en cuanto se confirma el pago</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  One2One Pro · <a href="https://one2onepro.es">one2onepro.es</a> · administracion@one2onepro.es
+</footer>
+
+<script>
+(function(){
+  /* Lee los parámetros de la URL y rellena el resumen. Diseñado para que
+     pago.html funcione 100% client-side sin necesidad de backend: la página
+     simplemente refleja lo que viene en la URL.
+     Parámetros esperados (todos opcionales pero recomendados):
+       expediente      — código tipo O2O-12345
+       artista         — nombre completo del artista
+       actividad       — descripción de la actividad
+       fechaInicio     — YYYY-MM-DD
+       fechaFin        — YYYY-MM-DD
+       baseImponible   — número en euros (no en céntimos)
+       iva             — número en euros
+       total           — número en euros
+       stripe          — URL completa de Stripe Checkout */
+  function esc(s){
+    if(s==null)return '—';
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function fmtEUR(v){
+    var n = parseFloat(String(v||'').replace(',','.'));
+    if(!isFinite(n)) return '—';
+    return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  }
+  function fmtDate(s){
+    if(!s) return '';
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+    if(!m) return s;
+    return m[3]+'/'+m[2]+'/'+m[1];
+  }
+  function safeStripeUrl(u){
+    if(!u) return null;
+    try{
+      var url = new URL(u);
+      if(!/^(https?:)$/.test(url.protocol)) return null;
+      /* Whitelist de dominios Stripe legítimos para evitar open-redirect. */
+      var h = url.hostname.toLowerCase();
+      if(h==='checkout.stripe.com' || h==='buy.stripe.com' || /\.stripe\.com$/.test(h)) return u;
+      return null;
+    }catch(e){ return null; }
+  }
+
+  var params = new URLSearchParams(window.location.search);
+  var exp = params.get('expediente') || '';
+  var artista = params.get('artista') || '';
+  var actividad = params.get('actividad') || '';
+  var fi = params.get('fechaInicio') || '';
+  var ff = params.get('fechaFin') || '';
+  var base = params.get('baseImponible');
+  var iva = params.get('iva');
+  var total = params.get('total');
+  var stripe = safeStripeUrl(params.get('stripe'));
+
+  /* Si no hay ni expediente ni total, pintamos error claro en lugar de
+     un resumen vacío. */
+  if(!exp && total==null){
+    document.getElementById('card').innerHTML =
+      '<div class="error-state">'+
+      '<div class="ico">!</div>'+
+      '<h2>Enlace incompleto</h2>'+
+      '<p>Este enlace de pago no contiene los datos necesarios para procesar el cobro. Pide al artista que te lo reenvíe completo, o escríbenos a <strong>administracion@one2onepro.es</strong>.</p>'+
+      '</div>';
+    return;
+  }
+
+  document.getElementById('m-exp').textContent  = exp || '—';
+  document.getElementById('m-art').textContent  = artista || '—';
+  document.getElementById('m-act').textContent  = actividad || '—';
+  var per = '';
+  if(fi && ff && fi !== ff) per = fmtDate(fi)+' — '+fmtDate(ff);
+  else if(fi) per = fmtDate(fi);
+  document.getElementById('m-per').textContent = per || '—';
+
+  document.getElementById('t-base').textContent  = (base==null)? '—' : fmtEUR(base);
+  document.getElementById('t-iva').textContent   = (iva==null)?  '—' : fmtEUR(iva);
+  document.getElementById('t-total').textContent = (total==null)?'—' : fmtEUR(total);
+
+  /* Título de la pestaña con el expediente y el importe para que sea
+     fácil de identificar en una bandeja con muchas pestañas abiertas. */
+  if(exp || total) document.title = (exp?exp+' · ':'')+'Pago seguro · One2One Pro';
+
+  var btn = document.getElementById('btnPagar');
+  var aviso = document.getElementById('aviso');
+  if(stripe){
+    btn.addEventListener('click', function(){
+      btn.disabled = true;
+      btn.innerHTML = 'Redirigiendo a Stripe…';
+      window.location.href = stripe;
+    });
+  } else {
+    btn.disabled = true;
+    btn.textContent = 'Esperando enlace de pago';
+    aviso.classList.add('show');
+    aviso.innerHTML = '<strong>Este enlace aún no incluye la URL de pago de Stripe.</strong> One2One Pro la genera al confirmar el expediente y te la enviará por email. Si han pasado más de unos minutos, escribe a <strong>administracion@one2onepro.es</strong>.';
+  }
+})();
+</script>
+</body>
+</html>
