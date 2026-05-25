@@ -34,11 +34,57 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;ali
 .nav-badge.empresa{background:rgba(232,240,254,.14);color:#cfe2ff;border-color:rgba(207,226,255,.32)}
 .nav-logout{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:#dc2626;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;transition:background .15s;font-family:inherit}
 .nav-logout:hover{background:#b91c1c}
+.nav-link{font-family:inherit;font-size:13px;font-weight:500;color:rgba(255,255,255,.7);background:none;border:none;cursor:pointer;padding:8px 4px;transition:color .15s;white-space:nowrap}
+.nav-link:hover{color:#fff}
 .perfil-btn:disabled{cursor:not-allowed;opacity:.45;background:transparent;color:var(--gris-suave)}
 .perfil-btn.act:disabled{opacity:1;cursor:default}
 
+/* ─── MODAL DE AUTH ──────────────────────────────────────────────────── */
+.auth-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:80px 20px 40px;overflow-y:auto}
+.auth-modal.show{display:flex}
+.auth-modal-overlay{position:fixed;inset:0;background:rgba(9,29,61,.65);backdrop-filter:blur(6px)}
+.auth-modal-box{position:relative;background:#fff;border-radius:14px;max-width:480px;width:100%;box-shadow:0 16px 48px rgba(15,45,94,.3);padding:36px 36px 30px;animation:authModalIn .25s ease}
+@keyframes authModalIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+.auth-modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:28px;color:var(--gris-suave);cursor:pointer;line-height:1;padding:4px 10px;font-family:inherit;transition:color .15s}
+.auth-modal-close:hover{color:var(--azul)}
+.auth-modal-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--azul);margin-bottom:20px;letter-spacing:-.5px;line-height:1.2}
+.auth-modal-title em{font-style:italic;font-weight:400;color:var(--azul-medio)}
+.auth-modal .auth-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--gris-borde)}
+.auth-modal .auth-tab{flex:1;background:none;border:none;padding:12px 0;font-family:inherit;font-size:13px;font-weight:500;color:var(--gris-suave);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px}
+.auth-modal .auth-tab.active{color:var(--azul);border-bottom-color:var(--verde);font-weight:600}
+.auth-modal .auth-tab:hover:not(.active){color:var(--azul)}
+.auth-modal .auth-msg.error{background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:10px 14px;border-radius:6px;font-size:12.5px;line-height:1.55;margin-bottom:14px}
+.auth-modal .form-grid{display:grid;gap:14px;margin-bottom:18px}
+.auth-modal .form-field label{display:block;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:6px}
+.auth-modal .form-field input{width:100%;padding:10px 0;border:none;border-bottom:1.5px solid var(--gris-borde);background:transparent;outline:none;font-family:inherit;font-size:14px;color:var(--azul);transition:border-color .15s}
+.auth-modal .form-field input:focus{border-bottom-color:var(--azul)}
+.auth-modal .form-field input::placeholder{color:var(--gris-borde)}
+.auth-modal .btn-verde-full{width:100%;padding:14px;background:var(--verde);color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s}
+.auth-modal .btn-verde-full:hover{opacity:.9}
+.auth-modal .btn-verde-full:disabled{background:var(--gris-borde);color:var(--gris-suave);cursor:not-allowed}
+.auth-perfil-sel{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:18px}
+.auth-perfil-btn{text-align:left;background:#fff;border:1.5px solid var(--gris-borde);border-radius:8px;padding:14px 16px;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;flex-direction:column;gap:3px}
+.auth-perfil-btn:hover{border-color:var(--azul);background:#f7f9fc}
+.auth-perfil-btn.active{border-color:var(--azul);border-width:2px;background:var(--azul-claro);padding:13px 15px}
+.auth-perfil-btn strong{font-size:13px;font-weight:600;color:var(--azul);line-height:1.3}
+.auth-perfil-btn span{font-size:11.5px;color:var(--gris-suave);font-weight:300;line-height:1.45}
+.auth-hint{font-size:12.5px;color:var(--gris-suave);background:#f7f9fc;border:1px dashed var(--gris-borde);border-radius:6px;padding:14px 16px;line-height:1.5;text-align:center;font-weight:300}
+.auth-footer-modal{margin-top:16px;font-size:12px;color:var(--gris-suave);text-align:center;font-weight:300}
+.auth-footer-modal .auth-link{background:none;border:none;color:var(--azul);font-weight:500;cursor:pointer;padding:0;font-family:inherit;font-size:inherit;text-decoration:underline}
+.password-strength{display:block;font-size:11px;font-weight:300;margin-top:6px;color:var(--gris-suave)}
+.password-strength.ok{color:var(--verde)}
+.password-strength.weak{color:#b45309}
+@media(max-width:520px){
+  .auth-modal{padding:40px 12px 24px}
+  .auth-modal-box{padding:26px 22px 22px}
+  .auth-modal-title{font-size:21px}
+}
+
 /* HERO — sin altura fija, se adapta al contenido */
 .hero{display:grid;grid-template-columns:1fr 1fr;padding-top:60px}
+.hero.anon{grid-template-columns:1fr}
+.hero.anon .hero-l-content{max-width:780px;margin-left:auto;margin-right:auto;padding-right:40px}
+@media(max-width:900px){.hero.anon .hero-l-content{padding-right:0}}
 .hero-l{display:flex;flex-direction:column;justify-content:center;padding:80px 5% 80px 6%;background:var(--azul);position:relative;overflow:hidden;min-height:calc(100vh - 60px)}
 .hero-l::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(26,74,138,0.4) 0%,transparent 70%);pointer-events:none}
 /* Fondo visual para el espacio vacío */
@@ -529,7 +575,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
       <h1 class="hero-h1">Gestión laboral<br><em>para artistas.</em></h1>
       <p class="hero-desc">Asumimos la contratación, el alta en la Seguridad Social y la tramitación de la factura. Tú solo te preocupas de actuar.</p>
       <div class="hero-btns">
-        <button class="btn-verde" onclick="document.getElementById('sim').scrollIntoView({behavior:'smooth'})">Calcular lo que cobro</button>
+        <button class="btn-verde" onclick="openAuthModal('register')">Gestiona tu alta</button>
         <button class="btn-ghost" onclick="document.getElementById('como').scrollIntoView({behavior:'smooth'})">Ver cómo funciona</button>
       </div>
       <div class="aviso-legal">
@@ -543,18 +589,10 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
     </div>
   </div>
 
-  <div class="hero-r" id="sim">
-    <p class="sim-label-top" id="sim-label-top">¿Qué necesitas?</p>
-    <div class="perfil-sel" id="perfil-sel">
-      <button class="perfil-btn" id="pb-trab" onclick="setPerfil('artista')">
-        <span class="pb-main">Soy artista o técnico</span>
-        <span class="pb-sub">Músico, DJ, técnico de sonido, bailarín, actor…</span>
-      </button>
-      <button class="perfil-btn" id="pb-emp" onclick="setPerfil('empresa')">
-        <span class="pb-main">Soy promotor o empresa</span>
-        <span class="pb-sub">Sala, festival, agencia, empresa privada, particular…</span>
-      </button>
-    </div>
+  <div class="hero-r" id="sim" style="display:none">
+    <!-- Panel del usuario logueado. Cuando no hay sesión, este bloque está
+         oculto y la home se ve como landing normal a una sola columna.
+         El login/registro vive ahora en el modal #auth-modal. -->
     <div id="sim-c"></div>
   </div>
 </section>
@@ -934,75 +972,65 @@ function resetExpedienteState(){
 function setPerfil(p){
   const user=aGetCurrentUser();
   /* Cuenta ya registrada: el tipo (artista/empresa) es inmutable porque
-     determina el flujo de validación y los webhooks. Las pestañas no hacen
-     nada en este caso. Antes del registro el usuario puede cambiar libremente
-     entre "artista o técnico" y "promotor o empresa" sin perder nada porque
-     resetExpedienteState() limpia el state del simulador en cada cambio. */
-  if(user){return;}
-  if(perfil===p)return; /* ya en ese perfil; nada que hacer */
+     determina el flujo de validación y los webhooks. Antes del registro
+     el usuario puede cambiar libremente entre artista/promotor dentro del
+     modal de "Crear cuenta": el selector vive ahí, ya no en la home. */
+  if(user)return;
+  if(perfil===p)return;
   perfil=p;
-  artistAuth.view='login';artistAuth.form={};artistAuth.error='';artistAuth.expedienteOpen=false;
+  /* Reset del form de registro entre cambios de tipo: si tecleó nombre
+     pensando que era artista y cambia a empresa, mantener el nombre y el
+     email es razonable (no son específicos del tipo). No reseteo `f`. */
+  artistAuth.error='';artistAuth.expedienteOpen=false;
   resetExpedienteState();
-  updateChromeUI();renderPasos();renderSim();
+  updateChromeUI();renderPasos();
+  /* Si el modal está abierto, re-renderiza solo su contenido (sin tocar el
+     panel de la home, que está oculto cuando no hay sesión). */
+  if(isAuthModalOpen())renderAuthModal();
+  else renderSim();
 }
 
-/* CTA del nav: lleva al usuario a la zona del simulador y, si todavía no ha
-   elegido perfil, abre por defecto el flujo de "artista o técnico" (caso más
-   común en visitantes). Si ya está logueado, simplemente hace scroll. */
+/* CTA del nav (botón verde "Gestiona tu alta"). Sin sesión: abre el modal
+   en pestaña "Crear cuenta". Con sesión: scroll al panel. */
 function navCtaClick(){
   const user=aGetCurrentUser();
+  if(!user){openAuthModal('register');return;}
   const sim=document.getElementById('sim');
   if(sim)sim.scrollIntoView({behavior:'smooth',block:'start'});
-  if(!user && !perfil){
-    /* Pequeño delay para que el scroll termine antes de pintar el formulario;
-       evita saltos visuales. */
-    setTimeout(function(){setPerfil('artista');},120);
-  }
 }
 
 function updateChromeUI(){
   const user=aGetCurrentUser();
-  const sel=document.getElementById('perfil-sel');
-  const lbl=document.getElementById('sim-label-top');
+  const hero=document.querySelector('.hero');
+  const heroR=document.getElementById('sim');
   const simC=document.getElementById('sim-c');
   if(user){
-    if(sel)sel.style.display='none';
-    if(lbl)lbl.style.display='none';
-    renderNavRight();
-    return;
+    /* Logueado: la home muestra el panel a la derecha. Hero vuelve a 2 cols. */
+    if(hero)hero.classList.remove('anon');
+    if(heroR)heroR.style.display='';
+  } else {
+    /* Sin sesión: la home es una landing limpia a una sola columna. El
+       panel y el simulador están escondidos; el login/registro vive en el
+       modal #auth-modal que abre el nav. */
+    if(hero)hero.classList.add('anon');
+    if(heroR)heroR.style.display='none';
+    if(simC)simC.innerHTML='';
   }
-  if(sel)sel.style.display='grid';
-  if(lbl)lbl.style.display='block';
-  const emp=document.getElementById('pb-emp'),trab=document.getElementById('pb-trab');
-  /* Antes del registro, el usuario puede alternar entre los dos perfiles
-     libremente: ambos botones quedan siempre habilitados; solo cambia cuál
-     tiene la clase `.act`. El "bloqueo" definitivo se materializa cuando se
-     crea la cuenta: a partir de ahí aGetCurrentUser() devuelve un user con
-     accountType fijo y setPerfil() ignora los clicks. */
-  if(emp){
-    emp.classList.toggle('act',perfil==='empresa');
-    emp.disabled=false;
-  }
-  if(trab){
-    trab.classList.toggle('act',perfil==='artista');
-    trab.disabled=false;
-  }
-  /* Sin perfil elegido todavía: limpiamos #sim-c para que la primera pantalla
-     sea solo el selector. En cuanto se elija un perfil, renderSim() vuelve a
-     pintar login/register debajo. */
-  if(!perfil && simC) simC.innerHTML='';
   renderNavRight();
 }
 
-/* Genera el bloque de la derecha del nav. Sin sesión: CTA verde. Con sesión:
-   nombre abreviado + badge ("Profesional"/"Empresa") + botón rojo de cerrar
-   sesión SIEMPRE visible (nunca oculto). */
+/* Bloque derecho del nav. Sin sesión: 3 botones (Iniciar sesión, Crear cuenta,
+   Gestiona tu alta — verde). Con sesión: nombre abreviado + badge + botón rojo
+   "Cerrar sesión" SIEMPRE visible. */
 function renderNavRight(){
   const nr=document.getElementById('nav-right');
   if(!nr)return;
   const user=aGetCurrentUser();
   if(!user){
-    nr.innerHTML='<button class="nav-cta" onclick="navCtaClick()">Gestiona tu alta</button>';
+    nr.innerHTML=
+      '<button type="button" class="nav-link" onclick="openAuthModal(\'login\')">Iniciar sesión</button>'+
+      '<button type="button" class="nav-link" onclick="openAuthModal(\'register\')">Crear cuenta</button>'+
+      '<button type="button" class="nav-cta" onclick="navCtaClick()">Gestiona tu alta</button>';
     return;
   }
   const isEmp=user.accountType==='empresa';
@@ -1219,12 +1247,16 @@ function aHandleEmpFile(event,key){
   reader.readAsDataURL(file);
 }
 
-/* ─── Auth chrome ─── */
-function aTabs(active){return `<div class="auth-tabs">
-<button class="auth-tab ${active==='login'?'active':''}" onclick="aSwitchView('login')">Iniciar sesión</button>
-<button class="auth-tab ${active==='register'?'active':''}" onclick="aSwitchView('register')">Crear cuenta</button>
-</div>`;}
-function aSwitchView(v){artistAuth.view=v;artistAuth.error='';renderSim();}
+/* ─── Auth chrome (todo dentro del modal #auth-modal) ─── */
+function aSwitchView(v){
+  artistAuth.view=v;
+  artistAuth.error='';
+  /* aSwitchView se llama tanto desde dentro del modal (cambiar de pestaña)
+     como desde callers legacy. En cualquier caso queremos abrir/refrescar
+     el modal: el flujo en la home ya no renderiza login/registro. */
+  if(isAuthModalOpen()){renderAuthModal();}
+  else{openAuthModal(v);}
+}
 function aUpdatePassStrength(val){
   const el=document.getElementById('art-pass-strength');
   if(!el)return;
@@ -1233,51 +1265,92 @@ function aUpdatePassStrength(val){
   else{el.className='password-strength weak';el.textContent='Mínimo 8 caracteres ('+val.length+'/8)';}
 }
 
-/* ─── Pantallas de Login / Registro ─── */
-function renderAuthLogin(){
-  const c=document.getElementById('sim-c');
-  const f=artistAuth.form;
-  const isArt=perfil==='artista';
-  c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">${isArt?'Soy artista o técnico':'Soy promotor o empresa'}</p>
-<h2 class="auth-title">Accede a tu <em>cuenta</em></h2>
-<p class="auth-lead">${isArt?'Para gestionar tus altas y enviar presupuestos a promotores necesitas una cuenta verificada.':'Para contratar artistas con factura legal necesitas una cuenta de empresa verificada.'}</p>
-</div>
-${aTabs('login')}
-${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:''}
-<div class="auth-card">
+/* ─── Modal de login / registro ─── */
+function isAuthModalOpen(){
+  const m=document.getElementById('auth-modal');
+  return !!(m && m.classList.contains('show'));
+}
+function openAuthModal(tab){
+  const user=aGetCurrentUser();
+  if(user)return; /* logueado no necesita modal */
+  artistAuth.view=(tab==='register')?'register':'login';
+  artistAuth.error='';
+  const m=document.getElementById('auth-modal');
+  if(!m)return;
+  m.classList.add('show');
+  m.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  renderAuthModal();
+  setTimeout(function(){
+    const first=document.querySelector('#auth-modal-content input');
+    if(first)first.focus();
+  },80);
+}
+function closeAuthModal(){
+  const m=document.getElementById('auth-modal');
+  if(!m)return;
+  m.classList.remove('show');
+  m.setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+}
+/* Cierre con tecla Escape */
+document.addEventListener('keydown',function(ev){
+  if(ev.key==='Escape' && isAuthModalOpen())closeAuthModal();
+});
+
+function renderAuthModal(){
+  const c=document.getElementById('auth-modal-content');
+  if(!c)return;
+  const view=artistAuth.view==='register'?'register':'login';
+  const f=artistAuth.form||{};
+  const err=artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:'';
+  const tabs=`<div class="auth-tabs">
+<button type="button" class="auth-tab ${view==='login'?'active':''}" onclick="setAuthTab('login')">Iniciar sesión</button>
+<button type="button" class="auth-tab ${view==='register'?'active':''}" onclick="setAuthTab('register')">Crear cuenta</button>
+</div>`;
+  if(view==='login'){
+    c.innerHTML=`<h2 class="auth-modal-title" id="auth-modal-title">Accede a tu <em>cuenta</em></h2>
+${tabs}
+${err}
 <div class="form-grid">
 <div class="form-field full"><label>Email</label><input type="email" id="art-login-email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
 <div class="form-field full"><label>Contraseña</label><input type="password" id="art-login-pass" placeholder="Tu contraseña" autocomplete="current-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value" onkeydown="if(event.key==='Enter')doLogin()"></div>
 </div>
 <button class="btn-verde-full" onclick="doLogin()">Iniciar sesión</button>
-</div>
-<p class="auth-footer">¿Aún no tienes cuenta? <button class="auth-link" onclick="aSwitchView('register')">Crear cuenta ${isArt?'como profesional':'de empresa'}</button></p>`;
-  artistAuth.error='';
-}
-
-function renderAuthRegister(){
-  const c=document.getElementById('sim-c');
-  const f=artistAuth.form;
+<p class="auth-footer-modal">¿Aún no tienes cuenta? <button class="auth-link" type="button" onclick="setAuthTab('register')">Crear cuenta</button></p>`;
+    return;
+  }
+  /* view === 'register' */
   const isArt=perfil==='artista';
-  c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">${isArt?'Cuenta de artista o técnico':'Cuenta de promotor o empresa'}</p>
-<h2 class="auth-title">Crea tu <em>cuenta</em></h2>
-<p class="auth-lead">${isArt?'Regístrate como artista para gestionar tus altas y enviar presupuestos a tus promotores.':'Regístrate como promotor o empresa para contratar artistas con factura legal y alta en SS.'}</p>
-</div>
-${aTabs('register')}
-${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:''}
-<div class="auth-card">
-<div class="form-grid">
+  const selector=`<div class="auth-perfil-sel">
+<button type="button" class="auth-perfil-btn ${perfil==='artista'?'active':''}" onclick="setPerfil('artista')">
+<strong>Soy artista o técnico</strong>
+<span>Músico, DJ, técnico de sonido, bailarín, actor…</span>
+</button>
+<button type="button" class="auth-perfil-btn ${perfil==='empresa'?'active':''}" onclick="setPerfil('empresa')">
+<strong>Soy promotor o empresa</strong>
+<span>Sala, festival, agencia, empresa privada, particular…</span>
+</button>
+</div>`;
+  const fields=perfil?`<div class="form-grid">
 <div class="form-field full"><label>Nombre</label><input type="text" placeholder="${isArt?'Tu nombre':'Nombre de contacto'}" autocomplete="given-name" maxlength="80" value="${aEscape(f.nombre||'')}" oninput="artistAuth.form.nombre=this.value"></div>
 <div class="form-field full"><label>Email</label><input type="email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
 <div class="form-field full"><label>Contraseña</label><input type="password" id="art-reg-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value)" onkeydown="if(event.key==='Enter')doRegister()"><span id="art-pass-strength" class="password-strength"></span></div>
 </div>
-<button class="btn-verde-full" onclick="doRegister()">Crear cuenta ${isArt?'como profesional':'de empresa'}</button>
-</div>
-<p class="auth-footer">¿Ya tienes cuenta? <button class="auth-link" onclick="aSwitchView('login')">Iniciar sesión</button></p>`;
+<button class="btn-verde-full" onclick="doRegister()">Crear cuenta ${isArt?'como profesional':'de empresa'}</button>`:`<p class="auth-hint">Elige arriba si eres <strong>artista/técnico</strong> o <strong>promotor/empresa</strong> para continuar.</p>`;
+  c.innerHTML=`<h2 class="auth-modal-title" id="auth-modal-title">Crea tu <em>cuenta</em></h2>
+${tabs}
+${err}
+${selector}
+${fields}
+<p class="auth-footer-modal">¿Ya tienes cuenta? <button class="auth-link" type="button" onclick="setAuthTab('login')">Iniciar sesión</button></p>`;
+  if(perfil && (f.pass||'').length>0)setTimeout(function(){aUpdatePassStrength(f.pass);},0);
+}
+
+function setAuthTab(tab){
+  artistAuth.view=(tab==='register')?'register':'login';
   artistAuth.error='';
-  if((f.pass||'').length>0)setTimeout(()=>aUpdatePassStrength(f.pass),0);
+  renderAuthModal();
 }
 
 function doLogin(){
@@ -1285,13 +1358,19 @@ function doLogin(){
   const f=artistAuth.form||{};
   const email=(f.email||'').trim().toLowerCase();
   const pass=f.pass||'';
-  if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderSim();return;}
-  if(!pass){artistAuth.error='Introduce tu contraseña.';renderSim();return;}
+  if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderAuthModal();return;}
+  if(!pass){artistAuth.error='Introduce tu contraseña.';renderAuthModal();return;}
   const users=aGetUsers();
-  if(!users[email]){artistAuth.error='No existe ninguna cuenta con ese email. Crea una cuenta primero.';renderSim();return;}
-  if(users[email].password!==pass){artistAuth.error='Contraseña incorrecta.';renderSim();return;}
+  if(!users[email]){artistAuth.error='No existe ninguna cuenta con ese email. Crea una cuenta primero.';renderAuthModal();return;}
+  if(users[email].password!==pass){artistAuth.error='Contraseña incorrecta.';renderAuthModal();return;}
+  /* Login OK: cerramos modal y vamos al panel. Al ser cuenta empresa
+     el accountType se respeta sin tocarlo aquí. */
   aSetSession(email);artistAuth.form={};artistAuth.error='';artistAuth.view='login';artistAuth.expedienteOpen=false;
+  closeAuthModal();
   renderPasos();updateChromeUI();renderSim();
+  /* En desktop el panel ya está visible (hero-r). En móvil hay que bajar. */
+  const sim=document.getElementById('sim');
+  if(sim&&window.innerWidth<900)setTimeout(()=>sim.scrollIntoView({behavior:'smooth'}),100);
 }
 
 function doRegister(){
@@ -1300,14 +1379,18 @@ function doRegister(){
   const nombre=(f.nombre||'').trim();
   const email=(f.email||'').trim().toLowerCase();
   const pass=f.pass||'';
-  if(nombre.length<2){artistAuth.error='Indica tu nombre.';renderSim();return;}
-  if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderSim();return;}
-  if(pass.length<8){artistAuth.error='La contraseña debe tener al menos 8 caracteres.';renderSim();return;}
+  if(!perfil){artistAuth.error='Elige si eres artista/técnico o promotor/empresa.';renderAuthModal();return;}
+  if(nombre.length<2){artistAuth.error='Indica tu nombre.';renderAuthModal();return;}
+  if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderAuthModal();return;}
+  if(pass.length<8){artistAuth.error='La contraseña debe tener al menos 8 caracteres.';renderAuthModal();return;}
   const users=aGetUsers();
-  if(users[email]){artistAuth.error='Ya existe una cuenta con ese email. Inicia sesión.';renderSim();return;}
+  if(users[email]){artistAuth.error='Ya existe una cuenta con ese email. Inicia sesión.';renderAuthModal();return;}
   users[email]={nombre:nombre,password:pass,accountType:perfil,verified:false,createdAt:new Date().toISOString(),profile:null,profileStatus:'pendiente'};
   aSaveUsers(users);aSetSession(email);artistAuth.form={};artistAuth.error='';artistAuth.view='login';artistAuth.expedienteOpen=false;
+  closeAuthModal();
   renderPasos();updateChromeUI();renderSim();
+  const sim=document.getElementById('sim');
+  if(sim&&window.innerWidth<900)setTimeout(()=>sim.scrollIntoView({behavior:'smooth'}),100);
 }
 
 function renderPendingVerification(user){
@@ -1858,33 +1941,40 @@ function empresaDatosValidos(){
 }
 
 function aSyncFormFromDOM(){
-  /* Recorre todos los <input>/<select> del panel y, leyendo el atributo
-     inline `oninput`/`onchange`, infiere qué clave de estado actualiza y la
-     sincroniza con el valor real del DOM. Defensa contra autofill, gestores
-     de contraseñas y cambios programáticos que no disparan `input`. */
-  const c=document.getElementById('sim-c');if(!c)return;
-  const inputs=c.querySelectorAll('input, select, textarea');
-  inputs.forEach(el=>{
-    if(el.type==='file')return;
-    const handler=(el.getAttribute('oninput')||'')+';'+(el.getAttribute('onchange')||'');
-    /* st.xxx=this.value(.method(...)?) */
-    const mSt=handler.match(/st\.([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*this\.value/);
-    if(mSt){
-      let v=el.value;
-      if(/toUpperCase\(\)/.test(handler))v=v.toUpperCase();
-      if(/trim\(\)/.test(handler))v=v.trim();
-      if(/toLowerCase\(\)/.test(handler))v=v.toLowerCase();
-      st[mSt[1]]=v;return;
-    }
-    /* artistAuth.form.xxx=this.value(.method)? */
-    const mAf=handler.match(/artistAuth\.form\.([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*this\.value/);
-    if(mAf){
-      let v=el.value;
-      if(/toUpperCase\(\)/.test(handler))v=v.toUpperCase();
-      if(/trim\(\)/.test(handler))v=v.trim();
-      if(/toLowerCase\(\)/.test(handler))v=v.toLowerCase();
-      artistAuth.form[mAf[1]]=v;return;
-    }
+  /* Recorre todos los <input>/<select> de los contenedores activos (#sim-c
+     y, si el modal de auth está abierto, #auth-modal-content) y, leyendo el
+     atributo inline `oninput`/`onchange`, infiere qué clave de estado
+     actualiza y la sincroniza con el valor real del DOM. Defensa contra
+     autofill, gestores de contraseñas y cambios programáticos que no
+     disparan `input`. */
+  const containers=['sim-c','auth-modal-content']
+    .map(function(id){return document.getElementById(id);})
+    .filter(function(el){return !!el;});
+  if(!containers.length)return;
+  containers.forEach(function(c){
+    const inputs=c.querySelectorAll('input, select, textarea');
+    inputs.forEach(function(el){
+      if(el.type==='file')return;
+      const handler=(el.getAttribute('oninput')||'')+';'+(el.getAttribute('onchange')||'');
+      /* st.xxx=this.value(.method(...)?) */
+      const mSt=handler.match(/st\.([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*this\.value/);
+      if(mSt){
+        let v=el.value;
+        if(/toUpperCase\(\)/.test(handler))v=v.toUpperCase();
+        if(/trim\(\)/.test(handler))v=v.trim();
+        if(/toLowerCase\(\)/.test(handler))v=v.toLowerCase();
+        st[mSt[1]]=v;return;
+      }
+      /* artistAuth.form.xxx=this.value(.method)? */
+      const mAf=handler.match(/artistAuth\.form\.([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*this\.value/);
+      if(mAf){
+        let v=el.value;
+        if(/toUpperCase\(\)/.test(handler))v=v.toUpperCase();
+        if(/trim\(\)/.test(handler))v=v.trim();
+        if(/toLowerCase\(\)/.test(handler))v=v.toLowerCase();
+        artistAuth.form[mAf[1]]=v;return;
+      }
+    });
   });
 }
 function aSyncEmpresaDatosFromDOM(){aSyncFormFromDOM();}
@@ -2062,16 +2152,10 @@ function copiarEnlace(url){
 function renderSim(){
   const user=aGetCurrentUser();
   if(!user){
-    /* El selector de tipo de cuenta es la primera pantalla. Hasta que no
-       se elija un perfil, no pintamos ningún formulario debajo. */
-    if(!perfil){
-      const c=document.getElementById('sim-c');
-      if(c)c.innerHTML='';
-      updateChromeUI();
-      return;
-    }
-    if(artistAuth.view==='register')return renderAuthRegister();
-    return renderAuthLogin();
+    /* Sin sesión la home es una landing limpia. El login/registro vive en
+       el modal #auth-modal, no se renderiza nada en el panel. */
+    updateChromeUI();
+    return;
   }
   perfil=user.accountType;
   updateChromeUI();
@@ -2220,5 +2304,19 @@ function renderSim(){
   };
 })();
 </script>
+
+<!-- ─── MODAL DE LOGIN / REGISTRO ──────────────────────────────────────
+     Reemplaza el antiguo flujo en la home. Se abre desde los 3 botones
+     del nav (Iniciar sesión / Crear cuenta / Gestiona tu alta) y desde
+     el CTA del hero. El selector artista/promotor vive aquí dentro,
+     visible solo en la pestaña "Crear cuenta". -->
+<div class="auth-modal" id="auth-modal" aria-hidden="true">
+  <div class="auth-modal-overlay" onclick="closeAuthModal()"></div>
+  <div class="auth-modal-box" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <button type="button" class="auth-modal-close" onclick="closeAuthModal()" aria-label="Cerrar">×</button>
+    <div id="auth-modal-content"></div>
+  </div>
+</div>
+
 </body>
 </html>
