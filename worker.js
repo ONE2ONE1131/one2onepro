@@ -91,94 +91,55 @@ function jsonResponse(data, status, extraHeaders) {
 /* ─── /upload-drive ────────────────────────────────────────────────────── */
 
 async function handleUploadDrive(request, env, cors) {
-  const body = await request.json().catch(() => ({}));
+  const body = await request.json().catch(() => null);
+  if (!body) return jsonResponse({ error: 'Invalid JSON' }, 400);
+
   const { filename, mimeType, base64 } = body || {};
-  if (!base64 || typeof base64 !== 'string') {
-    return jsonResponse({ error: 'Missing or invalid `base64`' }, 400, cors);
-  }
-  if (!env.GOOGLE_SERVICE_ACCOUNT_KEY || !env.GOOGLE_DRIVE_FOLDER_ID) {
-    return jsonResponse({ error: 'Worker not configured (missing GOOGLE_* env)' }, 500, cors);
-  }
+  if (!base64) return jsonResponse({ error: 'Missing or invalid base64' }, 400);
 
-  // Strip data URL prefix if present and detect MIME
+  // Strip data URL prefix if present
   let cleanB64 = base64;
-  let detectedMime = mimeType || 'image/jpeg';
   const dataUrlMatch = /^data:([^;]+);base64,(.+)$/.exec(base64);
-  if (dataUrlMatch) {
-    detectedMime = dataUrlMatch[1];
-    cleanB64 = dataUrlMatch[2];
-  }
-  // Strict allowlist of MIME types
-  if (!/^image\/(jpeg|jpg|png|webp|heic|heif)$/i.test(detectedMime)) {
-    return jsonResponse({ error: 'Unsupported mime type: ' + detectedMime }, 400, cors);
-  }
+  if (dataUrlMatch) cleanB64 = dataUrlMatch[2];
 
-  const bytes = base64ToBytes(cleanB64);
-  const finalName = sanitizeFilename(filename) || ('dni_' + Date.now() + '.' + extFromMime(detectedMime));
+  // Upload to Cloudinary
+  const cloudName = env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = env.CLOUDINARY_API_KEY;
+  const apiSecret = env.CLOUDINARY_API_SECRET;
 
-  const token = await getGoogleAccessToken(env);
-  const folderId = env.GOOGLE_DRIVE_FOLDER_ID;
+  const timestamp = Math.floor(Date.now() / 1000);
+  const folder = 'DNIs_One2One_Pro';
 
-  // Multipart upload (single request: metadata + bytes)
-  const metadata = { name: finalName, parents: [folderId] };
-  const boundary = '----o2o' + Math.random().toString(36).slice(2);
+  // Generate signature
+  const strToSign = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
+  const msgBuffer = new TextEncoder().encode(strToSign);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-  const head = '--' + boundary + '\r\n' +
-    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-    JSON.stringify(metadata) + '\r\n' +
-    '--' + boundary + '\r\n' +
-    'Content-Type: ' + detectedMime + '\r\n\r\n';
-  const tail = '\r\n--' + boundary + '--\r\n';
-
-  const headBytes = new TextEncoder().encode(head);
-  const tailBytes = new TextEncoder().encode(tail);
-  const multipart = new Uint8Array(headBytes.length + bytes.length + tailBytes.length);
-  multipart.set(headBytes, 0);
-  multipart.set(bytes, headBytes.length);
-  multipart.set(tailBytes, headBytes.length + bytes.length);
+  const formData = new FormData();
+  formData.append('file', `data:${mimeType || 'image/jpeg'};base64,${cleanB64}`);
+  formData.append('api_key', apiKey);
+  formData.append('timestamp', timestamp.toString());
+  formData.append('folder', folder);
+  formData.append('signature', signature);
 
   const uploadResp = await fetch(
-    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true',
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'multipart/related; boundary=' + boundary,
-        'Content-Length': String(multipart.byteLength)
-      },
-      body: multipart
-    }
+    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    { method: 'POST', body: formData }
   );
+
   const uploadData = await uploadResp.json();
-  if (!uploadResp.ok || !uploadData.id) {
-    return jsonResponse({ error: 'Drive upload failed', status: uploadResp.status, detail: uploadData }, 502, cors);
-  }
-  const fileId = uploadData.id;
 
-  // Make publicly readable (anyone with link can view)
-  const permResp = await fetch(
-    'https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(fileId) + '/permissions?supportsAllDrives=true',
-    {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'reader', type: 'anyone' })
-    }
-  );
-  if (!permResp.ok) {
-    const detail = await permResp.text();
-    // The file is uploaded but not public; surface the warning but still return URL
-    console.warn('Permission grant failed', permResp.status, detail);
+  if (!uploadResp.ok) {
+    return jsonResponse({ error: 'Cloudinary upload failed', status: uploadResp.status, detail: uploadData }, 502);
   }
 
-  // Public-friendly URLs for embedding. The "uc" form streams the binary.
   return jsonResponse({
-    fileId: fileId,
-    url: 'https://drive.google.com/uc?id=' + fileId,
-    viewUrl: 'https://drive.google.com/file/d/' + fileId + '/view',
-    name: finalName,
-    mimeType: detectedMime,
-    size: bytes.length
-  }, 200, cors);
+    fileId: uploadData.public_id,
+    url: uploadData.secure_url,
+    viewUrl: uploadData.secure_url
+  });
 }
 
 /* ─── /chat ─────────────────────────────────────────────────────────────── */
@@ -282,87 +243,6 @@ async function handleValidateDni(request, env, cors) {
   return jsonResponse({ result: parsed, raw: text, usage: data.usage || null }, 200, cors);
 }
 
-/* ─── Google service account JWT → access token ────────────────────────── */
-
-async function getGoogleAccessToken(env) {
-  const sa = typeof env.GOOGLE_SERVICE_ACCOUNT_KEY === 'string'
-    ? JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_KEY)
-    : env.GOOGLE_SERVICE_ACCOUNT_KEY;
-  if (!sa || !sa.client_email || !sa.private_key) {
-    throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_KEY (missing client_email or private_key)');
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const claims = {
-    iss: sa.client_email,
-    scope: 'https://www.googleapis.com/auth/drive.file',
-    aud: 'https://oauth2.googleapis.com/token',
-    iat: now,
-    exp: now + 3600
-  };
-
-  const enc = obj => base64UrlEncodeString(JSON.stringify(obj));
-  const unsigned = enc(header) + '.' + enc(claims);
-
-  const key = await importRsaPrivateKey(sa.private_key);
-  const sigBuf = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    key,
-    new TextEncoder().encode(unsigned)
-  );
-  const sig = base64UrlEncodeBytes(new Uint8Array(sigBuf));
-  const jwt = unsigned + '.' + sig;
-
-  const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + encodeURIComponent(jwt)
-  });
-  const tokenData = await tokenResp.json();
-  if (!tokenResp.ok || !tokenData.access_token) {
-    throw new Error('Token exchange failed: ' + JSON.stringify(tokenData));
-  }
-  return tokenData.access_token;
-}
-
-async function importRsaPrivateKey(pem) {
-  const b64 = pem
-    .replace(/-----BEGIN PRIVATE KEY-----/, '')
-    .replace(/-----END PRIVATE KEY-----/, '')
-    .replace(/\s+/g, '');
-  const der = base64ToBytes(b64);
-  return crypto.subtle.importKey(
-    'pkcs8',
-    der.buffer,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-}
-
-/* ─── Base64 helpers ───────────────────────────────────────────────────── */
-
-function base64ToBytes(b64) {
-  // Workers run V8/JSC; atob is available and produces a binary string.
-  const bin = atob(b64);
-  const len = bin.length;
-  const out = new Uint8Array(len);
-  for (let i = 0; i < len; i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
-
-function base64UrlEncodeString(str) {
-  // Use TextEncoder to handle non-ASCII safely
-  const bytes = new TextEncoder().encode(str);
-  return base64UrlEncodeBytes(bytes);
-}
-
-function base64UrlEncodeBytes(bytes) {
-  let s = '';
-  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
-  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
 
 /* ─── Small utils ──────────────────────────────────────────────────────── */
 
