@@ -576,7 +576,17 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 .chat-msg.user{align-self:flex-end;flex-direction:row-reverse}
 .chat-avatar{width:34px;height:34px;border-radius:50%;background:var(--verde);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;letter-spacing:.3px;box-shadow:0 2px 8px rgba(0,168,107,.25)}
 .chat-msg.user .chat-avatar{background:var(--azul);box-shadow:0 2px 8px rgba(15,45,94,.2)}
-.chat-bubble{background:#fff;border:1px solid var(--gris-borde);padding:12px 16px;border-radius:14px;font-size:13.5px;line-height:1.6;color:var(--gris-texto);font-weight:400;white-space:pre-wrap}
+.chat-bubble{background:#fff;border:1px solid var(--gris-borde);padding:12px 16px;border-radius:14px;font-size:13.5px;line-height:1.6;color:var(--gris-texto);font-weight:400}
+.chat-bubble h1,.chat-bubble h2,.chat-bubble h3{font-family:'Playfair Display',serif;color:var(--azul);font-weight:700;letter-spacing:-.3px;margin:8px 0 4px;line-height:1.25}
+.chat-bubble h1{font-size:18px}
+.chat-bubble h2{font-size:16px}
+.chat-bubble h3{font-size:14.5px}
+.chat-bubble h1:first-child,.chat-bubble h2:first-child,.chat-bubble h3:first-child{margin-top:0}
+.chat-bubble strong{color:var(--azul);font-weight:600}
+.chat-bubble em{font-style:italic}
+.chat-bubble ul{margin:6px 0 6px 4px;padding-left:18px;list-style:disc}
+.chat-bubble li{margin-bottom:3px}
+.chat-msg.user .chat-bubble strong,.chat-msg.user .chat-bubble h1,.chat-msg.user .chat-bubble h2,.chat-msg.user .chat-bubble h3{color:#fff}
 .chat-msg.user .chat-bubble{background:var(--azul);color:#fff;border-color:var(--azul)}
 .chat-msg.user .chat-bubble{border-bottom-right-radius:4px}
 .chat-msg.bot .chat-bubble{border-bottom-left-radius:4px}
@@ -2433,6 +2443,24 @@ function renderSim(){
 
   function chatEscape(s){return String(s).replace(/[<>&"']/g,function(c){return({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'})[c];});}
 
+  /* Conversor de markdown básico → HTML. Aplicamos esto SIEMPRE sobre texto
+     previamente escapado con chatEscape para neutralizar cualquier HTML
+     que pudiera colarse en la respuesta del modelo. Los caracteres
+     marcadores (*, #, espacios) no se ven afectados por el escape, así que
+     las regex siguen funcionando. */
+  function renderMarkdown(text){
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/^### (.*)/gm, '<h3>$1</h3>')
+      .replace(/^## (.*)/gm, '<h2>$1</h2>')
+      .replace(/^# (.*)/gm, '<h1>$1</h1>')
+      .replace(/^\* (.*)/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+      .replace(/\n\n/g, '<br><br>')
+      .replace(/\n/g, '<br>');
+  }
+
   window.chatSend=async function chatSend(){
     const inp=document.getElementById('chat-input');
     const btn=document.getElementById('chat-send');
@@ -2459,7 +2487,7 @@ function renderSim(){
       chatHistory.push({role:'user',content:text});
       chatHistory.push({role:'assistant',content:respuesta});
       const t=document.getElementById(typingId);if(t)t.remove();
-      msgs.insertAdjacentHTML('beforeend','<div class="chat-msg bot"><div class="chat-avatar">O2O</div><div class="chat-bubble">'+chatEscape(respuesta)+'</div></div>');
+      msgs.insertAdjacentHTML('beforeend','<div class="chat-msg bot"><div class="chat-avatar">O2O</div><div class="chat-bubble">'+renderMarkdown(chatEscape(respuesta))+'</div></div>');
     }catch(e){
       const t=document.getElementById(typingId);if(t)t.remove();
       msgs.insertAdjacentHTML('beforeend','<div class="chat-error">Lo siento, ha habido un error procesando tu pregunta. Inténtalo de nuevo en unos segundos.</div>');
