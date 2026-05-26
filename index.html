@@ -234,6 +234,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;ali
 
 .form-section{background:#fff;border:1px solid var(--gris-borde);padding:16px;margin-bottom:8px}
 .form-section-title{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--gris-borde)}
+.autofill-hint{background:rgba(0,168,107,.08);border:1px solid rgba(0,168,107,.28);border-left:3px solid var(--verde);color:var(--azul);font-size:12.5px;font-weight:400;line-height:1.55;padding:10px 14px;border-radius:6px;margin:0 0 14px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .form-field{display:flex;flex-direction:column}
 .form-field.full{grid-column:1/-1}
@@ -1066,7 +1067,7 @@ let st={
   aNombre:'',aApellidos:'',aDni:'',aFechaNac:'',aNacionalidad:'',aDireccion:'',aIban:'',aNaf:'',aTel:'',
   /* Cuenta empresa — datos fiscales de la EMPRESA (se piden en cada expediente) */
   eContacto:'',eTel:'',eRazon:'',eCif:'',eEmailFact:'',
-  eTipoVia:'Calle',eCalle:'',eNumero:'',ePiso:'',eCp:'',eMunicipio:'',eProvincia:'',
+  eTipoVia:'Calle',eCalle:'',eNumero:'',ePiso:'',eCp:'',eMunicipio:'',eProvincia:'',ePais:'España',
   condAceptadas:false
 };
 
@@ -1081,7 +1082,7 @@ function resetExpedienteState(){
   st.aDniAnverso=null;st.aDniReverso=null;
   st.eContacto='';st.eTel='';st.eRazon='';st.eCif='';st.eEmailFact='';
   st.eTipoVia='Calle';st.eCalle='';st.eNumero='';st.ePiso='';
-  st.eCp='';st.eMunicipio='';st.eProvincia='';
+  st.eCp='';st.eMunicipio='';st.eProvincia='';st.ePais='España';
   st.condAceptadas=false;
 }
 
@@ -1269,6 +1270,7 @@ function aEscapeText(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;'
    en el paso 3 según el tipo de cuenta.
    ────────────────────────────────────────────────────────────────── */
 const PROVINCIAS_ES=['Álava','Albacete','Alicante','Almería','Asturias','Ávila','Badajoz','Barcelona','Burgos','Cáceres','Cádiz','Cantabria','Castellón','Ciudad Real','Córdoba','A Coruña','Cuenca','Girona','Granada','Guadalajara','Gipuzkoa','Huelva','Huesca','Illes Balears','Jaén','León','Lleida','Lugo','Madrid','Málaga','Murcia','Navarra','Ourense','Palencia','Las Palmas','Pontevedra','La Rioja','Salamanca','Santa Cruz de Tenerife','Segovia','Sevilla','Soria','Tarragona','Teruel','Toledo','Valencia','Valladolid','Bizkaia','Zamora','Zaragoza','Ceuta','Melilla'];
+const PAISES=['España','Francia','Portugal','Italia','Alemania','Reino Unido','Otros'];
 const TIPOS_VIA=['Calle','Avenida','Plaza','Paseo','Carretera','Ronda','Travesía','Camino','Pasaje','Glorieta','Vía','Bulevar','Polígono','Urbanización'];
 
 let artistAuth={view:'login',form:{},error:'',expedienteOpen:false,expedienteResult:null};
@@ -1544,8 +1546,10 @@ function renderArtProfileForm(user){
   if(!p.sexo)p.sexo='';
   if(!p.nacionalidad)p.nacionalidad='Española';
   if(!p.provincia)p.provincia='';
+  if(!p.pais)p.pais='España';
   const provOpts=PROVINCIAS_ES.map(pr=>`<option value="${pr}" ${p.provincia===pr?'selected':''}>${pr}</option>`).join('');
   const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${p.tipoVia===v?'selected':''}>${v}</option>`).join('');
+  const paisOpts=PAISES.map(pa=>`<option value="${pa}" ${p.pais===pa?'selected':''}>${pa}</option>`).join('');
   const fileLabel=(f,defaultText)=>f?`<span class="fu-title">✓ ${aEscape(f.name)}</span><span class="fu-sub">${(f.size/1024).toFixed(0)} KB · cambiar archivo</span>`:`<span class="fu-title">${defaultText}</span><span class="fu-sub">JPG o PNG · máx 5MB</span>`;
   c.innerHTML=`<div class="auth-hero">
 <p class="auth-eyebrow">Completa tu perfil</p>
@@ -1585,7 +1589,8 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 <div class="form-field"><label>Piso / puerta (opcional)</label><input type="text" placeholder="3ºA" maxlength="20" value="${aEscape(p.piso||'')}" oninput="artistAuth.form.piso=this.value"></div>
 <div class="form-field"><label>Código Postal *</label><input type="text" placeholder="28001" maxlength="5" value="${aEscape(p.cp||'')}" oninput="artistAuth.form.cp=this.value.replace(/\D/g,'').substring(0,5);this.value=artistAuth.form.cp"></div>
 <div class="form-field"><label>Municipio *</label><input type="text" placeholder="Madrid" maxlength="80" value="${aEscape(p.municipio||'')}" oninput="artistAuth.form.municipio=this.value"></div>
-<div class="form-field full"><label>Provincia *</label><select class="prov-sel" onchange="artistAuth.form.provincia=this.value"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
+<div class="form-field"><label>Provincia *</label><select class="prov-sel" onchange="artistAuth.form.provincia=this.value"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
+<div class="form-field"><label>País *</label><select onchange="artistAuth.form.pais=this.value">${paisOpts}</select></div>
 </div>
 </div>
 <div class="form-section">
@@ -1619,6 +1624,7 @@ function profileArtValido(){
   if(!/^\d{5}$/.test((p.cp||'').trim()))return 'El código postal debe tener 5 dígitos.';
   if(!p.municipio||p.municipio.trim().length<2)return 'Indica el municipio.';
   if(!p.provincia)return 'Selecciona la provincia.';
+  if(!p.pais)return 'Selecciona el país.';
   if(!aValidIbanES(p.iban))return 'El IBAN debe tener formato ES + 22 dígitos.';
   if(!p.profesion||p.profesion.trim().length<2)return 'Indica tu profesión artística.';
   return null;
@@ -1683,6 +1689,7 @@ ${(val.discrepancias&&val.discrepancias.length)?'<ul style="text-align:left;marg
       codigoPostal:p.cp||'',
       municipio:p.municipio||'',
       provincia:p.provincia||'',
+      pais:p.pais||'España',
       iban:p.iban||'',
       naf:p.naf||'',
       profesionArtistica:p.profesion||'',
@@ -1775,7 +1782,48 @@ function renderEmpresaDashboard(user){
 </div>`;
 }
 
-function iniciarExpediente(){artistAuth.expedienteOpen=true;artistAuth.expedienteResult=null;resetExpedienteState();renderSim();}
+function iniciarExpediente(){
+  artistAuth.expedienteOpen=true;
+  artistAuth.expedienteResult=null;
+  resetExpedienteState();
+  /* Autorrelleno desde el perfil guardado. Para el artista volcamos sus
+     datos personales en st.aX (los usa generarEnlaceArtista para componer
+     el enlace de pago). Para la empresa volcamos los datos fiscales en
+     st.eX desde companyProfile (guardado tras el primer expediente). */
+  const u=aGetCurrentUser();
+  if(u && u.accountType==='artista' && u.profile){
+    const pr=u.profile;
+    st.aNombre=pr.nombre||'';
+    st.aApellidos=pr.apellidos||'';
+    st.aDni=pr.numDoc||'';
+    st.aFechaNac=pr.fechaNac||'';
+    st.aNacionalidad=pr.nacionalidad||'';
+    const dirParts=[pr.tipoVia,pr.calle,pr.numero,pr.piso].filter(Boolean).join(' ');
+    const dirCp=[pr.cp,pr.municipio].filter(Boolean).join(' ');
+    const dirProv=[pr.provincia,pr.pais].filter(Boolean).join(', ');
+    st.aDireccion=[dirParts,dirCp,dirProv].filter(Boolean).join(', ');
+    st.aIban=pr.iban||'';
+    st.aNaf=pr.naf||'';
+    st.aTel=pr.telefono||'';
+  }
+  if(u && u.accountType==='empresa' && u.companyProfile){
+    const cp=u.companyProfile;
+    st.eContacto=cp.contacto||u.nombre||'';
+    st.eTel=cp.tel||'';
+    st.eRazon=cp.razon||'';
+    st.eCif=cp.cif||'';
+    st.eEmailFact=cp.emailFact||u.email||'';
+    st.eTipoVia=cp.tipoVia||'Calle';
+    st.eCalle=cp.calle||'';
+    st.eNumero=cp.numero||'';
+    st.ePiso=cp.piso||'';
+    st.eCp=cp.cp||'';
+    st.eMunicipio=cp.municipio||'';
+    st.eProvincia=cp.provincia||'';
+    st.ePais=cp.pais||'España';
+  }
+  renderSim();
+}
 function cerrarExpediente(){artistAuth.expedienteOpen=false;artistAuth.expedienteResult=null;resetExpedienteState();renderSim();}
 
 /* ─── EXPEDIENTE — pasos comunes 0/1/2 + divergencia 3/4 ─── */
@@ -1984,17 +2032,25 @@ ${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del profesional</
 </div>
 <button class="btn-n" id="exp-bs3" onclick="continueEmpresaPaso3()" ${!artistaDatosValidos()?'disabled':''}>Continuar a confirmación →</button>`;
   } else if(st.step===4){
-    /* Pre-rellenar el contacto con el nombre de la cuenta si está vacío */
+    /* Pre-rellenado de los datos fiscales:
+       - Si existe companyProfile (guardado tras el primer expediente),
+         iniciarExpediente ya vuelca todo en st.eX. Aquí solo cubrimos
+         huecos con datos de la cuenta (contacto + email).
+       - Si NO existe companyProfile, ponemos defaults razonables. */
     if(!st.eContacto)st.eContacto=user.nombre||'';
     if(!st.eEmailFact)st.eEmailFact=user.email||'';
     if(!st.eTipoVia)st.eTipoVia='Calle';
+    if(!st.ePais)st.ePais='España';
+    const autofilledFromProfile=!!(user.companyProfile && user.companyProfile.razon);
     const r=calcular();
     const provOpts=PROVINCIAS_ES.map(pr=>`<option value="${pr}" ${st.eProvincia===pr?'selected':''}>${pr}</option>`).join('');
     const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${st.eTipoVia===v?'selected':''}>${v}</option>`).join('');
+    const paisOpts=PAISES.map(pa=>`<option value="${pa}" ${st.ePais===pa?'selected':''}>${pa}</option>`).join('');
     c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
 ${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Datos de tu empresa, confirmación y pago</p>
 <p class="sim-q">Datos fiscales y confirmación</p>
 <p class="sim-hint">Necesitamos los datos fiscales de tu empresa para emitir la factura legal del servicio.</p>
+${autofilledFromProfile?'<div class="autofill-hint">💡 Hemos cargado los datos de tu cuenta. Revisa y confirma antes de continuar.</div>':''}
 <div class="res" style="margin-bottom:14px">${resumenEmpresa(r)}</div>
 <div class="form-section">
 <div class="form-section-title">Persona de contacto</div>
@@ -2020,7 +2076,8 @@ ${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Datos de tu empresa, co
 <div class="form-field"><label>Piso / puerta (opcional)</label><input type="text" placeholder="3ºA" maxlength="20" value="${aEscape(st.ePiso)}" oninput="st.ePiso=this.value" onchange="st.ePiso=this.value"></div>
 <div class="form-field"><label>Código Postal *</label><input type="text" placeholder="28001" maxlength="5" value="${aEscape(st.eCp)}" oninput="st.eCp=this.value.replace(/\D/g,'').substring(0,5);this.value=st.eCp;rBtn('exp-bs4',empresaDatosValidos)" onchange="st.eCp=this.value.replace(/\D/g,'').substring(0,5);this.value=st.eCp;rBtn('exp-bs4',empresaDatosValidos)"></div>
 <div class="form-field"><label>Municipio *</label><input type="text" placeholder="Madrid" maxlength="80" value="${aEscape(st.eMunicipio)}" oninput="st.eMunicipio=this.value;rBtn('exp-bs4',empresaDatosValidos)" onchange="st.eMunicipio=this.value;rBtn('exp-bs4',empresaDatosValidos)"></div>
-<div class="form-field full"><label>Provincia *</label><select class="prov-sel" onchange="st.eProvincia=this.value;rBtn('exp-bs4',empresaDatosValidos)"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
+<div class="form-field"><label>Provincia *</label><select class="prov-sel" onchange="st.eProvincia=this.value;rBtn('exp-bs4',empresaDatosValidos)"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
+<div class="form-field"><label>País *</label><select onchange="st.ePais=this.value;rBtn('exp-bs4',empresaDatosValidos)">${paisOpts}</select></div>
 </div>
 </div>
 <div class="contrato-box">
@@ -2053,6 +2110,7 @@ function empresaDatosValidos(){
   if(!/^\d{5}$/.test((st.eCp||'').trim()))return false;
   if(!st.eMunicipio||st.eMunicipio.trim().length<2)return false;
   if(!st.eProvincia)return false;
+  if(!st.ePais)return false;
   if(!st.condAceptadas)return false;
   return true;
 }
@@ -2120,7 +2178,7 @@ async function finalizarExpedienteEmpresa(){
   }
   const r=calcular();
   const expNum='O2O-'+Math.floor(Math.random()*90000+10000);
-  const empresaDir=[st.eTipoVia,st.eCalle,st.eNumero,st.ePiso].filter(Boolean).join(' ')+', '+(st.eCp||'')+' '+(st.eMunicipio||'')+', '+(st.eProvincia||'');
+  const empresaDir=[st.eTipoVia,st.eCalle,st.eNumero,st.ePiso].filter(Boolean).join(' ')+', '+(st.eCp||'')+' '+(st.eMunicipio||'')+', '+(st.eProvincia||'')+(st.ePais&&st.ePais!=='España'?' ('+st.ePais+')':'');
   /* Guard defensivo final: el módulo Stripe (Make scenario 5779346, módulo 14)
      pone este valor en `customer_email`. Si llegase vacío Stripe responde
      [email_invalid] y aborta el checkout. Saneamos y validamos formato como
@@ -2199,6 +2257,7 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
     empresa_razon_social:st.eRazon,
     empresa_cif:st.eCif,
     empresa_direccion:empresaDir,
+    empresa_pais:st.ePais||'España',
     empresa_telefono:st.eTel,
     empresa_contacto:st.eContacto||user.nombre||'',
     empresa_usuario_email:user.email,
@@ -2223,6 +2282,25 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
   };
   try{
     await fetch(EMPRESA_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    /* Guardamos los datos fiscales en user.companyProfile para autorrellenar
+       el siguiente expediente. La cuenta empresa solo tiene un perfil fiscal,
+       así que sobrescribimos siempre con los últimos datos confirmados. */
+    aUpdateUser(user.email,{companyProfile:{
+      contacto:st.eContacto||'',
+      tel:st.eTel||'',
+      razon:st.eRazon||'',
+      cif:st.eCif||'',
+      emailFact:empresaEmail,
+      tipoVia:st.eTipoVia||'Calle',
+      calle:st.eCalle||'',
+      numero:st.eNumero||'',
+      piso:st.ePiso||'',
+      cp:st.eCp||'',
+      municipio:st.eMunicipio||'',
+      provincia:st.eProvincia||'',
+      pais:st.ePais||'España',
+      updatedAt:new Date().toISOString()
+    }});
     document.getElementById('sim-c').innerHTML=`<div class="exito">
 <div class="exito-icon">✓</div>
 <div class="exito-title">Solicitud recibida</div>
