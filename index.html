@@ -2425,40 +2425,13 @@ function renderSim(){
   }
 
   /* ──────────────────────────────────────────────────
-     ASISTENTE IA — vía Cloudflare Worker (no llamamos a Anthropic desde
-     el navegador para no exponer la API key).
-     El system prompt vive en `worker.js`; aquí solo enviamos message+history.
+     ASISTENTE IA — POST directo al Cloudflare Worker (/chat).
+     El system prompt vive en worker.js; aquí solo enviamos
+     { message, history } y pintamos d.text en el chat.
      ────────────────────────────────────────────────── */
   const chatHistory=[];
 
   function chatEscape(s){return String(s).replace(/[<>&"']/g,function(c){return({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'})[c];});}
-
-  async function callClaude(userMsg){
-    /* Fallback: si seguimos dentro de un artifact de Claude y existe
-       window.claude.complete, lo usamos. Útil para previsualizar el chat
-       en entornos de desarrollo sin worker desplegado. */
-    if(window.claude&&typeof window.claude.complete==='function'){
-      chatHistory.push({role:'user',content:userMsg});
-      const fakeSystem='Eres el asistente virtual de One2One Pro. Responde siempre en español, conciso y profesional, solo sobre temas del Régimen Especial de Artistas, gestión laboral y One2One Pro.';
-      const prompt=fakeSystem+'\n\nHistorial:\n'+chatHistory.map(m=>(m.role==='user'?'Usuario':'Asistente')+': '+m.content).join('\n\n')+'\n\nResponde ahora como Asistente:';
-      return await window.claude.complete(prompt);
-    }
-    /* Modo producción: POST al worker. */
-    const r=await fetch(WORKER_URL+'/chat',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:userMsg,history:chatHistory})
-    });
-    if(!r.ok){
-      if(r.status===404||r.status===0)throw new Error('NO_API');
-      const e=await r.text();
-      throw new Error('HTTP '+r.status+' '+e.substring(0,200));
-    }
-    const data=await r.json();
-    if(!data.text)throw new Error('Empty response from worker');
-    chatHistory.push({role:'user',content:userMsg});
-    return data.text;
-  }
 
   window.chatSend=async function chatSend(){
     const inp=document.getElementById('chat-input');
@@ -2476,19 +2449,20 @@ function renderSim(){
     msgs.insertAdjacentHTML('beforeend','<div class="chat-msg bot" id="'+typingId+'"><div class="chat-avatar">O2O</div><div class="chat-bubble" style="padding:10px 14px"><div class="chat-typing"><span></span><span></span><span></span></div></div></div>');
     msgs.scrollTop=msgs.scrollHeight;
     try{
-      const resp=await callClaude(text);
-      chatHistory.push({role:'assistant',content:resp});
+      const r=await fetch(WORKER_URL+'/chat',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message:text,history:chatHistory})
+      });
+      const d=await r.json();
+      const respuesta=d.text||'';
+      chatHistory.push({role:'user',content:text});
+      chatHistory.push({role:'assistant',content:respuesta});
       const t=document.getElementById(typingId);if(t)t.remove();
-      msgs.insertAdjacentHTML('beforeend','<div class="chat-msg bot"><div class="chat-avatar">O2O</div><div class="chat-bubble">'+chatEscape(resp)+'</div></div>');
+      msgs.insertAdjacentHTML('beforeend','<div class="chat-msg bot"><div class="chat-avatar">O2O</div><div class="chat-bubble">'+chatEscape(respuesta)+'</div></div>');
     }catch(e){
       const t=document.getElementById(typingId);if(t)t.remove();
-      let errHtml;
-      if(e.message==='NO_API'){
-        errHtml='<div class="chat-error">El asistente todavía no está conectado a la API en este entorno. Mientras tanto, puedes consultar las <a href="#faq" style="color:inherit;text-decoration:underline">preguntas frecuentes</a> o escribirnos a <a href="mailto:administracion@one2onepro.es" style="color:inherit;text-decoration:underline">administracion@one2onepro.es</a>.</div>';
-      } else {
-        errHtml='<div class="chat-error">Lo siento, ha habido un error procesando tu pregunta. Inténtalo de nuevo en unos segundos.</div>';
-      }
-      msgs.insertAdjacentHTML('beforeend',errHtml);
+      msgs.insertAdjacentHTML('beforeend','<div class="chat-error">Lo siento, ha habido un error procesando tu pregunta. Inténtalo de nuevo en unos segundos.</div>');
       console.error('[asistente]',e);
     }finally{
       inp.disabled=false;
