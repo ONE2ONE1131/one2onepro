@@ -96,58 +96,33 @@ function jsonResponse(data, status = 200) {
   });
 }
 
-/* ─── /upload-drive ────────────────────────────────────────────────────── */
+/* ─── /upload-drive (Cloudinary unsigned upload con preset one2one_unsigned) ─── */
 
 async function handleUploadDrive(request, env, cors) {
-  const body = await request.json().catch(() => null);
-  if (!body) return jsonResponse({ error: 'Invalid JSON' }, 400);
-
+  const body = await request.json().catch(() => ({}));
   const { filename, mimeType, base64 } = body || {};
-  if (!base64) return jsonResponse({ error: 'Missing or invalid base64' }, 400);
-
-  // Strip data URL prefix if present
+  if (!base64 || typeof base64 !== 'string') {
+    return jsonResponse({ error: 'Missing or invalid base64' }, 400, cors);
+  }
   let cleanB64 = base64;
+  let detectedMime = mimeType || 'image/jpeg';
   const dataUrlMatch = /^data:([^;]+);base64,(.+)$/.exec(base64);
-  if (dataUrlMatch) cleanB64 = dataUrlMatch[2];
-
-  // Upload to Cloudinary
+  if (dataUrlMatch) { detectedMime = dataUrlMatch[1]; cleanB64 = dataUrlMatch[2]; }
   const cloudName = env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = env.CLOUDINARY_API_KEY;
-  const apiSecret = env.CLOUDINARY_API_SECRET;
-
-  const timestamp = Math.floor(Date.now() / 1000);
-  const folder = 'DNIs_One2One_Pro';
-
-  // Generate signature
-  const strToSign = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
-  const msgBuffer = new TextEncoder().encode(strToSign);
-  const hashBuffer = await crypto.subtle.digest('SHA-1', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
+  if (!cloudName) return jsonResponse({ error: 'Missing CLOUDINARY_CLOUD_NAME' }, 500, cors);
   const formData = new FormData();
-  formData.append('file', `data:${mimeType || 'image/jpeg'};base64,${cleanB64}`);
-  formData.append('api_key', apiKey);
-  formData.append('timestamp', timestamp.toString());
-  formData.append('folder', folder);
-  formData.append('signature', signature);
-
+  formData.append('file', 'data:' + detectedMime + ';base64,' + cleanB64);
+  formData.append('upload_preset', 'one2one_unsigned');
+  formData.append('folder', 'DNIs_One2One_Pro');
   const uploadResp = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    'https://api.cloudinary.com/v1_1/' + cloudName + '/image/upload',
     { method: 'POST', body: formData }
   );
-
   const uploadData = await uploadResp.json();
-
   if (!uploadResp.ok) {
-    return jsonResponse({ error: 'Cloudinary upload failed', status: uploadResp.status, detail: uploadData }, 502);
+    return jsonResponse({ error: 'Cloudinary upload failed', status: uploadResp.status, detail: uploadData }, 502, cors);
   }
-
-  return jsonResponse({
-    fileId: uploadData.public_id,
-    url: uploadData.secure_url,
-    viewUrl: uploadData.secure_url
-  });
+  return jsonResponse({ fileId: uploadData.public_id, url: uploadData.secure_url, viewUrl: uploadData.secure_url }, 200, cors);
 }
 
 /* ─── /chat ─────────────────────────────────────────────────────────────── */
