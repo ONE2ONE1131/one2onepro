@@ -113,7 +113,7 @@ async function handleUploadDrive(request, env, cors) {
   const formData = new FormData();
   formData.append('file', 'data:' + detectedMime + ';base64,' + cleanB64);
   formData.append('upload_preset', 'one2one_unsigned');
-  formData.append('folder', 'DNIs_One2One_Pro');
+  
   const uploadResp = await fetch(
     'https://api.cloudinary.com/v1_1/' + cloudName + '/image/upload',
     { method: 'POST', body: formData }
