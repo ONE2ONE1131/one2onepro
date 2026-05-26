@@ -25,7 +25,7 @@ const ALLOWED_ORIGINS = [
   'https://www.one2onepro.es'
 ];
 
-const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
+const CLAUDE_MODEL = 'claude-sonnet-4-5';
 
 const SYSTEM_PROMPT_CHAT = `Eres el asistente virtual de One2One Pro, una empresa española especializada en gestión laboral para artistas y técnicos de espectáculos bajo el Régimen Especial de Artistas (Real Decreto 1435/1985).
 
