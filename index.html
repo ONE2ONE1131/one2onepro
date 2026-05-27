@@ -1004,11 +1004,11 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
     </div>
     <form class="cf" onsubmit="enviarContacto(event)">
       <div class="cf-row">
-        <div class="cf-field"><label>Nombre</label><input type="text" placeholder="Su nombre" required></div>
-        <div class="cf-field"><label>Email</label><input type="email" placeholder="su@email.com" required></div>
+        <div class="cf-field"><label>Nombre</label><input type="text" name="nombre" placeholder="Su nombre" autocomplete="name" required></div>
+        <div class="cf-field"><label>Email</label><input type="email" name="email" placeholder="su@email.com" autocomplete="email" required></div>
       </div>
       <div class="cf-field"><label>Consulta</label>
-        <select>
+        <select name="consulta">
           <option value="">Seleccione...</option>
           <option>Necesito pagar a alguien por un trabajo puntual</option>
           <option>Voy a realizar un trabajo puntual y quiero cobrar legalmente</option>
@@ -1017,7 +1017,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
           <option>Otro</option>
         </select>
       </div>
-      <div class="cf-field"><label>Mensaje</label><textarea placeholder="Cuéntenos su caso" rows="3"></textarea></div>
+      <div class="cf-field"><label>Mensaje</label><textarea name="mensaje" placeholder="Cuéntenos su caso" rows="3" required></textarea></div>
       <button type="submit" class="btn-enviar">Enviar consulta</button>
     </form>
   </div>
@@ -2992,7 +2992,43 @@ function toggleDesglose(el){
   el.querySelector('span:first-child').textContent=body.classList.contains('show')?'Ocultar desglose':'Ver desglose';
 }
 function toggleFaq(el){const o=el.classList.contains('open');document.querySelectorAll('.faq').forEach(f=>f.classList.remove('open'));if(!o)el.classList.add('open')}
-function enviarContacto(e){e.preventDefault();e.target.innerHTML='<p style="font-size:14px;font-weight:300;color:rgba(255,255,255,.5);padding:20px 0;line-height:1.75">Mensaje recibido. Le responderemos en breve.</p>'}
+async function enviarContacto(e){
+  e.preventDefault();
+  const form=e.target;
+  const fd=new FormData(form);
+  const nombre=(fd.get('nombre')||'').trim();
+  const email=(fd.get('email')||'').trim().toLowerCase();
+  const mensaje=(fd.get('mensaje')||'').trim();
+  const consulta=(fd.get('consulta')||'').trim();
+  if(!nombre||!aValidEmail(email)||!mensaje){
+    showFlash('Revisa que nombre, email y mensaje estén bien rellenos.','error');
+    return;
+  }
+  const btn=form.querySelector('button[type="submit"]');
+  const orig=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;btn.textContent='Enviando…';}
+  try{
+    /* tipo:'contacto' permite que el escenario Make ramifique según
+       el tipo de evento (registro empresa, contacto, etc.). El consulta
+       (subject seleccionado) viaja como campo extra opcional. */
+    await fetch(EMPRESA_WEBHOOK,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        tipo:'contacto',
+        nombre:nombre,
+        email:email,
+        consulta:consulta,
+        mensaje:mensaje
+      })
+    });
+    form.innerHTML='<p style="font-size:14px;font-weight:300;color:rgba(255,255,255,.65);padding:20px 0;line-height:1.75">✓ Mensaje recibido. Le responderemos lo antes posible.</p>';
+  }catch(err){
+    console.error('enviarContacto:',err);
+    if(btn){btn.disabled=false;btn.textContent=orig;}
+    showFlash('No hemos podido enviar el mensaje. Inténtalo en unos segundos.','error');
+  }
+}
 function compartirWA(msg){window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank')}
 function compartirEmail(msg,subj){window.open('mailto:?subject='+encodeURIComponent(subj||'Presupuesto One2One Pro')+'&body='+encodeURIComponent(msg),'_blank')}
 function copiarEnlace(url){
