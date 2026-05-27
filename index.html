@@ -39,9 +39,23 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;ali
 .nav-user{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:500;color:#fff;white-space:nowrap}
 .nav-badge{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;background:rgba(0,168,107,.18);color:var(--verde);padding:4px 9px;border-radius:99px;border:1px solid rgba(0,168,107,.35)}
 .nav-badge.empresa{background:rgba(232,240,254,.14);color:#cfe2ff;border-color:rgba(207,226,255,.32)}
-.nav-avatar-btn{background:none;border:none;padding:0;cursor:pointer;line-height:0;display:inline-flex}
-.nav-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,.3);transition:border-color .15s}
-.nav-avatar-btn:hover .nav-avatar{border-color:var(--verde)}
+/* ─── Menú de usuario (dropdown) ─── */
+.nav-user-wrap{position:relative;display:inline-flex;align-items:center}
+.nav-user-trigger{display:inline-flex;align-items:center;gap:10px;background:none;border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:5px 8px 5px 14px;cursor:pointer;font-family:inherit;color:#fff;font-size:12px;font-weight:500;line-height:1;transition:border-color .15s,background .15s}
+.nav-user-trigger:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.04)}
+.nav-user-name{white-space:nowrap}
+.nav-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,.25);display:block}
+.nav-user-trigger:hover .nav-avatar{border-color:var(--verde)}
+.nav-gear{color:rgba(255,255,255,.55);transition:color .15s}
+.nav-user-trigger:hover .nav-gear{color:#fff}
+.nav-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:220px;background:#fff;border:1px solid var(--gris-borde);border-radius:8px;box-shadow:0 12px 32px rgba(15,45,94,.18);padding:6px;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .15s,transform .15s;z-index:200}
+.nav-menu.open{opacity:1;transform:none;pointer-events:auto}
+.nav-menu-item{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;background:none;border:none;font-family:inherit;font-size:13px;font-weight:500;color:var(--azul);cursor:pointer;border-radius:5px;transition:background .12s,color .12s;text-decoration:none;line-height:1.3}
+.nav-menu-item:hover{background:var(--fondo);color:var(--azul-medio)}
+.nav-menu-item svg{flex-shrink:0;stroke:currentColor}
+.nav-menu-item.danger{color:#dc2626}
+.nav-menu-item.danger:hover{background:#fee2e2;color:#991b1b}
+.nav-menu-divider{height:1px;background:var(--gris-borde);margin:6px 4px}
 .nav-logout{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:#dc2626;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;transition:background .15s;font-family:inherit}
 .nav-logout:hover{background:#b91c1c}
 .nav-link{font-family:inherit;font-size:13px;font-weight:500;color:rgba(255,255,255,.7);background:none;border:none;cursor:pointer;padding:8px 4px;transition:color .15s;white-space:nowrap}
@@ -1114,7 +1128,7 @@ let st={
   /* Cuenta artista — datos del PROMOTOR */
   pNombre:'',pCif:'',pEmail:'',
   /* Cuenta empresa — datos del ARTISTA */
-  aNombre:'',aApellidos:'',aDni:'',aFechaNac:'',aNacionalidad:'',aDireccion:'',aIban:'',aNaf:'',aTel:'',
+  aNombre:'',aApellidos:'',aDni:'',aFechaNac:'',aNacionalidad:'',aDireccion:'',aIban:'',aNaf:'',aTel:'',aEmail:'',
   /* Cuenta empresa — datos fiscales de la EMPRESA (se piden en cada expediente) */
   eContacto:'',eTel:'',eRazon:'',eCif:'',eEmailFact:'',
   eTipoVia:'Calle',eCalle:'',eNumero:'',ePiso:'',eCp:'',eMunicipio:'',eProvincia:'',ePais:'España',
@@ -1128,7 +1142,7 @@ function resetExpedienteState(){
   st.fechaInicio='';st.fechaFin='';
   st.pNombre='';st.pCif='';st.pEmail='';
   st.aNombre='';st.aApellidos='';st.aDni='';st.aFechaNac='';st.aNacionalidad='';
-  st.aDireccion='';st.aIban='';st.aNaf='';st.aTel='';
+  st.aDireccion='';st.aIban='';st.aNaf='';st.aTel='';st.aEmail='';
   st.aDniAnverso=null;st.aDniReverso=null;
   st.eContacto='';st.eTel='';st.eRazon='';st.eCif='';st.eEmailFact='';
   st.eTipoVia='Calle';st.eCalle='';st.eNumero='';st.ePiso='';
@@ -1203,14 +1217,64 @@ function renderNavRight(){
   const isEmp=user.accountType==='empresa';
   const tipoLabel=isEmp?'Empresa':'Profesional';
   const badgeCls=isEmp?'nav-badge empresa':'nav-badge';
-  /* Si hay avatar custom subido a Cloudinary, lo mostramos como thumbnail
-     redondo y suprime el badge de texto. Si no, badge tradicional. */
-  const avatarHtml=user.avatarUrl
-    ? '<button type="button" class="nav-avatar-btn" onclick="openProfileEditor()" title="Editar perfil"><img class="nav-avatar" src="'+aEscape(user.avatarUrl)+'" alt="" /></button>'
-    : '<span class="'+badgeCls+'">'+tipoLabel+'</span>';
+  /* Trigger: avatar circular si existe, badge + engranaje si no. Ambos
+     casos disparan el menú desplegable con Mi perfil / Asistente /
+     Contacto / Cerrar sesión. */
+  const triggerInner=user.avatarUrl
+    ? '<img class="nav-avatar" src="'+aEscape(user.avatarUrl)+'" alt="" />'
+    : '<span class="'+badgeCls+'">'+tipoLabel+'</span><svg class="nav-gear" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
   nr.innerHTML=
-    '<span class="nav-user">'+aEscape(abbrevName(user))+' '+avatarHtml+'</span>'+
-    '<button class="nav-logout" onclick="doLogout()">Cerrar sesión</button>';
+    '<div class="nav-user-wrap">'+
+      '<button type="button" class="nav-user-trigger" id="nav-user-trigger" onclick="toggleNavMenu(event)" aria-haspopup="true" aria-expanded="false">'+
+        '<span class="nav-user-name">'+aEscape(abbrevName(user))+'</span>'+
+        triggerInner+
+      '</button>'+
+      '<div class="nav-menu" id="nav-menu" role="menu" aria-hidden="true">'+
+        '<button type="button" class="nav-menu-item" role="menuitem" onclick="closeNavMenu();openProfileEditor()">'+
+          '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+
+          '<span>Mi perfil</span>'+
+        '</button>'+
+        '<a class="nav-menu-item" role="menuitem" href="#asistente" onclick="closeNavMenu()">'+
+          '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>'+
+          '<span>Asistente</span>'+
+        '</a>'+
+        '<a class="nav-menu-item" role="menuitem" href="#contacto" onclick="closeNavMenu()">'+
+          '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>'+
+          '<span>Contacto</span>'+
+        '</a>'+
+        '<div class="nav-menu-divider"></div>'+
+        '<button type="button" class="nav-menu-item danger" role="menuitem" onclick="closeNavMenu();doLogout()">'+
+          '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'+
+          '<span>Cerrar sesión</span>'+
+        '</button>'+
+      '</div>'+
+    '</div>';
+}
+
+function toggleNavMenu(event){
+  if(event)event.stopPropagation();
+  const menu=document.getElementById('nav-menu');
+  const trigger=document.getElementById('nav-user-trigger');
+  if(!menu)return;
+  const isOpen=menu.classList.toggle('open');
+  if(trigger)trigger.setAttribute('aria-expanded',isOpen?'true':'false');
+  menu.setAttribute('aria-hidden',isOpen?'false':'true');
+}
+function closeNavMenu(){
+  const menu=document.getElementById('nav-menu');
+  const trigger=document.getElementById('nav-user-trigger');
+  if(menu)menu.classList.remove('open');
+  if(menu)menu.setAttribute('aria-hidden','true');
+  if(trigger)trigger.setAttribute('aria-expanded','false');
+}
+/* Cierre al pinchar fuera del menú o pulsar Escape. Lo registramos una
+   sola vez en init; aquí solo definimos las funciones que usa. */
+function aHandleDocClickForNavMenu(e){
+  const menu=document.getElementById('nav-menu');
+  const trigger=document.getElementById('nav-user-trigger');
+  if(!menu||!menu.classList.contains('open'))return;
+  if(menu.contains(e.target)||(trigger&&trigger.contains(e.target)))return;
+  closeNavMenu();
 }
 
 /* "Juan García López" → "Juan G." · prioriza profile.nombre/apellidos para
@@ -1517,8 +1581,15 @@ function closeAuthModal(){
 }
 /* Cierre con tecla Escape */
 document.addEventListener('keydown',function(ev){
-  if(ev.key==='Escape' && isAuthModalOpen())closeAuthModal();
+  if(ev.key!=='Escape')return;
+  if(isAuthModalOpen()){closeAuthModal();return;}
+  const m=document.getElementById('nav-menu');
+  if(m&&m.classList.contains('open'))closeNavMenu();
 });
+/* Click fuera del menú de usuario lo cierra */
+document.addEventListener('click',function(ev){
+  if(typeof aHandleDocClickForNavMenu==='function')aHandleDocClickForNavMenu(ev);
+},true);
 
 function renderAuthModal(){
   const c=document.getElementById('auth-modal-content');
@@ -2372,6 +2443,7 @@ function iniciarExpediente(){
     st.aIban=pr.iban||'';
     st.aNaf=pr.naf||'';
     st.aTel=pr.telefono||'';
+    st.aEmail=u.email||'';
   }
   if(u && u.accountType==='empresa' && u.companyProfile){
     const cp=u.companyProfile;
@@ -2586,6 +2658,7 @@ ${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del profesional</
 <div class="form-field"><label>Fecha de nacimiento *</label><input type="date" value="${aEscape(st.aFechaNac)}" oninput="st.aFechaNac=this.value;rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aFechaNacError(this.value))"><div class="field-error"></div></div>
 <div class="form-field"><label>Nacionalidad *</label><input type="text" placeholder="Española" maxlength="50" value="${aEscape(st.aNacionalidad)}" oninput="st.aNacionalidad=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
 <div class="form-field"><label>Teléfono *</label><input type="tel" placeholder="+34 600 000 000" maxlength="16" value="${aEscape(st.aTel)}" oninput="st.aTel=this.value;rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido')"><div class="field-error"></div></div>
+<div class="form-field full"><label>Email *</label><input type="email" placeholder="trabajador@email.com" autocomplete="email" value="${aEscape(st.aEmail)}" oninput="st.aEmail=this.value.trim().toLowerCase();rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aValidEmail(this.value)?null:'Email inválido')"><div class="field-error"></div></div>
 <div class="form-field full"><label>Dirección completa *</label><input type="text" placeholder="Calle, número, CP, municipio, provincia" maxlength="200" value="${aEscape(st.aDireccion)}" oninput="st.aDireccion=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
 <div class="form-field"><label>IBAN *</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" maxlength="29" value="${aEscape(st.aIban)}" oninput="st.aIban=aFormatIban(this.value);this.value=st.aIban;rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aValidIbanES(this.value)?null:'IBAN español inválido')"><div class="field-error"></div></div>
 <div class="form-field"><label>NAF (opcional)</label><input type="text" placeholder="12 dígitos" maxlength="12" value="${aEscape(st.aNaf)}" oninput="st.aNaf=this.value.replace(/\D/g,'').substring(0,12);this.value=st.aNaf"></div>
@@ -2737,6 +2810,7 @@ function artistaDatosValidos(){
   if(aFechaNacError(st.aFechaNac))return false;
   if(!st.aNacionalidad||st.aNacionalidad.trim().length<2)return false;
   if(!aValidTelES(st.aTel))return false;
+  if(!aValidEmail(st.aEmail))return false;
   if(!st.aDireccion||st.aDireccion.trim().length<5)return false;
   if(!aValidIbanES(st.aIban))return false;
   if(!st.aDniAnverso||!st.aDniAnverso.data)return false;
@@ -2842,7 +2916,16 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
        Las URLs las generó el Worker tras subir los archivos a la carpeta
        "DNIs One2One Pro". */
     modo_datos_trabajador:'manual',
-    trabajador_email:'',
+    /* trabajador_email viaja en el payload pero el escenario 1 de Make
+       (Integration Webhooks, ID 5779346) NO debe usarlo para notificar
+       al trabajador todavía — el promotor aún no ha pagado.
+       AVISO IMPORTANTE: el módulo Brevo 13 del escenario 1 que enviaba
+       email al trabajador DEBE estar desactivado en Make. El email al
+       trabajador solo se envía desde el escenario 2 post-pago, cuando
+       Stripe dispara checkout.session.completed. Antes del fix, este
+       campo llegaba vacío y Brevo caía a empresa_email → el promotor
+       recibía el aviso dos veces y el trabajador, ninguno. */
+    trabajador_email:st.aEmail,
     trabajador_nombre:st.aNombre,
     trabajador_apellidos:st.aApellidos,
     trabajador_dni:st.aDni,
