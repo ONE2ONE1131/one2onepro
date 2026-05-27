@@ -39,6 +39,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;ali
 .nav-user{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:500;color:#fff;white-space:nowrap}
 .nav-badge{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;background:rgba(0,168,107,.18);color:var(--verde);padding:4px 9px;border-radius:99px;border:1px solid rgba(0,168,107,.35)}
 .nav-badge.empresa{background:rgba(232,240,254,.14);color:#cfe2ff;border-color:rgba(207,226,255,.32)}
+.nav-avatar-btn{background:none;border:none;padding:0;cursor:pointer;line-height:0;display:inline-flex}
+.nav-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,.3);transition:border-color .15s}
+.nav-avatar-btn:hover .nav-avatar{border-color:var(--verde)}
 .nav-logout{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:#dc2626;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;transition:background .15s;font-family:inherit}
 .nav-logout:hover{background:#b91c1c}
 .nav-link{font-family:inherit;font-size:13px;font-weight:500;color:rgba(255,255,255,.7);background:none;border:none;cursor:pointer;padding:8px 4px;transition:color .15s;white-space:nowrap}
@@ -436,6 +439,38 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 .dashboard-card{background:#fff;border:1px solid var(--gris-borde);padding:22px 20px;margin-bottom:10px;border-radius:6px}
 .dashboard-welcome{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--azul);margin-bottom:6px;line-height:1.3}
 .dashboard-welcome strong{font-weight:700}
+.dash-header{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.dash-header .auth-eyebrow{margin:0}
+.dash-header .auth-title{margin:0}
+.dash-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--gris-borde);margin-bottom:8px;display:block}
+.profile-edit-btn{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--gris-borde);color:var(--azul);font-family:inherit;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;padding:8px 14px;border-radius:99px;cursor:pointer;transition:all .15s}
+.profile-edit-btn:hover{border-color:var(--azul);background:var(--azul);color:#fff}
+.profile-edit-btn svg{stroke:currentColor}
+/* ─── Editor de perfil ─── */
+.avatar-section{display:flex;align-items:center;gap:20px;background:#fff;border:1px solid var(--gris-borde);border-radius:8px;padding:18px 20px;margin-bottom:18px}
+.avatar-display{position:relative;width:84px;height:84px;flex-shrink:0;border-radius:50%;overflow:hidden;background:var(--fondo);border:2px solid var(--gris-borde)}
+.avatar-display img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--gris-suave)}
+.avatar-spinner{position:absolute;inset:0;background:rgba(15,45,94,.65);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.avatar-spinner::after{content:'Subiendo…'}
+.avatar-controls{flex:1;display:flex;flex-direction:column;gap:6px}
+.avatar-btn{display:inline-block;background:var(--azul);color:#fff;font-family:inherit;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;padding:9px 16px;border-radius:4px;cursor:pointer;transition:background .15s;align-self:flex-start}
+.avatar-btn:hover{background:var(--azul-medio)}
+.avatar-remove{background:none;border:none;color:#dc2626;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;text-decoration:underline;padding:2px 0;align-self:flex-start}
+.avatar-hint{font-size:11px;color:var(--gris-suave);font-weight:300;margin:2px 0 0}
+.dni-thumbs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.dni-thumb-wrap{position:relative;background:var(--fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.dni-thumb-label{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--gris-suave)}
+.dni-thumb{width:100%;max-height:120px;object-fit:cover;border-radius:4px;border:1px solid var(--gris-borde)}
+.dni-thumb-empty{width:100%;height:80px;background:#fff;border:1px dashed var(--gris-borde);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--gris-suave);font-size:12px;font-style:italic}
+.dni-thumb-resubir{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--azul);text-decoration:underline;cursor:pointer}
+.dni-thumb-resubir:hover{color:var(--verde)}
+.dni-thumb-spinner{position:absolute;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;color:var(--azul);font-size:11px;font-weight:600;letter-spacing:1px;border-radius:8px}
+/* ─── Toast / flash ─── */
+.o2o-flash{position:fixed;bottom:24px;right:24px;background:var(--verde);color:#fff;padding:14px 22px;border-radius:8px;font-size:13.5px;font-weight:500;box-shadow:0 8px 28px rgba(0,168,107,.32);opacity:0;transform:translateY(20px);transition:opacity .25s,transform .25s;z-index:9999;pointer-events:none;max-width:360px;line-height:1.45}
+.o2o-flash.show{opacity:1;transform:none;pointer-events:auto}
+.o2o-flash.error{background:#dc2626;box-shadow:0 8px 28px rgba(220,38,38,.32)}
+@media(max-width:560px){.o2o-flash{left:16px;right:16px;bottom:16px;max-width:none}}
 .dashboard-sub{font-size:13px;color:var(--gris-suave);font-weight:300;line-height:1.6}
 .dashboard-user-email{font-size:11px;color:var(--gris-suave);font-weight:400;margin-top:4px}
 .status-badge{display:inline-block;padding:5px 12px;border-radius:99px;font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;margin-top:10px}
@@ -1168,9 +1203,13 @@ function renderNavRight(){
   const isEmp=user.accountType==='empresa';
   const tipoLabel=isEmp?'Empresa':'Profesional';
   const badgeCls=isEmp?'nav-badge empresa':'nav-badge';
+  /* Si hay avatar custom subido a Cloudinary, lo mostramos como thumbnail
+     redondo y suprime el badge de texto. Si no, badge tradicional. */
+  const avatarHtml=user.avatarUrl
+    ? '<button type="button" class="nav-avatar-btn" onclick="openProfileEditor()" title="Editar perfil"><img class="nav-avatar" src="'+aEscape(user.avatarUrl)+'" alt="" /></button>'
+    : '<span class="'+badgeCls+'">'+tipoLabel+'</span>';
   nr.innerHTML=
-    '<span class="nav-user">'+aEscape(abbrevName(user))+
-    ' <span class="'+badgeCls+'">'+tipoLabel+'</span></span>'+
+    '<span class="nav-user">'+aEscape(abbrevName(user))+' '+avatarHtml+'</span>'+
     '<button class="nav-logout" onclick="doLogout()">Cerrar sesión</button>';
 }
 
@@ -1288,7 +1327,7 @@ const PROVINCIAS_ES=['Álava','Albacete','Alicante','Almería','Asturias','Ávil
 const PAISES=['España','Francia','Portugal','Italia','Alemania','Reino Unido','Otros'];
 const TIPOS_VIA=['Calle','Avenida','Plaza','Paseo','Carretera','Ronda','Travesía','Camino','Pasaje','Glorieta','Vía','Bulevar','Polígono','Urbanización'];
 
-let artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',expedienteOpen:false,expedienteResult:null};
+let artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',expedienteOpen:false,expedienteResult:null,editingProfile:false,editForm:{}};
 
 /* ─── Almacén local ─── */
 function aGetUsers(){try{return JSON.parse(localStorage.getItem('o2o_users')||'{}')}catch(e){return{}}}
@@ -1698,7 +1737,7 @@ function doLogout(){
   const u=aGetCurrentUser();
   if(u)perfil=u.accountType;
   aClearSession();
-  artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',expedienteOpen:false,expedienteResult:null};
+  artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',expedienteOpen:false,expedienteResult:null,editingProfile:false,editForm:{}};
   resetExpedienteState();
   renderPasos();updateChromeUI();renderSim();
 }
@@ -1896,13 +1935,24 @@ ${(val.discrepancias&&val.discrepancias.length)?'<ul style="text-align:left;marg
    email de facturación, etc.) se recogen en el momento de crear cada expediente. */
 
 /* ─── DASHBOARDS ─── */
+function renderDashboardHeader(user){
+  const avatar=user.avatarUrl
+    ? `<img class="dash-avatar" src="${aEscape(user.avatarUrl)}" alt="" />`
+    : '';
+  return `<div class="dash-header">
+<div>${avatar}<p class="auth-eyebrow" style="margin:0">Mi panel</p>
+<h2 class="auth-title">Tu <em>cuenta</em></h2></div>
+<button type="button" class="profile-edit-btn" onclick="openProfileEditor()" aria-label="Editar perfil">
+<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+<span>Mi perfil</span>
+</button>
+</div>`;
+}
+
 function renderArtDashboard(user){
   const c=document.getElementById('sim-c');
   const p=user.profile||{};
-  c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">Mi panel</p>
-<h2 class="auth-title">Tu <em>cuenta</em></h2>
-</div>
+  c.innerHTML=`${renderDashboardHeader(user)}
 <div class="dashboard-card">
 <div class="dashboard-welcome">Hola, <strong>${aEscape(p.nombre||user.nombre)} ${aEscape(p.apellidos||'')}</strong></div>
 <div class="dashboard-sub">${aEscape(p.profesion||'')}</div>
@@ -1918,10 +1968,7 @@ function renderArtDashboard(user){
 
 function renderEmpresaDashboard(user){
   const c=document.getElementById('sim-c');
-  c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">Mi panel</p>
-<h2 class="auth-title">Tu <em>cuenta</em></h2>
-</div>
+  c.innerHTML=`${renderDashboardHeader(user)}
 <div class="dashboard-card">
 <div class="dashboard-welcome">Hola, <strong>${aEscape(user.nombre)}</strong></div>
 <div class="dashboard-user-email">${aEscape(user.email)}</div>
@@ -1932,6 +1979,374 @@ function renderEmpresaDashboard(user){
 <p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Contrata a un profesional para un trabajo puntual. Introducirás los datos fiscales de tu empresa (razón social, CIF, dirección fiscal, email de facturación) al crear el expediente.</p>
 <button class="btn-verde-full" style="margin-top:0" onclick="iniciarExpediente()">+ Nuevo expediente</button>
 </div>`;
+}
+
+/* ─── EDITOR DE PERFIL ─────────────────────────────────────────────────
+   Vista accesible desde el botón "Mi perfil" del dashboard. Permite
+   editar todos los campos del perfil + subir un avatar. Artista y empresa
+   tienen formularios distintos porque sus datos son distintos:
+   - Artista edita user.profile (registrado al subir el DNI con IA).
+   - Empresa edita user.companyProfile (persistido tras el primer expediente).
+   El avatar vive en user.avatarUrl (mismo nivel para ambos perfiles).
+   ──────────────────────────────────────────────────────────────────── */
+function openProfileEditor(){
+  const u=aGetCurrentUser();if(!u)return;
+  if(u.accountType==='artista'){
+    const p=u.profile||{};
+    artistAuth.editForm=Object.assign({},p);
+  } else {
+    const cp=u.companyProfile||{};
+    artistAuth.editForm={
+      contacto:cp.contacto||u.nombre||'',
+      tel:cp.tel||'',
+      razon:cp.razon||'',
+      cif:cp.cif||'',
+      emailFact:cp.emailFact||u.email||'',
+      tipoVia:cp.tipoVia||'Calle',
+      calle:cp.calle||'',
+      numero:cp.numero||'',
+      piso:cp.piso||'',
+      cp:cp.cp||'',
+      municipio:cp.municipio||'',
+      provincia:cp.provincia||'',
+      pais:cp.pais||'España'
+    };
+  }
+  artistAuth.editForm.avatarUrl=u.avatarUrl||'';
+  artistAuth.editingProfile=true;
+  artistAuth.error='';
+  artistAuth.info='';
+  renderSim();
+  /* En desktop el panel ya está visible; en móvil hacemos scroll */
+  const sim=document.getElementById('sim');
+  if(sim&&window.innerWidth<900)setTimeout(()=>sim.scrollIntoView({behavior:'smooth'}),60);
+}
+
+function closeProfileEditor(){
+  artistAuth.editingProfile=false;
+  artistAuth.editForm={};
+  artistAuth.error='';
+  renderSim();
+}
+
+function renderProfileEditor(user){
+  const c=document.getElementById('sim-c');
+  const ef=artistAuth.editForm||(artistAuth.editForm={});
+  const err=artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:'';
+  /* Cabecera común: avatar + título + botón volver */
+  const avatarSrc=ef.avatarPreview||ef.avatarUrl||user.avatarUrl||'';
+  const avatarBlock=`<div class="avatar-section">
+<div class="avatar-display">${avatarSrc?`<img src="${aEscape(avatarSrc)}" alt="" />`:'<div class="avatar-placeholder">📷</div>'}${ef._uploading?'<div class="avatar-spinner"></div>':''}</div>
+<div class="avatar-controls">
+<label class="avatar-btn" for="profile-avatar-input">${avatarSrc?'Cambiar foto':'Subir foto de perfil'}</label>
+<input type="file" id="profile-avatar-input" accept="image/jpeg,image/png,image/webp" onchange="aHandleAvatarFile(event)" style="display:none">
+${avatarSrc?'<button type="button" class="avatar-remove" onclick="aRemoveAvatar()">Quitar</button>':''}
+<p class="avatar-hint">JPG, PNG o WebP · máx 3 MB</p>
+</div>
+</div>`;
+  if(user.accountType==='empresa'){
+    const provOpts=PROVINCIAS_ES.map(pr=>`<option value="${pr}" ${ef.provincia===pr?'selected':''}>${pr}</option>`).join('');
+    const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${ef.tipoVia===v?'selected':''}>${v}</option>`).join('');
+    const paisOpts=PAISES.map(pa=>`<option value="${pa}" ${ef.pais===pa?'selected':''}>${pa}</option>`).join('');
+    c.innerHTML=`<button class="btn-b" onclick="closeProfileEditor()">← Volver al panel</button>
+<div class="auth-hero"><p class="auth-eyebrow">Editar perfil</p><h2 class="auth-title">Mi <em>cuenta</em></h2></div>
+${err}
+${avatarBlock}
+<div class="form-section">
+<div class="form-section-title">Persona de contacto</div>
+<div class="form-grid">
+<div class="form-field"><label>Nombre de contacto *</label><input type="text" maxlength="100" value="${aEscape(ef.contacto||'')}" oninput="artistAuth.editForm.contacto=this.value"></div>
+<div class="form-field"><label>Teléfono *</label><input type="tel" maxlength="16" value="${aEscape(ef.tel||'')}" oninput="artistAuth.editForm.tel=this.value" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido')"><div class="field-error"></div></div>
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">Identificación fiscal</div>
+<div class="form-grid">
+<div class="form-field"><label>Razón social *</label><input type="text" maxlength="120" value="${aEscape(ef.razon||'')}" oninput="artistAuth.editForm.razon=this.value"></div>
+<div class="form-field"><label>CIF / DNI / NIE *</label><input type="text" maxlength="9" value="${aEscape(ef.cif||'')}" oninput="artistAuth.editForm.cif=this.value.toUpperCase();this.value=artistAuth.editForm.cif" onblur="aShowFieldError(this,aValidCifDniNie(this.value)?null:'CIF, DNI o NIE inválido')"><div class="field-error"></div></div>
+<div class="form-field full"><label>Email de facturación *</label><input type="email" value="${aEscape(ef.emailFact||'')}" oninput="artistAuth.editForm.emailFact=this.value.trim().toLowerCase()" onblur="aShowFieldError(this,aValidEmail(this.value)?null:'Email inválido')"><div class="field-error"></div></div>
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">Dirección fiscal</div>
+<div class="form-grid">
+<div class="form-field"><label>Tipo de vía *</label><select onchange="artistAuth.editForm.tipoVia=this.value">${viaOpts}</select></div>
+<div class="form-field"><label>Nombre de la vía *</label><input type="text" maxlength="120" value="${aEscape(ef.calle||'')}" oninput="artistAuth.editForm.calle=this.value"></div>
+<div class="form-field"><label>Número *</label><input type="text" maxlength="10" value="${aEscape(ef.numero||'')}" oninput="artistAuth.editForm.numero=this.value"></div>
+<div class="form-field"><label>Piso / puerta</label><input type="text" maxlength="20" value="${aEscape(ef.piso||'')}" oninput="artistAuth.editForm.piso=this.value"></div>
+<div class="form-field"><label>Código Postal *</label><input type="text" maxlength="5" value="${aEscape(ef.cp||'')}" oninput="artistAuth.editForm.cp=this.value.replace(/\\D/g,'').substring(0,5);this.value=artistAuth.editForm.cp"></div>
+<div class="form-field"><label>Municipio *</label><input type="text" maxlength="80" value="${aEscape(ef.municipio||'')}" oninput="artistAuth.editForm.municipio=this.value"></div>
+<div class="form-field"><label>Provincia *</label><select class="prov-sel" onchange="artistAuth.editForm.provincia=this.value"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
+<div class="form-field"><label>País *</label><select onchange="artistAuth.editForm.pais=this.value">${paisOpts}</select></div>
+</div>
+</div>
+<button class="btn-verde-full" onclick="saveProfileEdits()" ${ef._uploading?'disabled':''}>Guardar cambios</button>
+<button class="btn-b" style="margin-top:14px;text-align:center" onclick="closeProfileEditor()">Cancelar</button>`;
+    return;
+  }
+  /* ── Artista ─────────────────────────────────────────────────────── */
+  if(!ef.tipoVia)ef.tipoVia='Calle';
+  if(!ef.tipoDoc)ef.tipoDoc='DNI';
+  if(!ef.nacionalidad)ef.nacionalidad='Española';
+  if(!ef.pais)ef.pais='España';
+  const provOpts=PROVINCIAS_ES.map(pr=>`<option value="${pr}" ${ef.provincia===pr?'selected':''}>${pr}</option>`).join('');
+  const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${ef.tipoVia===v?'selected':''}>${v}</option>`).join('');
+  const paisOpts=PAISES.map(pa=>`<option value="${pa}" ${ef.pais===pa?'selected':''}>${pa}</option>`).join('');
+  /* DNI: las fotos ya están subidas (vienen como objeto {name,url,...}).
+     Mostramos thumbnail con un input file oculto para resubir. La URL nueva
+     se persiste en editForm tras el upload exitoso al Worker. */
+  const dniThumb=(side,label)=>{
+    const meta=ef[side]||{};
+    const url=ef['_'+side+'New']||meta.url||'';
+    return `<div class="dni-thumb-wrap">
+<div class="dni-thumb-label">${label}</div>
+${url?`<img class="dni-thumb" src="${aEscape(url)}" alt="${label}" />`:'<div class="dni-thumb-empty">Sin foto</div>'}
+<label class="dni-thumb-resubir" for="edit-dni-${side}">${url?'Resubir':'Subir'}</label>
+<input type="file" id="edit-dni-${side}" accept="image/jpeg,image/png" onchange="aHandleDniReupload(event,'${side}')" style="display:none">
+${ef['_'+side+'Uploading']?'<div class="dni-thumb-spinner">Subiendo…</div>':''}
+</div>`;
+  };
+  c.innerHTML=`<button class="btn-b" onclick="closeProfileEditor()">← Volver al panel</button>
+<div class="auth-hero"><p class="auth-eyebrow">Editar perfil</p><h2 class="auth-title">Mi <em>perfil</em></h2></div>
+${err}
+${avatarBlock}
+<div class="form-section">
+<div class="form-section-title">Datos personales</div>
+<div class="form-grid">
+<div class="form-field"><label>Nombre *</label><input type="text" maxlength="50" value="${aEscape(ef.nombre||'')}" oninput="artistAuth.editForm.nombre=this.value"></div>
+<div class="form-field"><label>Apellidos *</label><input type="text" maxlength="80" value="${aEscape(ef.apellidos||'')}" oninput="artistAuth.editForm.apellidos=this.value"></div>
+<div class="form-field"><label>Teléfono *</label><input type="tel" maxlength="16" value="${aEscape(ef.telefono||'')}" oninput="artistAuth.editForm.telefono=this.value" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido')"><div class="field-error"></div></div>
+<div class="form-field"><label>Fecha de nacimiento *</label><input type="date" value="${aEscape(ef.fechaNac||'')}" oninput="artistAuth.editForm.fechaNac=this.value" onblur="aShowFieldError(this,aFechaNacError(this.value))"><div class="field-error"></div></div>
+<div class="form-field"><label>Sexo *</label><select onchange="artistAuth.editForm.sexo=this.value"><option value="">Seleccionar...</option><option value="M" ${ef.sexo==='M'?'selected':''}>Hombre</option><option value="F" ${ef.sexo==='F'?'selected':''}>Mujer</option><option value="X" ${ef.sexo==='X'?'selected':''}>No binario / Otro</option></select></div>
+<div class="form-field"><label>Nacionalidad *</label><input type="text" maxlength="50" value="${aEscape(ef.nacionalidad||'')}" oninput="artistAuth.editForm.nacionalidad=this.value"></div>
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">Documento identificativo</div>
+<div class="form-grid">
+<div class="form-field"><label>Tipo de documento *</label><select onchange="artistAuth.editForm.tipoDoc=this.value"><option value="DNI" ${ef.tipoDoc==='DNI'?'selected':''}>DNI</option><option value="NIE" ${ef.tipoDoc==='NIE'?'selected':''}>NIE</option></select></div>
+<div class="form-field"><label>Número de documento *</label><input type="text" maxlength="9" value="${aEscape(ef.numDoc||'')}" oninput="artistAuth.editForm.numDoc=this.value.toUpperCase();this.value=artistAuth.editForm.numDoc" onblur="aShowFieldError(this,aValidDniNie(this.value)?null:'DNI o NIE inválido')"><div class="field-error"></div></div>
+<div class="form-field full"><label>Fecha de caducidad *</label><input type="date" value="${aEscape(ef.fechaCaducidad||'')}" oninput="artistAuth.editForm.fechaCaducidad=this.value" onblur="aShowFieldError(this,aFechaCaducidadError(this.value))"><div class="field-error"></div></div>
+</div>
+<div class="dni-thumbs-grid">
+${dniThumb('dniAnverso','DNI / NIE anverso')}
+${dniThumb('dniReverso','DNI / NIE reverso')}
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">Dirección</div>
+<div class="form-grid">
+<div class="form-field"><label>Tipo de vía *</label><select onchange="artistAuth.editForm.tipoVia=this.value">${viaOpts}</select></div>
+<div class="form-field"><label>Nombre de la vía *</label><input type="text" maxlength="120" value="${aEscape(ef.calle||'')}" oninput="artistAuth.editForm.calle=this.value"></div>
+<div class="form-field"><label>Número *</label><input type="text" maxlength="10" value="${aEscape(ef.numero||'')}" oninput="artistAuth.editForm.numero=this.value"></div>
+<div class="form-field"><label>Piso / puerta</label><input type="text" maxlength="20" value="${aEscape(ef.piso||'')}" oninput="artistAuth.editForm.piso=this.value"></div>
+<div class="form-field"><label>Código Postal *</label><input type="text" maxlength="5" value="${aEscape(ef.cp||'')}" oninput="artistAuth.editForm.cp=this.value.replace(/\\D/g,'').substring(0,5);this.value=artistAuth.editForm.cp"></div>
+<div class="form-field"><label>Municipio *</label><input type="text" maxlength="80" value="${aEscape(ef.municipio||'')}" oninput="artistAuth.editForm.municipio=this.value"></div>
+<div class="form-field"><label>Provincia *</label><select class="prov-sel" onchange="artistAuth.editForm.provincia=this.value"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
+<div class="form-field"><label>País *</label><select onchange="artistAuth.editForm.pais=this.value">${paisOpts}</select></div>
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">Datos profesionales y bancarios</div>
+<div class="form-grid">
+<div class="form-field full"><label>IBAN *</label><input type="text" maxlength="29" value="${aEscape(ef.iban||'')}" oninput="artistAuth.editForm.iban=aFormatIban(this.value);this.value=artistAuth.editForm.iban" onblur="aShowFieldError(this,aValidIbanES(this.value)?null:'IBAN español inválido')"><div class="field-error"></div></div>
+<div class="form-field"><label>Nº Afiliación SS / NAF</label><input type="text" maxlength="12" value="${aEscape(ef.naf||'')}" oninput="artistAuth.editForm.naf=this.value.replace(/\\D/g,'').substring(0,12);this.value=artistAuth.editForm.naf"></div>
+<div class="form-field"><label>Profesión artística *</label><input type="text" maxlength="80" value="${aEscape(ef.profesion||'')}" oninput="artistAuth.editForm.profesion=this.value"></div>
+</div>
+</div>
+<button class="btn-verde-full" onclick="saveProfileEdits()" ${ef._uploading||ef._dniAnversoUploading||ef._dniReversoUploading?'disabled':''}>Guardar cambios</button>
+<button class="btn-b" style="margin-top:14px;text-align:center" onclick="closeProfileEditor()">Cancelar</button>`;
+}
+
+/* Sube el avatar al Worker en background. Mientras tanto enseñamos el
+   preview local. Si el upload falla revertimos el preview. */
+async function aHandleAvatarFile(event){
+  const file=event.target.files[0];if(!file)return;
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){showFlash('La foto debe ser JPG, PNG o WebP.','error');return;}
+  if(file.size>3*1024*1024){showFlash('La foto no puede superar 3 MB.','error');return;}
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    const dataUrl=e.target.result;
+    artistAuth.editForm.avatarPreview=dataUrl;
+    artistAuth.editForm._uploading=true;
+    renderSim();
+    try{
+      const base64=dataUrl.split(',')[1];
+      const r=await fetch(WORKER_URL+'/upload-drive',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({base64:base64,mimeType:file.type,filename:'avatar.jpg'})
+      });
+      const d=await r.json();
+      if(!r.ok||!d.url)throw new Error(d.error||'upload failed');
+      artistAuth.editForm.avatarUrl=d.url;
+      delete artistAuth.editForm.avatarPreview;
+    }catch(err){
+      console.error('avatar upload:',err);
+      delete artistAuth.editForm.avatarPreview;
+      showFlash('No hemos podido subir la foto. Inténtalo de nuevo.','error');
+    }finally{
+      artistAuth.editForm._uploading=false;
+      renderSim();
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function aRemoveAvatar(){
+  delete artistAuth.editForm.avatarUrl;
+  delete artistAuth.editForm.avatarPreview;
+  renderSim();
+}
+
+/* Resubida de DNI durante edición. Mismo patrón que el avatar pero
+   guarda el resultado en ef._dniAnversoNew / ef._dniReversoNew para
+   que al pulsar "Guardar cambios" mergemos la URL nueva en el profile. */
+async function aHandleDniReupload(event,side){
+  const file=event.target.files[0];if(!file)return;
+  if(!['image/jpeg','image/png'].includes(file.type)){showFlash('Debe ser JPG o PNG.','error');return;}
+  if(file.size>5*1024*1024){showFlash('Máximo 5 MB.','error');return;}
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    const dataUrl=e.target.result;
+    artistAuth.editForm['_'+side+'Uploading']=true;
+    renderSim();
+    try{
+      const base64=dataUrl.split(',')[1];
+      const r=await fetch(WORKER_URL+'/upload-drive',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({base64:base64,mimeType:file.type,filename:side+'.jpg'})
+      });
+      const d=await r.json();
+      if(!r.ok||!d.url)throw new Error(d.error||'upload failed');
+      artistAuth.editForm['_'+side+'New']=d.url;
+      /* Actualizar también el objeto del profile en el editForm */
+      if(!artistAuth.editForm[side])artistAuth.editForm[side]={};
+      artistAuth.editForm[side]=Object.assign({},artistAuth.editForm[side],{
+        name:file.name,size:file.size,type:file.type,url:d.url
+      });
+      showFlash('Foto actualizada.','success');
+    }catch(err){
+      console.error('dni reupload:',err);
+      showFlash('No hemos podido subir la foto. Inténtalo de nuevo.','error');
+    }finally{
+      artistAuth.editForm['_'+side+'Uploading']=false;
+      renderSim();
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveProfileEdits(){
+  aSyncFormFromDOM();
+  const u=aGetCurrentUser();if(!u)return;
+  const ef=artistAuth.editForm||{};
+  /* Validación según accountType */
+  if(u.accountType==='empresa'){
+    if(!ef.contacto||ef.contacto.trim().length<2){artistAuth.error='Indica el nombre de contacto.';renderSim();return;}
+    if(!aValidTelES(ef.tel)){artistAuth.error='Teléfono español inválido.';renderSim();return;}
+    if(!ef.razon||ef.razon.trim().length<2){artistAuth.error='Indica la razón social.';renderSim();return;}
+    if(!aValidCifDniNie(ef.cif)){artistAuth.error='CIF/DNI/NIE inválido.';renderSim();return;}
+    if(!aValidEmail(ef.emailFact)){artistAuth.error='Email de facturación inválido.';renderSim();return;}
+    if(!ef.calle||ef.calle.trim().length<2){artistAuth.error='Indica el nombre de la vía.';renderSim();return;}
+    if(!ef.numero){artistAuth.error='Indica el número.';renderSim();return;}
+    if(!/^\d{5}$/.test((ef.cp||'').trim())){artistAuth.error='Código postal de 5 dígitos.';renderSim();return;}
+    if(!ef.municipio||ef.municipio.trim().length<2){artistAuth.error='Indica el municipio.';renderSim();return;}
+    if(!ef.provincia){artistAuth.error='Selecciona la provincia.';renderSim();return;}
+    if(!ef.pais){artistAuth.error='Selecciona el país.';renderSim();return;}
+    const patch={
+      avatarUrl:ef.avatarUrl||u.avatarUrl||'',
+      companyProfile:Object.assign({},u.companyProfile||{},{
+        contacto:ef.contacto.trim(),
+        tel:ef.tel.trim(),
+        razon:ef.razon.trim(),
+        cif:ef.cif.trim().toUpperCase(),
+        emailFact:ef.emailFact.trim().toLowerCase(),
+        tipoVia:ef.tipoVia||'Calle',
+        calle:ef.calle.trim(),
+        numero:ef.numero.trim(),
+        piso:ef.piso||'',
+        cp:ef.cp.trim(),
+        municipio:ef.municipio.trim(),
+        provincia:ef.provincia,
+        pais:ef.pais,
+        updatedAt:new Date().toISOString()
+      })
+    };
+    aUpdateUser(u.email,patch);
+  } else {
+    /* Artista */
+    if(!ef.nombre||ef.nombre.trim().length<2){artistAuth.error='Indica tu nombre.';renderSim();return;}
+    if(!ef.apellidos||ef.apellidos.trim().length<2){artistAuth.error='Indica tus apellidos.';renderSim();return;}
+    if(!aValidTelES(ef.telefono)){artistAuth.error='Teléfono español inválido.';renderSim();return;}
+    const errNac=aFechaNacError(ef.fechaNac);if(errNac){artistAuth.error=errNac;renderSim();return;}
+    if(!ef.sexo){artistAuth.error='Selecciona el sexo.';renderSim();return;}
+    if(!ef.nacionalidad||ef.nacionalidad.trim().length<2){artistAuth.error='Indica tu nacionalidad.';renderSim();return;}
+    if(!ef.tipoDoc){artistAuth.error='Selecciona el tipo de documento.';renderSim();return;}
+    if(!aValidDniNie(ef.numDoc)){artistAuth.error='DNI/NIE inválido.';renderSim();return;}
+    const errCad=aFechaCaducidadError(ef.fechaCaducidad);if(errCad){artistAuth.error=errCad;renderSim();return;}
+    if(!ef.calle||ef.calle.trim().length<2){artistAuth.error='Indica el nombre de la vía.';renderSim();return;}
+    if(!ef.numero){artistAuth.error='Indica el número.';renderSim();return;}
+    if(!/^\d{5}$/.test((ef.cp||'').trim())){artistAuth.error='Código postal de 5 dígitos.';renderSim();return;}
+    if(!ef.municipio||ef.municipio.trim().length<2){artistAuth.error='Indica el municipio.';renderSim();return;}
+    if(!ef.provincia){artistAuth.error='Selecciona la provincia.';renderSim();return;}
+    if(!ef.pais){artistAuth.error='Selecciona el país.';renderSim();return;}
+    if(!aValidIbanES(ef.iban)){artistAuth.error='IBAN español inválido.';renderSim();return;}
+    if(!ef.profesion||ef.profesion.trim().length<2){artistAuth.error='Indica tu profesión artística.';renderSim();return;}
+    /* Merge sobre el profile previo. Limpiamos campos temporales (_X). */
+    const cleanProfile=Object.assign({},u.profile||{});
+    Object.keys(ef).forEach(k=>{
+      if(k.startsWith('_')||k==='avatarPreview'||k==='avatarUrl')return;
+      cleanProfile[k]=ef[k];
+    });
+    aUpdateUser(u.email,{
+      avatarUrl:ef.avatarUrl||u.avatarUrl||'',
+      profile:cleanProfile,
+      profileUpdatedAt:new Date().toISOString()
+    });
+  }
+  /* POST a Make con tipo:'actualizar_perfil'. El escenario actual no
+     tiene rama para este tipo, así que el Router lo ignora — pero deja
+     el dato disponible para añadir una rama futura sin tocar el frontend. */
+  try{
+    const refreshed=aGetCurrentUser();
+    await fetch(AUTH_WEBHOOK,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        tipo:'actualizar_perfil',
+        email:u.email,
+        accountType:u.accountType,
+        avatarUrl:refreshed.avatarUrl||'',
+        profile:refreshed.profile||null,
+        companyProfile:refreshed.companyProfile||null,
+        updatedAt:new Date().toISOString()
+      })
+    });
+  }catch(e){console.warn('profile update webhook failed:',e);}
+  artistAuth.editingProfile=false;
+  artistAuth.editForm={};
+  artistAuth.error='';
+  renderSim();
+  showFlash('Perfil actualizado correctamente.','success');
+}
+
+/* Toast flotante con auto-dismiss en 3.5s. Tipo: success|error. */
+function showFlash(msg,type){
+  let t=document.getElementById('o2o-flash');
+  if(!t){
+    t=document.createElement('div');
+    t.id='o2o-flash';
+    t.className='o2o-flash';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;
+  t.classList.remove('error','success');
+  t.classList.add(type==='error'?'error':'success');
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),3500);
 }
 
 function iniciarExpediente(){
@@ -2301,6 +2716,15 @@ function aSyncFormFromDOM(){
         if(/toLowerCase\(\)/.test(handler))v=v.toLowerCase();
         artistAuth.form[mAf[1]]=v;return;
       }
+      /* artistAuth.editForm.xxx=this.value(.method)? */
+      const mEf=handler.match(/artistAuth\.editForm\.([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*this\.value/);
+      if(mEf){
+        let v=el.value;
+        if(/toUpperCase\(\)/.test(handler))v=v.toUpperCase();
+        if(/trim\(\)/.test(handler))v=v.trim();
+        if(/toLowerCase\(\)/.test(handler))v=v.toLowerCase();
+        artistAuth.editForm[mEf[1]]=v;return;
+      }
     });
   });
 }
@@ -2507,6 +2931,17 @@ function renderSim(){
   perfil=user.accountType;
   updateChromeUI();
   if(!user.verified)return renderPendingVerification(user);
+  /* Editor de perfil — disponible tanto para artista (con perfil ya creado)
+     como para empresa. Toma precedencia sobre el dashboard y el flujo de
+     expedientes. */
+  if(artistAuth.editingProfile){
+    if(user.accountType==='artista' && !user.profile){
+      /* Artista sin perfil aún: el editor no aplica, primero crear perfil */
+      artistAuth.editingProfile=false;
+    } else {
+      return renderProfileEditor(user);
+    }
+  }
   if(user.accountType==='empresa'){
     /* Cuenta empresa: tras verificar email va directa al dashboard.
        Los datos fiscales se recogen en el momento de crear cada expediente. */
@@ -2548,7 +2983,12 @@ function renderSim(){
           aUpdateUser(email,{verified:true,verifiedAt:new Date().toISOString()});
           const sess=aGetSessionEmail();
           if(sess===email){
+            /* Pinta un toast de bienvenida y deja que renderSim decida
+               la siguiente vista. Para artistas sin perfil renderSim
+               muestra automáticamente renderArtProfileForm; para empresa
+               o artistas con perfil aterrizan en su dashboard. */
             renderSim();
+            setTimeout(function(){showFlash('✓ Email verificado. Tu cuenta está activa.','success');},80);
           }else{
             artistAuth.view='login';
             artistAuth.info='✓ Email verificado. Inicia sesión para acceder a tu cuenta.';
