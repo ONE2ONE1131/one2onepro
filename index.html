@@ -1029,6 +1029,10 @@ const PASOS_TRAB=[
 const BASES_MIN={1:1989.30,2:1649.70,3:1435.20,4:1424.40,7:1424.40,8:47.48};
 const COM=0.10;
 const EMPRESA_WEBHOOK='https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku';
+/* AUTH_WEBHOOK soporta tipos: 'verificacion_email', 'recuperar_password' y
+   también el registro de artista (con todos los campos del perfil). El
+   escenario Make decide qué email enviar leyendo `tipo`. */
+const AUTH_WEBHOOK='https://hook.eu1.make.com/azu072mdlkvxarr98xp9flffxd5gipa3';
 /* perfil = "artista" o "empresa". Antes del login indica qué pestaña ha pulsado el usuario.
    Después del login se sobreescribe con user.accountType en cada renderSim(). */
 let perfil=null;
@@ -1284,7 +1288,7 @@ const PROVINCIAS_ES=['Álava','Albacete','Alicante','Almería','Asturias','Ávil
 const PAISES=['España','Francia','Portugal','Italia','Alemania','Reino Unido','Otros'];
 const TIPOS_VIA=['Calle','Avenida','Plaza','Paseo','Carretera','Ronda','Travesía','Camino','Pasaje','Glorieta','Vía','Bulevar','Polígono','Urbanización'];
 
-let artistAuth={view:'login',form:{},error:'',expedienteOpen:false,expedienteResult:null};
+let artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',expedienteOpen:false,expedienteResult:null};
 
 /* ─── Almacén local ─── */
 function aGetUsers(){try{return JSON.parse(localStorage.getItem('o2o_users')||'{}')}catch(e){return{}}}
@@ -1295,6 +1299,53 @@ function aClearSession(){localStorage.removeItem('o2o_session')}
 function aGetCurrentUser(){const e=aGetSessionEmail();if(!e)return null;const u=aGetUsers();return u[e]?Object.assign({email:e},u[e]):null;}
 function aUpdateUser(email,patch){const u=aGetUsers();if(!u[email])return;u[email]=Object.assign({},u[email],patch);aSaveUsers(u);}
 function aEscape(s){return aEscapeText(s);}
+
+/* ─── Tokens de verificación de email y reset de contraseña ───
+   Pure-frontend: los tokens viven en localStorage del navegador que los
+   generó. Limitación conocida: si el usuario abre el email en otro
+   dispositivo, el token no existirá allí. Es aceptable para un MVP. */
+function aRandomToken(){
+  const arr=new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr,b=>b.toString(16).padStart(2,'0')).join('');
+}
+function aGetVerifyTokens(){try{return JSON.parse(localStorage.getItem('o2o_verify_tokens')||'{}')}catch(e){return{}}}
+function aSaveVerifyTokens(t){localStorage.setItem('o2o_verify_tokens',JSON.stringify(t))}
+function aGetResetTokens(){try{return JSON.parse(localStorage.getItem('o2o_reset_tokens')||'{}')}catch(e){return{}}}
+function aSaveResetTokens(t){localStorage.setItem('o2o_reset_tokens',JSON.stringify(t))}
+function aCreateVerifyToken(email){
+  const tokens=aGetVerifyTokens();
+  /* Limpiamos tokens previos del mismo email — solo el último vale */
+  Object.keys(tokens).forEach(k=>{if(tokens[k].email===email)delete tokens[k];});
+  const token=aRandomToken();
+  tokens[token]={email:email,createdAt:Date.now()};
+  aSaveVerifyTokens(tokens);
+  return token;
+}
+function aCreateResetToken(email){
+  const tokens=aGetResetTokens();
+  Object.keys(tokens).forEach(k=>{if(tokens[k].email===email)delete tokens[k];});
+  const token=aRandomToken();
+  tokens[token]={email:email,createdAt:Date.now()};
+  aSaveResetTokens(tokens);
+  return token;
+}
+function aConsumeVerifyToken(token){
+  const tokens=aGetVerifyTokens();
+  const entry=tokens[token];
+  if(!entry)return null;
+  delete tokens[token];
+  aSaveVerifyTokens(tokens);
+  return entry.email;
+}
+function aConsumeResetToken(token){
+  const tokens=aGetResetTokens();
+  const entry=tokens[token];
+  if(!entry)return null;
+  delete tokens[token];
+  aSaveResetTokens(tokens);
+  return entry.email;
+}
 
 /* ─── Validaciones de campos ─── */
 function aFormatIban(val){let clean=(val||'').replace(/\s/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'').substring(0,24);return clean.replace(/(.{4})/g,'$1 ').trim();}
@@ -1402,8 +1453,11 @@ function isAuthModalOpen(){
 function openAuthModal(tab){
   const user=aGetCurrentUser();
   if(user)return; /* logueado no necesita modal */
-  artistAuth.view=(tab==='register')?'register':'login';
-  artistAuth.error='';
+  const allowed=['login','register','forgot','reset'];
+  artistAuth.view=allowed.indexOf(tab)>=0?tab:'login';
+  /* Solo limpiamos `error` aquí cuando es navegación natural; los flujos
+     de URL (verify/reset) ya pre-cargan error/info antes de llamarnos. */
+  if(!artistAuth.error&&!artistAuth.info)artistAuth.error='';
   const m=document.getElementById('auth-modal');
   if(!m)return;
   m.classList.add('show');
@@ -1430,24 +1484,54 @@ document.addEventListener('keydown',function(ev){
 function renderAuthModal(){
   const c=document.getElementById('auth-modal-content');
   if(!c)return;
-  const view=artistAuth.view==='register'?'register':'login';
+  const allowed=['login','register','forgot','reset'];
+  const view=allowed.indexOf(artistAuth.view)>=0?artistAuth.view:'login';
   const f=artistAuth.form||{};
   const err=artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</div>`:'';
+  const info=artistAuth.info?`<div class="auth-msg info">${aEscape(artistAuth.info)}</div>`:'';
   const logoBlock=`<div class="auth-modal-logo" aria-hidden="true"><svg class="brand-logo" viewBox="0 0 49 56"><rect class="bar" x="0" y="0" width="9" height="56" rx="4.5"/><path class="curve" d="M13 0 C13 0 22 0 22 28 C22 56 31 56 31 56"/><rect class="bar" x="40" y="0" width="9" height="56" rx="4.5"/></svg></div>`;
-  const tabs=`<div class="auth-tabs">
+  /* Las tabs solo tienen sentido en login y register; en forgot/reset las
+     ocultamos para no confundir al usuario. */
+  const tabs=(view==='login'||view==='register')?`<div class="auth-tabs">
 <button type="button" class="auth-tab ${view==='login'?'active':''}" onclick="setAuthTab('login')">Iniciar sesión</button>
 <button type="button" class="auth-tab ${view==='register'?'active':''}" onclick="setAuthTab('register')">Crear cuenta</button>
-</div>`;
+</div>`:'';
   if(view==='login'){
     c.innerHTML=`${logoBlock}<h2 class="auth-modal-title" id="auth-modal-title">Accede a tu <em>cuenta</em></h2>
 ${tabs}
 ${err}
+${info}
 <div class="form-grid">
 <div class="form-field full"><label>Email</label><input type="email" id="art-login-email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
 <div class="form-field full"><label>Contraseña</label><input type="password" id="art-login-pass" placeholder="Tu contraseña" autocomplete="current-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value" onkeydown="if(event.key==='Enter')doLogin()"></div>
 </div>
+<div style="text-align:right;margin-top:-10px;margin-bottom:14px"><button type="button" class="auth-link" onclick="setAuthTab('forgot')" style="font-size:12px">¿Olvidaste tu contraseña?</button></div>
 <button class="btn-verde-full" onclick="doLogin()">Iniciar sesión</button>
 <p class="auth-footer-modal">¿Aún no tienes cuenta? <button class="auth-link" type="button" onclick="setAuthTab('register')">Crear cuenta</button></p>`;
+    return;
+  }
+  if(view==='forgot'){
+    c.innerHTML=`${logoBlock}<h2 class="auth-modal-title" id="auth-modal-title">Recuperar <em>contraseña</em></h2>
+${err}
+${info}
+<p class="auth-hint" style="text-align:left;margin-bottom:14px">Introduce el email asociado a tu cuenta. Te enviaremos un enlace para restablecer la contraseña.</p>
+<div class="form-grid">
+<div class="form-field full"><label>Email</label><input type="email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()" onkeydown="if(event.key==='Enter')doForgotPassword()"></div>
+</div>
+<button class="btn-verde-full" onclick="doForgotPassword()">Enviar enlace de recuperación</button>
+<p class="auth-footer-modal"><button class="auth-link" type="button" onclick="setAuthTab('login')">← Volver a iniciar sesión</button></p>`;
+    return;
+  }
+  if(view==='reset'){
+    c.innerHTML=`${logoBlock}<h2 class="auth-modal-title" id="auth-modal-title">Nueva <em>contraseña</em></h2>
+${err}
+<p class="auth-hint" style="text-align:left;margin-bottom:14px">Elige una contraseña nueva para tu cuenta. Debe tener al menos 8 caracteres.</p>
+<div class="form-grid">
+<div class="form-field full"><label>Nueva contraseña</label><input type="password" id="art-reset-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value)"><span id="art-pass-strength" class="password-strength"></span></div>
+<div class="form-field full"><label>Confirmar contraseña</label><input type="password" placeholder="Repite la contraseña" autocomplete="new-password" value="${aEscape(f.pass2||'')}" oninput="artistAuth.form.pass2=this.value" onkeydown="if(event.key==='Enter')doResetPassword()"></div>
+</div>
+<button class="btn-verde-full" onclick="doResetPassword()">Restablecer contraseña</button>`;
+    if((f.pass||'').length>0)setTimeout(function(){aUpdatePassStrength(f.pass);},0);
     return;
   }
   /* view === 'register' */
@@ -1478,8 +1562,58 @@ ${fields}
 }
 
 function setAuthTab(tab){
-  artistAuth.view=(tab==='register')?'register':'login';
+  const allowed=['login','register','forgot','reset'];
+  artistAuth.view=allowed.indexOf(tab)>=0?tab:'login';
   artistAuth.error='';
+  artistAuth.info='';
+  renderAuthModal();
+}
+
+async function doForgotPassword(){
+  aSyncFormFromDOM();
+  const f=artistAuth.form||{};
+  const email=(f.email||'').trim().toLowerCase();
+  if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderAuthModal();return;}
+  /* No revelamos si la cuenta existe o no — política estándar para evitar
+     enumeración de cuentas. Si no existe, simplemente no se manda nada,
+     pero al usuario le mostramos el mismo mensaje de confirmación. */
+  const users=aGetUsers();
+  if(users[email]){
+    const token=aCreateResetToken(email);
+    try{
+      await fetch(AUTH_WEBHOOK,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({tipo:'recuperar_password',email:email,token:token})
+      });
+    }catch(e){console.warn('reset email send failed:',e);}
+  }
+  artistAuth.view='login';
+  artistAuth.error='';
+  artistAuth.info='Te hemos enviado un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada.';
+  artistAuth.form={};
+  renderAuthModal();
+}
+
+function doResetPassword(){
+  aSyncFormFromDOM();
+  const f=artistAuth.form||{};
+  const pass=f.pass||'';
+  const pass2=f.pass2||'';
+  const token=artistAuth.resetToken||'';
+  if(!token){artistAuth.error='El enlace de recuperación no es válido o ha caducado.';renderAuthModal();return;}
+  if(pass.length<8){artistAuth.error='La contraseña debe tener al menos 8 caracteres.';renderAuthModal();return;}
+  if(pass!==pass2){artistAuth.error='Las contraseñas no coinciden.';renderAuthModal();return;}
+  const email=aConsumeResetToken(token);
+  if(!email){artistAuth.error='El enlace de recuperación no es válido o ha caducado.';renderAuthModal();return;}
+  const users=aGetUsers();
+  if(!users[email]){artistAuth.error='La cuenta asociada al enlace ya no existe.';renderAuthModal();return;}
+  aUpdateUser(email,{password:pass,passwordUpdatedAt:new Date().toISOString()});
+  artistAuth.resetToken='';
+  artistAuth.form={email:email};
+  artistAuth.view='login';
+  artistAuth.error='';
+  artistAuth.info='Contraseña actualizada. Inicia sesión con la nueva contraseña.';
   renderAuthModal();
 }
 
@@ -1518,28 +1652,53 @@ function doRegister(){
   users[email]={nombre:nombre,password:pass,accountType:perfil,verified:false,createdAt:new Date().toISOString(),profile:null,profileStatus:'pendiente'};
   aSaveUsers(users);aSetSession(email);artistAuth.form={};artistAuth.error='';artistAuth.view='login';artistAuth.expedienteOpen=false;
   closeAuthModal();
+  /* Enviar email de verificación real vía Make. No esperamos a la respuesta
+     antes de pintar el panel para no bloquear la UI; si el webhook falla la
+     pantalla de "verificación pendiente" tiene un botón para reenviar. */
+  aSendVerificationEmail(email,nombre).catch(function(e){console.warn('verify email send failed:',e);});
   renderPasos();updateChromeUI();renderSim();
   const sim=document.getElementById('sim');
   if(sim&&window.innerWidth<900)setTimeout(()=>sim.scrollIntoView({behavior:'smooth'}),100);
+}
+
+async function aSendVerificationEmail(email,nombre){
+  const token=aCreateVerifyToken(email);
+  await fetch(AUTH_WEBHOOK,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({tipo:'verificacion_email',email:email,nombre:nombre||'',token:token})
+  });
 }
 
 function renderPendingVerification(user){
   const c=document.getElementById('sim-c');
   c.innerHTML=`<div class="auth-hero">
 <p class="auth-eyebrow">Verificación pendiente</p>
-<h2 class="auth-title">Revisa tu <em>email</em></h2>
+<h2 class="auth-title">Te hemos enviado un email de <em>verificación</em></h2>
+<p class="auth-lead">Revisa tu bandeja de entrada en <strong>${aEscape(user.email)}</strong>. Pincha el enlace del correo para activar tu cuenta.</p>
 </div>
-<div class="auth-msg warning"><strong>Revisa tu email para verificar tu cuenta.</strong><br>Hemos enviado un mensaje a <strong>${aEscape(user.email)}</strong>. Sin verificación no puedes continuar ni crear expedientes.</div>
-<div class="auth-msg info">Si no encuentras el correo, revisa tu carpeta de spam o promociones. El enlace de verificación caduca a las 24 horas.</div>
-<div class="dev-tools">Modo demo (sin backend de email): <button onclick="aSimularVerificacion()">Simular click en email de verificación</button></div>`;
+<div class="auth-msg info">Si no encuentras el correo, revisa tu carpeta de spam o promociones. El enlace caduca a las 24 horas.</div>
+<div id="resend-status" style="min-height:20px;margin-top:8px"></div>
+<button class="btn-verde-full" style="margin-top:14px" onclick="aResendVerification()">Reenviar email de verificación</button>
+<p class="auth-footer-modal" style="margin-top:14px">¿Email incorrecto? <button class="auth-link" type="button" onclick="doLogout()">Cambiar de cuenta</button></p>`;
 }
 
-function aSimularVerificacion(){const u=aGetCurrentUser();if(!u)return;aUpdateUser(u.email,{verified:true,verifiedAt:new Date().toISOString()});renderSim();}
+async function aResendVerification(){
+  const u=aGetCurrentUser();if(!u)return;
+  const st=document.getElementById('resend-status');
+  if(st){st.innerHTML='<span style="font-size:12px;color:var(--gris-suave)">Enviando…</span>';}
+  try{
+    await aSendVerificationEmail(u.email,u.nombre);
+    if(st){st.innerHTML='<span style="font-size:12px;color:var(--verde);font-weight:500">✓ Email reenviado a '+aEscape(u.email)+'</span>';}
+  }catch(e){
+    if(st){st.innerHTML='<span style="font-size:12px;color:#dc2626">No hemos podido reenviar el email. Inténtalo en unos segundos.</span>';}
+  }
+}
 function doLogout(){
   const u=aGetCurrentUser();
   if(u)perfil=u.accountType;
   aClearSession();
-  artistAuth={view:'login',form:{},error:'',expedienteOpen:false,expedienteResult:null};
+  artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',expedienteOpen:false,expedienteResult:null};
   resetExpedienteState();
   renderPasos();updateChromeUI();renderSim();
 }
@@ -1709,14 +1868,16 @@ ${(val.discrepancias&&val.discrepancias.length)?'<ul style="text-align:left;marg
       validacionIA:val||null,
       submittedAt:new Date().toISOString()
     };
-    await fetch('https://hook.eu1.make.com/azu072mdlkvxarr98xp9flffxd5gipa3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(webhookPayload)});
+    await fetch(AUTH_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(webhookPayload)});
     /* 4) Persistencia local: guardamos las URLs de Drive (NO las base64,
        que ya viven en Drive). Esto evita reventar el quota de localStorage
-       con imágenes pesadas. */
+       con imágenes pesadas. La IA ya ha validado el DNI, así que el
+       perfil queda directamente en estado 'validado' — no hay revisión
+       manual posterior. */
     const profileToStore=Object.assign({},p);
     if(profileToStore.dniAnverso)profileToStore.dniAnverso={name:profileToStore.dniAnverso.name,size:profileToStore.dniAnverso.size,type:profileToStore.dniAnverso.type,url:dniAnversoURL};
     if(profileToStore.dniReverso)profileToStore.dniReverso={name:profileToStore.dniReverso.name,size:profileToStore.dniReverso.size,type:profileToStore.dniReverso.type,url:dniReversoURL};
-    aUpdateUser(user.email,{profile:profileToStore,profileStatus:'en_revision',profileSubmittedAt:new Date().toISOString()});
+    aUpdateUser(user.email,{profile:profileToStore,profileStatus:'validado',profileSubmittedAt:new Date().toISOString(),profileValidatedAt:new Date().toISOString()});
     artistAuth.form={};artistAuth.error='';
     renderSim();
   }catch(e){
@@ -1733,26 +1894,6 @@ ${(val.discrepancias&&val.discrepancias.length)?'<ul style="text-align:left;marg
 /* PERFIL EMPRESA eliminado — la cuenta empresa va directa de la verificación
    de email al dashboard. Los datos fiscales (razón social, CIF, dirección fiscal,
    email de facturación, etc.) se recogen en el momento de crear cada expediente. */
-
-/* ─── PERFIL EN REVISIÓN (sólo cuentas artista) ─── */
-function renderProfileReview(user){
-  const c=document.getElementById('sim-c');
-  const submittedDate=user.profileSubmittedAt?new Date(user.profileSubmittedAt).toLocaleDateString('es-ES'):'';
-  c.innerHTML=`<div class="auth-hero">
-<p class="auth-eyebrow">Estado de tu cuenta</p>
-<h2 class="auth-title">Perfil en <em>revisión</em></h2>
-</div>
-<div class="dashboard-card">
-<div class="dashboard-welcome">Hola, <strong>${aEscape(user.nombre)}</strong></div>
-<div class="dashboard-sub">Tu perfil está siendo revisado por nuestro equipo.</div>
-<span class="status-badge revision">Perfil en revisión</span>
-</div>
-<div class="auth-msg info"><strong>Perfil en revisión.</strong><br>Hemos recibido tu documentación el ${submittedDate}. Estamos validando tu identidad y los datos aportados. Recibirás un email en cuanto esté validado.</div>
-<div class="auth-msg warning">Hasta que tu perfil esté validado <strong>no puedes crear expedientes</strong>. El proceso de validación suele tardar entre 24 y 48 horas laborables.</div>
-<div class="dev-tools">Modo demo (sin backoffice de validación): <button onclick="aSimularValidacion()">Simular validación manual</button></div>`;
-}
-
-function aSimularValidacion(){const u=aGetCurrentUser();if(!u)return;aUpdateUser(u.email,{profileStatus:'validado',profileValidatedAt:new Date().toISOString()});renderSim();}
 
 /* ─── DASHBOARDS ─── */
 function renderArtDashboard(user){
@@ -2372,9 +2513,9 @@ function renderSim(){
     if(!artistAuth.expedienteOpen)return renderEmpresaDashboard(user);
     return renderExpedienteEmpresa(user);
   }
-  /* Cuenta artista: perfil obligatorio + validación manual */
+  /* Cuenta artista: una vez verificado el email + perfil con DNI validado
+     por IA tiene acceso completo. No hay paso de revisión manual. */
   if(!user.profile)return renderArtProfileForm(user);
-  if(user.profileStatus!=='validado')return renderProfileReview(user);
   if(!artistAuth.expedienteOpen)return renderArtDashboard(user);
   return renderExpedienteArtista(user);
 }
@@ -2386,6 +2527,68 @@ function renderSim(){
   updateChromeUI();
   renderPasos();
   renderSim();
+
+  /* Handler de los enlaces de verificación de email y reset de contraseña.
+     Los emails enviados por Make llevan el formato:
+       https://one2onepro.es/?verify=TOKEN
+       https://one2onepro.es/?reset=TOKEN
+     Procesamos el token, limpiamos la URL con replaceState para que un
+     reload no vuelva a dispararlo, y mostramos la UI correspondiente. */
+  try{
+    const params=new URLSearchParams(window.location.search);
+    const verifyTok=params.get('verify');
+    const resetTok=params.get('reset');
+    if(verifyTok){
+      const email=aConsumeVerifyToken(verifyTok);
+      const cleanUrl=window.location.pathname+window.location.hash;
+      window.history.replaceState({},'',cleanUrl);
+      if(email){
+        const users=aGetUsers();
+        if(users[email]){
+          aUpdateUser(email,{verified:true,verifiedAt:new Date().toISOString()});
+          const sess=aGetSessionEmail();
+          if(sess===email){
+            renderSim();
+          }else{
+            artistAuth.view='login';
+            artistAuth.info='✓ Email verificado. Inicia sesión para acceder a tu cuenta.';
+            artistAuth.form={email:email};
+            openAuthModal('login');
+          }
+        }else{
+          artistAuth.view='login';
+          artistAuth.error='La cuenta asociada al enlace ya no existe.';
+          openAuthModal('login');
+        }
+      }else{
+        /* Token no encontrado: o caducado, o el navegador no es el mismo
+           donde se registró. Mensaje claro y no intrusivo. */
+        artistAuth.view='login';
+        artistAuth.error='El enlace de verificación no es válido o ha caducado. Si te registraste en otro dispositivo, inicia sesión y pulsa "Reenviar email".';
+        openAuthModal('login');
+      }
+    }else if(resetTok){
+      const cleanUrl=window.location.pathname+window.location.hash;
+      window.history.replaceState({},'',cleanUrl);
+      const tokens=aGetResetTokens();
+      if(tokens[resetTok]){
+        /* Cerramos sesión si la había para no resetear "a ciegas" la
+           contraseña del usuario logueado por error. */
+        aClearSession();
+        perfil=null;
+        updateChromeUI();
+        artistAuth.resetToken=resetTok;
+        artistAuth.view='reset';
+        artistAuth.form={};
+        artistAuth.error='';
+        openAuthModal('reset');
+      }else{
+        artistAuth.view='login';
+        artistAuth.error='El enlace de recuperación no es válido o ha caducado.';
+        openAuthModal('login');
+      }
+    }
+  }catch(e){console.warn('URL token handler error:',e);}
 
   /* Delegación global: cuando un input o select dispara `change` (autofill,
      gestores de contraseñas, etc. no siempre disparan `input`), reenviamos
