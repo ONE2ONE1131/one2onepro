@@ -385,6 +385,147 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 .foot-links a:hover{color:rgba(255,255,255,.6)}
 .foot-copy{font-size:10px;color:rgba(255,255,255,.15)}
 
+/* ─────────────────────────────────────────────────────────────────────
+   HAMBURGUESA + DRAWER MÓVIL (desktop: oculto; mobile: visible)
+   ───────────────────────────────────────────────────────────────────── */
+.nav-hamburger{display:none;align-items:center;justify-content:center;width:42px;height:38px;background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;cursor:pointer;padding:0;gap:4px;flex-direction:column;transition:border-color .15s,background .15s}
+.nav-hamburger:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.04)}
+.nav-hamburger-bar{display:block;width:18px;height:2px;background:#fff;border-radius:1px;transition:transform .25s,opacity .15s}
+.nav-hamburger.open .nav-hamburger-bar:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.nav-hamburger.open .nav-hamburger-bar:nth-child(2){opacity:0}
+.nav-hamburger.open .nav-hamburger-bar:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+.mobile-menu{position:fixed;top:60px;left:0;right:0;background:rgba(15,45,94,.98);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.1);max-height:0;overflow:hidden;transition:max-height .3s ease;z-index:99}
+.mobile-menu.open{max-height:calc(100vh - 60px);overflow-y:auto}
+.mobile-menu-inner{padding:16px 20px 24px;display:flex;flex-direction:column;gap:6px}
+.mobile-menu-user{display:flex;align-items:center;gap:12px;padding:10px 4px 14px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:8px}
+.mobile-menu-user img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,.18)}
+.mobile-menu-user strong{display:block;color:#fff;font-size:14px;font-weight:600;line-height:1.2;margin-bottom:2px}
+.mobile-menu-user span{font-size:12px;color:rgba(255,255,255,.45);font-weight:300}
+.mobile-menu-item{display:block;width:100%;text-align:left;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.85);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;transition:background .15s,border-color .15s,color .15s;line-height:1.3}
+.mobile-menu-item:hover,.mobile-menu-item:focus{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.25);color:#fff;outline:none}
+.mobile-menu-item.cta{background:var(--verde);border-color:var(--verde);color:#fff;text-align:center;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;font-size:11px;padding:15px 16px}
+.mobile-menu-item.cta:hover{opacity:.92;background:var(--verde);border-color:var(--verde);color:#fff}
+.mobile-menu-item.danger{color:#fca5a5;border-color:rgba(220,38,38,.25);background:rgba(220,38,38,.08)}
+.mobile-menu-item.danger:hover{background:rgba(220,38,38,.15);border-color:rgba(220,38,38,.4);color:#fff}
+.mobile-menu-divider{border:none;height:1px;background:rgba(255,255,255,.1);margin:6px 0}
+
+/* ─────────────────────────────────────────────────────────────────────
+   RESPONSIVE — breakpoint principal 768px (móvil)
+   ───────────────────────────────────────────────────────────────────── */
+@media(max-width:768px){
+  /* Previene scroll horizontal accidental por elementos overflow */
+  html,body{overflow-x:hidden;max-width:100vw}
+
+  /* Nav: colapsa botones inline, muestra hamburguesa */
+  nav{padding:0 18px}
+  .nav-right{display:none}
+  .nav-hamburger{display:flex}
+
+  /* Hero: una sola columna centrada, sin elementos flotando fuera */
+  .hero,.hero.anon{grid-template-columns:1fr!important}
+  .hero-l{padding:48px 20px 36px;min-height:auto;text-align:center}
+  .hero-l::before,.hero-l::after{display:none}
+  .hero-l-content{max-width:100%;padding:0!important;margin:0 auto}
+  .hero-h1{font-size:32px;letter-spacing:-1px;margin-bottom:18px}
+  .hero-desc{font-size:14px;line-height:1.65;margin:0 auto 28px;max-width:100%}
+  .hero-eyebrow{margin-bottom:16px}
+  .hero-btns{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:28px}
+  .hero-btns>*{width:100%;justify-content:center;text-align:center}
+  .hero-stats{gap:18px;flex-wrap:wrap;justify-content:center;padding-top:22px}
+  .hero-stats>div{flex:1;min-width:90px}
+  .hero-r{padding:24px 16px;min-height:auto}
+  .sim-c{max-width:100%}
+
+  /* Simulador: 100% ancho sin desbordar */
+  .sim,.sim-c{width:100%;max-width:100%;box-sizing:border-box}
+  .sim-c .form-section,.sim-c .dashboard-card{max-width:100%}
+
+  /* Selector "Soy artista" / "Soy promotor" — vertical stack */
+  .auth-perfil-sel{grid-template-columns:1fr!important;gap:10px}
+  .auth-perfil-btn{padding:16px 18px}
+
+  /* Comparativa: scroll horizontal refuerzo + padding moderado */
+  .comparativa{padding:56px 5%}
+  .comparativa-scroll{margin:0 -5%;padding:0 5% 4px}
+  .comparativa-table{min-width:680px}
+
+  /* Contadores: 2×2 (no colapsar a 1 columna en móvil) */
+  .contador{padding:56px 20px}
+  .contador-inner{grid-template-columns:repeat(2,1fr)!important;gap:36px 16px!important}
+  .cont-stat{padding:0 6px}
+  .cont-stat::after{display:none!important}
+  .cont-num{font-size:38px;letter-spacing:-1.2px;margin-bottom:8px}
+  .cont-label{font-size:11px}
+
+  /* Chat asistente: ancho completo, altura ajustada */
+  .asistente-sec{padding:56px 20px}
+  .asistente-head{margin-bottom:28px}
+  .asistente-head h2{font-size:26px}
+  .chat-box{height:480px;border-radius:12px}
+  .chat-msgs{padding:18px 16px}
+  .chat-input-wrap{padding:12px}
+  .chat-send{padding:0 18px}
+
+  /* Otras secciones: padding lateral consistente */
+  .quienes,.como,.dif,.sectores,.faq,.cont-sec,.comparativa{padding-left:20px;padding-right:20px}
+  .contador{padding-left:20px;padding-right:20px}
+
+  /* Modal de auth: padding interior reducido */
+  .auth-modal{padding:60px 12px 24px}
+  .auth-modal-box{padding:28px 22px 22px}
+
+  /* Formularios: inputs ≥16px para evitar zoom automático de iOS.
+     iOS Safari hace zoom al enfocar un input con font-size <16px.
+     El !important sobrescribe los 14px globales sólo en mobile. */
+  .form-field input,
+  .form-field select,
+  .form-field textarea,
+  .auth-modal .form-field input,
+  .auth-modal .form-field select,
+  .auth-modal .form-field textarea,
+  .cf-field input,
+  .cf-field select,
+  .cf-field textarea,
+  .chat-input,
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="search"],
+  input[type="url"],
+  textarea{font-size:16px!important}
+
+  /* Footer: una sola columna ya está; ajusto padding */
+  footer{padding:40px 20px}
+  .foot-legal,.foot-copy{font-size:11px}
+
+  /* Toast: ya tiene su media query a 560px, ampliamos a 768 */
+  .o2o-flash{left:16px;right:16px;bottom:16px;max-width:none}
+
+  /* Dashboard header: stack vertical si no entra el botón Mi perfil */
+  .dash-header{flex-direction:column;align-items:flex-start;gap:16px}
+  .dash-header .profile-edit-btn{align-self:flex-end}
+
+  /* Editor de perfil: avatar más compacto */
+  .avatar-section{flex-direction:column;align-items:center;text-align:center;gap:14px}
+  .avatar-controls{align-items:center}
+  .dni-thumbs-grid{grid-template-columns:1fr;gap:10px}
+
+  /* Form-grid genérico: 1 columna en mobile (cubre formularios largos) */
+  .form-grid{grid-template-columns:1fr!important}
+}
+
+/* Móviles muy estrechos: ajustes finos */
+@media(max-width:380px){
+  .hero-h1{font-size:28px}
+  .hero-stats>div{min-width:0}
+  .contador-inner{gap:28px 12px!important}
+  .cont-num{font-size:32px}
+  .mobile-menu-inner{padding:12px 16px 20px}
+}
+
 @media(max-width:900px){
   .hero,.quienes{grid-template-columns:1fr}
   .hero-l{min-height:auto;padding:60px 5%}
@@ -673,7 +814,13 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
   <div class="nav-right" id="nav-right">
     <button class="nav-cta" onclick="navCtaClick()">Gestiona tu alta</button>
   </div>
+  <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileMenu(event)" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-menu">
+    <span class="nav-hamburger-bar"></span>
+    <span class="nav-hamburger-bar"></span>
+    <span class="nav-hamburger-bar"></span>
+  </button>
 </nav>
+<div class="mobile-menu" id="mobile-menu" role="menu" aria-hidden="true"></div>
 
 <section class="hero">
   <div class="hero-l">
@@ -1277,6 +1424,58 @@ function aHandleDocClickForNavMenu(e){
   closeNavMenu();
 }
 
+/* ─── Menú móvil (hamburguesa) ───
+   Drawer que cuelga del nav. Reemplaza los botones inline (Iniciar sesión /
+   Crear cuenta / Gestiona tu alta) y los enlaces de nav-links en pantallas
+   <768px. Renderiza dinámicamente para reflejar el estado de sesión. */
+function toggleMobileMenu(event){
+  if(event)event.stopPropagation();
+  const menu=document.getElementById('mobile-menu');
+  const btn=document.getElementById('nav-hamburger');
+  if(!menu)return;
+  if(!menu.classList.contains('open'))renderMobileMenu();
+  const open=menu.classList.toggle('open');
+  if(btn){btn.setAttribute('aria-expanded',open?'true':'false');btn.classList.toggle('open',open);}
+  menu.setAttribute('aria-hidden',open?'false':'true');
+  document.body.style.overflow=open?'hidden':'';
+}
+function closeMobileMenu(){
+  const menu=document.getElementById('mobile-menu');
+  const btn=document.getElementById('nav-hamburger');
+  if(menu){menu.classList.remove('open');menu.setAttribute('aria-hidden','true');}
+  if(btn){btn.setAttribute('aria-expanded','false');btn.classList.remove('open');}
+  document.body.style.overflow='';
+}
+function renderMobileMenu(){
+  const menu=document.getElementById('mobile-menu');
+  if(!menu)return;
+  const user=aGetCurrentUser();
+  let html='<div class="mobile-menu-inner">';
+  if(!user){
+    html+='<button class="mobile-menu-item cta" type="button" onclick="closeMobileMenu();navCtaClick()">Gestiona tu alta</button>';
+    html+='<button class="mobile-menu-item" type="button" onclick="closeMobileMenu();openAuthModal(\'login\')">Iniciar sesión</button>';
+    html+='<button class="mobile-menu-item" type="button" onclick="closeMobileMenu();openAuthModal(\'register\')">Crear cuenta</button>';
+    html+='<hr class="mobile-menu-divider">';
+    html+='<a class="mobile-menu-item" href="#quienes" onclick="closeMobileMenu()">Quiénes somos</a>';
+    html+='<a class="mobile-menu-item" href="#como" onclick="closeMobileMenu()">Cómo funciona</a>';
+    html+='<a class="mobile-menu-item" href="#sectores" onclick="closeMobileMenu()">Sectores</a>';
+    html+='<a class="mobile-menu-item" href="#asistente" onclick="closeMobileMenu()">Asistente</a>';
+    html+='<a class="mobile-menu-item" href="#faq" onclick="closeMobileMenu()">Preguntas frecuentes</a>';
+    html+='<a class="mobile-menu-item" href="#contacto" onclick="closeMobileMenu()">Contacto</a>';
+  } else {
+    const avatar=user.avatarUrl?'<img class="mobile-menu-avatar" src="'+aEscape(user.avatarUrl)+'" alt="" />':'';
+    html+='<div class="mobile-menu-user">'+avatar+'<div><strong>'+aEscape(abbrevName(user))+'</strong><span>'+aEscape(user.email)+'</span></div></div>';
+    html+='<button class="mobile-menu-item" type="button" onclick="closeMobileMenu();openProfileEditor()">Mi perfil</button>';
+    html+='<a class="mobile-menu-item" href="#asistente" onclick="closeMobileMenu()">Asistente</a>';
+    html+='<a class="mobile-menu-item" href="#contacto" onclick="closeMobileMenu()">Contacto</a>';
+    html+='<a class="mobile-menu-item" href="#faq" onclick="closeMobileMenu()">Preguntas frecuentes</a>';
+    html+='<hr class="mobile-menu-divider">';
+    html+='<button class="mobile-menu-item danger" type="button" onclick="closeMobileMenu();doLogout()">Cerrar sesión</button>';
+  }
+  html+='</div>';
+  menu.innerHTML=html;
+}
+
 /* "Juan García López" → "Juan G." · prioriza profile.nombre/apellidos para
    cuentas artista (datos reales del perfil), cae a user.nombre. */
 function abbrevName(user){
@@ -1583,12 +1782,19 @@ function closeAuthModal(){
 document.addEventListener('keydown',function(ev){
   if(ev.key!=='Escape')return;
   if(isAuthModalOpen()){closeAuthModal();return;}
+  const mob=document.getElementById('mobile-menu');
+  if(mob&&mob.classList.contains('open')){closeMobileMenu();return;}
   const m=document.getElementById('nav-menu');
   if(m&&m.classList.contains('open'))closeNavMenu();
 });
-/* Click fuera del menú de usuario lo cierra */
+/* Click fuera del menú de usuario o del menú móvil los cierra */
 document.addEventListener('click',function(ev){
   if(typeof aHandleDocClickForNavMenu==='function')aHandleDocClickForNavMenu(ev);
+  const mob=document.getElementById('mobile-menu');
+  const ham=document.getElementById('nav-hamburger');
+  if(mob&&mob.classList.contains('open')){
+    if(!mob.contains(ev.target)&&!(ham&&ham.contains(ev.target)))closeMobileMenu();
+  }
 },true);
 
 function renderAuthModal(){
