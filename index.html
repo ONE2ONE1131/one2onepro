@@ -825,6 +825,66 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 
 /* Section dividers — más densidad visual */
 .section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--gris-borde),transparent);max-width:1100px;margin:0 auto}
+
+/* ─────────────────────────────────────────────
+   SIMULADOR LIBRE — accesible sin login
+   ───────────────────────────────────────────── */
+.simlibre{padding:90px 6%;background:#fff;border-bottom:1px solid var(--gris-borde)}
+.simlibre-inner{max-width:900px;margin:0 auto}
+.simlibre-head{text-align:center;max-width:560px;margin:0 auto 40px}
+.simlibre-head .section-eyebrow{margin-bottom:14px}
+.simlibre-head h2{margin-bottom:14px}
+.simlibre-head p{font-size:14px;color:var(--gris-texto);font-weight:300;line-height:1.7}
+.simlibre-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:32px;align-items:start}
+.simlibre-card{background:var(--fondo);border:1px solid var(--gris-borde);border-radius:14px;padding:32px}
+.sl-field{margin-bottom:24px}
+.sl-field:last-of-type{margin-bottom:28px}
+.sl-field label{display:block;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:8px}
+.sl-field .sl-wr{position:relative;display:flex;align-items:center;border-bottom:1.5px solid var(--gris-borde);transition:border-color .2s}
+.sl-field .sl-wr:focus-within{border-bottom-color:var(--azul)}
+.sl-field .sl-pre{font-family:'Playfair Display',serif;font-size:22px;color:var(--gris-suave);margin-right:6px}
+.sl-field input{flex:1;width:100%;padding:6px 0;border:none;background:transparent;outline:none;font-family:'Playfair Display',serif;font-size:26px;color:var(--azul)}
+.sl-field input::placeholder{color:var(--gris-borde)}
+.sl-field input::-webkit-outer-spin-button,.sl-field input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.simlibre-card .btn-verde{width:100%;text-align:center;padding:15px;border-radius:8px;font-size:12px}
+.simlibre-result{min-height:100%}
+.sl-empty{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;height:100%;min-height:240px;color:var(--gris-suave);font-size:13px;font-weight:300;line-height:1.7;border:1px dashed var(--gris-borde);border-radius:14px;padding:32px}
+.sl-empty svg{width:34px;height:34px;margin-bottom:14px;opacity:.5}
+.sl-breakdown{background:var(--fondo);border:1px solid var(--gris-borde);border-radius:14px;padding:24px;animation:ru .3s ease}
+/* Neto protagonista — lo primero y más grande que se ve */
+.sl-hero{background:linear-gradient(135deg,rgba(0,168,107,.12),rgba(0,168,107,.04));border:1px solid rgba(0,168,107,.32);border-radius:12px;padding:22px 20px;text-align:center;margin-bottom:18px}
+.sl-hero-label{font-size:11px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--verde);margin-bottom:6px}
+.sl-hero-val{font-family:'Playfair Display',serif;font-size:clamp(38px,7vw,48px);font-weight:700;color:var(--verde);letter-spacing:-1.5px;line-height:1}
+.sl-hero-sub{font-size:12px;color:var(--gris-texto);font-weight:300;margin-top:8px}
+.sl-row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:9px 0;font-size:14px}
+.sl-row .sl-l{color:var(--gris-texto);font-weight:400}
+.sl-row .sl-v{font-variant-numeric:tabular-nums;font-weight:500;color:var(--azul);white-space:nowrap}
+.sl-row.sl-cache .sl-l{font-weight:600;color:var(--azul)}
+.sl-row.neg .sl-v{color:#b4453a}
+.sl-l-note{display:block;font-size:11px;font-weight:400;color:var(--verde);margin-top:3px;line-height:1.4;max-width:280px}
+.sl-sep{height:1px;background:var(--gris-borde);margin:8px 0}
+.sl-row.sl-promotor{margin-top:6px}
+.sl-row.sl-promotor .sl-l{font-weight:600;color:var(--azul)}
+.sl-row.sl-promotor .sl-v small{display:block;font-weight:300;font-size:10px;color:var(--gris-suave);text-align:right;margin-top:2px}
+/* Aviso de costes SS — visible, no letra pequeña */
+.sl-disclaimer{display:flex;gap:10px;align-items:flex-start;margin-top:18px;background:#fff7ed;border:1px solid #fed7aa;border-left:3px solid #f59e0b;border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.55;color:#92400e}
+.sl-disclaimer-icon{flex-shrink:0;font-size:14px;line-height:1.35}
+.sl-disclaimer strong{font-weight:700}
+/* CTA impactante tras el cálculo */
+.sl-cta{margin-top:28px;background:#0f2d5e;border-radius:14px;padding:40px 32px;text-align:center;position:relative;overflow:hidden}
+.sl-cta::before{content:'';position:absolute;top:-120px;right:-120px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(26,74,138,.45) 0%,transparent 70%);pointer-events:none}
+.sl-cta-title{font-family:'Playfair Display',serif;font-size:clamp(24px,3vw,34px);font-weight:700;letter-spacing:-1px;line-height:1.15;color:#fff;margin-bottom:12px;position:relative}
+.sl-cta-sub{font-size:15px;font-weight:500;color:var(--verde);margin-bottom:24px;position:relative}
+.sl-cta-btn{position:relative;background:var(--verde);color:#fff;border:none;border-radius:8px;padding:18px 36px;font-family:inherit;font-size:14px;font-weight:600;letter-spacing:.4px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 24px rgba(0,168,107,.3)}
+.sl-cta-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,168,107,.42)}
+.sl-cta-note{font-size:12px;font-weight:300;color:rgba(255,255,255,.55);margin-top:16px;position:relative}
+@media(max-width:768px){
+  .simlibre{padding:56px 20px}
+  .simlibre-grid{grid-template-columns:1fr;gap:20px}
+  .simlibre-card{padding:24px}
+  .sl-cta{padding:32px 22px}
+  .sl-cta-btn{width:100%}
+}
 </style>
 </head>
 <body>
@@ -858,7 +918,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
       <h1 class="hero-h1">Tú al show.<br><em>Nosotros, contigo.</em></h1>
       <p class="hero-desc">Gestionamos el alta, la factura y el cobro. Y estamos disponibles en cada paso del camino.</p>
       <div class="hero-btns">
-        <button class="btn-verde" onclick="openAuthModal('register')">Gestiona tu alta</button>
+        <button class="btn-verde" onclick="document.getElementById('simulador').scrollIntoView({behavior:'smooth'})">Probar el simulador</button>
         <button class="btn-ghost" onclick="document.getElementById('como').scrollIntoView({behavior:'smooth'})">Ver cómo funciona</button>
       </div>
       <div class="aviso-legal">
@@ -877,6 +937,38 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
          oculto y la home se ve como landing normal a una sola columna.
          El login/registro vive ahora en el modal #auth-modal. -->
     <div id="sim-c"></div>
+  </div>
+</section>
+
+<!-- ─── SIMULADOR LIBRE — sin login ───────────────────────────────────
+     Accesible para cualquier visitante. Solo pide caché y días; el login
+     se reserva al botón "Crear mi expediente" del bloque CTA. -->
+<section class="simlibre" id="simulador">
+  <div class="simlibre-inner">
+    <div class="simlibre-head">
+      <p class="section-eyebrow">Simulador</p>
+      <h2 class="section-title" style="font-size:clamp(28px,3vw,40px)">Calcula los <em>números</em></h2>
+      <p>Introduce el caché acordado y los días de trabajo. Verás lo que cobra el profesional y lo que paga el promotor. Sin registro, al instante.</p>
+    </div>
+    <div class="simlibre-grid">
+      <form class="simlibre-card" onsubmit="event.preventDefault();simLibreCalc()">
+        <div class="sl-field">
+          <label for="sl-cache">Caché acordado con el promotor</label>
+          <div class="sl-wr"><span class="sl-pre">€</span><input type="number" id="sl-cache" min="0" step="any" inputmode="decimal" placeholder="300" autocomplete="off"></div>
+        </div>
+        <div class="sl-field">
+          <label for="sl-dias">Número de días de trabajo</label>
+          <div class="sl-wr"><input type="number" id="sl-dias" min="1" max="365" step="1" inputmode="numeric" placeholder="1" value="1" autocomplete="off"></div>
+        </div>
+        <button type="submit" class="btn-verde">Calcular</button>
+      </form>
+      <div class="simlibre-result" id="sl-result">
+        <div class="sl-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+          Introduce el caché y los días, y pulsa <strong>Calcular</strong> para ver lo que cobrarás.
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1575,6 +1667,100 @@ function calcular(){
   const iva=cache*0.21;
   const totalPromotor=cache+iva;
   return{cache,dias,ss,cc,des,atep,fog,fp,mei,com,neto,iva,totalPromotor};
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   SIMULADOR LIBRE (público, sin login)
+   Autocontenido: NO depende de st.act/st.ubic ni del flujo de expediente.
+   Usa un ATEP medio del 1.5% (representativo del sector). No incluye IRPF:
+   la retención se calcula caso a caso según la situación fiscal de cada
+   profesional, así que mostrarla en un simulador genérico despista.
+   ────────────────────────────────────────────────────────────────── */
+const SL_ATEP_PCT=0.015; /* tipo medio de accidentes de trabajo del sector */
+function slFmt(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'}
+function calcSimple(cache,dias){
+  cache=parseFloat(cache)||0;
+  dias=parseInt(dias)||1;
+  if(dias<1)dias=1;
+  const baseMinDia=1424.40/30;
+  const baseMaxDia=170.04;
+  const baseDia=Math.min(Math.max(cache/dias,baseMinDia),baseMaxDia);
+  const base=baseDia*dias;
+  const cc=base*0.236,des=base*0.055,atep=base*SL_ATEP_PCT,fog=base*0.002,fp=base*0.006,mei=base*0.0075;
+  const ss=cc+des+atep+fog+fp+mei;
+  const com=cache*COM;
+  const neto=cache-ss-com;
+  const iva=cache*0.21;
+  const totalPromotor=cache+iva;
+  return{cache,dias,ss,com,neto,iva,totalPromotor};
+}
+function simLibreCalc(){
+  const cacheEl=document.getElementById('sl-cache');
+  const diasEl=document.getElementById('sl-dias');
+  const out=document.getElementById('sl-result');
+  if(!cacheEl||!diasEl||!out)return;
+  const cache=parseFloat(cacheEl.value)||0;
+  let dias=parseInt(diasEl.value)||1;if(dias<1)dias=1;
+  if(cache<=0){
+    out.innerHTML='<div class="sl-empty">Introduce un caché válido para calcular los números.</div>';
+    cacheEl.focus();
+    return;
+  }
+  const r=calcSimple(cache,dias);
+  /* Guardamos en memoria para pre-rellenar el expediente tras el login/registro */
+  slSavePrefill(cache,dias);
+  const diasTxt=`${r.dias} día${r.dias>1?'s':''}`;
+  out.innerHTML=`
+    <div class="sl-breakdown">
+      <div class="sl-hero">
+        <div class="sl-hero-label">Cobrarás aproximadamente</div>
+        <div class="sl-hero-val">${slFmt(r.neto)}</div>
+        <div class="sl-hero-sub">de un caché de ${slFmt(r.cache)} · ${diasTxt}</div>
+      </div>
+      <div class="sl-rows">
+        <div class="sl-row sl-cache"><span class="sl-l">Caché acordado</span><span class="sl-v">${slFmt(r.cache)}</span></div>
+        <div class="sl-sep"></div>
+        <div class="sl-row neg"><span class="sl-l">Seguridad Social<small class="sl-l-note">Es tu cotización: suma para tu paro, jubilación y sanidad</small></span><span class="sl-v">-${slFmt(r.ss)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">Comisión One2One (10%)</span><span class="sl-v">-${slFmt(r.com)}</span></div>
+        <div class="sl-sep"></div>
+        <div class="sl-row sl-promotor"><span class="sl-l">El promotor pagará</span><span class="sl-v">${slFmt(r.totalPromotor)}<small>IVA 21% incluido</small></span></div>
+      </div>
+      <div class="sl-disclaimer">
+        <span class="sl-disclaimer-icon" aria-hidden="true">ⓘ</span>
+        <span>Los costes de <strong>Seguridad Social son orientativos</strong>. La cuota exacta depende de las bases de cotización que aplique la Tesorería, así que el importe final puede variar.</span>
+      </div>
+    </div>
+    <div class="sl-cta">
+      <h3 class="sl-cta-title">¿Listo para hacerlo de verdad?</h3>
+      <p class="sl-cta-sub">Tu alta, tu factura y tu cobro — gestionados.</p>
+      <button type="button" class="sl-cta-btn" onclick="crearExpediente()">Crear mi expediente →</button>
+      <p class="sl-cta-note">Gratis registrarse. Solo pagas cuando tramitas.</p>
+    </div>`;
+}
+
+/* Memoria del simulador: persiste caché + días para pre-rellenar el
+   expediente una vez el usuario inicie sesión o se registre. */
+function slSavePrefill(cache,dias){
+  try{sessionStorage.setItem('o2o_sim_prefill',JSON.stringify({cache:cache,dias:dias}));}catch(e){}
+}
+function slGetPrefill(){
+  try{const v=sessionStorage.getItem('o2o_sim_prefill');return v?JSON.parse(v):null;}catch(e){return null;}
+}
+function slClearPrefill(){try{sessionStorage.removeItem('o2o_sim_prefill');}catch(e){}}
+
+/* CTA "Crear mi expediente →": con sesión va directo al panel; sin sesión
+   abre el modal de registro (con las dos opciones artista/promotor). */
+function crearExpediente(){
+  const cacheEl=document.getElementById('sl-cache');
+  const diasEl=document.getElementById('sl-dias');
+  if(cacheEl){const c=parseFloat(cacheEl.value)||0;let d=parseInt(diasEl&&diasEl.value)||1;if(d<1)d=1;if(c>0)slSavePrefill(c,d);}
+  const user=aGetCurrentUser();
+  if(user){
+    const sim=document.getElementById('sim');
+    if(sim)sim.scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
+  openAuthModal('register');
 }
 
 function prog(total){
@@ -2672,6 +2858,14 @@ function iniciarExpediente(){
   artistAuth.expedienteOpen=true;
   artistAuth.expedienteResult=null;
   resetExpedienteState();
+  /* Pre-relleno del caché y los días desde el simulador libre, si el
+     usuario los calculó antes de registrarse/iniciar sesión. */
+  const pre=slGetPrefill();
+  if(pre){
+    if(pre.cache>0)st.imp=String(pre.cache);
+    if(pre.dias>0)st.dias=String(pre.dias);
+    slClearPrefill();
+  }
   /* Autorrelleno desde el perfil guardado. Para el artista volcamos sus
      datos personales en st.aX (los usa generarEnlaceArtista para componer
      el enlace de pago). Para la empresa volcamos los datos fiscales en
