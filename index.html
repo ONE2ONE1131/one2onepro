@@ -472,7 +472,8 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
   .cont-label{font-size:11px}
 
   /* Asistente flotante: el panel ocupa toda la pantalla en móvil */
-  .chat-fab{bottom:18px;right:18px}
+  .chat-fab-wrap{bottom:18px;right:18px}
+  .chat-fab-label{display:none}
   .chat-panel{width:100vw;height:100vh;height:100dvh;bottom:0;right:0;border-radius:0;border:none}
   .chat-msgs{padding:18px 16px}
   .chat-input-wrap{padding:12px}
@@ -762,9 +763,19 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 /* ─────────────────────────────────────────────
    ASISTENTE IA — botón flotante + panel emergente
    ───────────────────────────────────────────── */
-.chat-fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#0f2d5e;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(15,45,94,.35);z-index:1000;transition:transform .15s,box-shadow .15s}
-.chat-fab:hover{transform:scale(1.06);box-shadow:0 8px 26px rgba(15,45,94,.45)}
-.chat-fab svg{width:26px;height:30px;display:block}
+.chat-fab-wrap{position:fixed;bottom:24px;right:24px;z-index:1000;display:flex;align-items:center;gap:12px}
+.chat-fab-label{background:#fff;color:var(--azul);font-size:13px;font-weight:600;line-height:1.2;padding:10px 16px;border-radius:99px;box-shadow:0 6px 20px rgba(15,45,94,.18);border:1px solid var(--gris-borde);white-space:nowrap;position:relative;animation:fabLabelIn .4s ease both;cursor:pointer}
+.chat-fab-label::after{content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:7px solid #fff}
+@keyframes fabLabelIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
+.chat-fab-wrap.panel-open .chat-fab-label{display:none}
+.chat-fab{position:relative;width:58px;height:58px;border-radius:50%;background:#0f2d5e;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 22px rgba(15,45,94,.4);transition:transform .15s,box-shadow .15s;flex-shrink:0}
+.chat-fab:hover{transform:scale(1.06);box-shadow:0 8px 28px rgba(15,45,94,.5)}
+.chat-fab svg{width:28px;height:28px;display:block}
+/* Anillo de pulso para llamar la atención */
+.chat-fab::before{content:'';position:absolute;inset:0;border-radius:50%;background:#0f2d5e;z-index:-1;animation:fabPulse 2.4s ease-out infinite}
+@keyframes fabPulse{0%{transform:scale(1);opacity:.55}70%{transform:scale(1.7);opacity:0}100%{opacity:0}}
+.chat-fab-wrap.panel-open .chat-fab::before{display:none}
+@media(prefers-reduced-motion:reduce){.chat-fab::before{animation:none;display:none}}
 .chat-panel{position:fixed;bottom:92px;right:24px;width:300px;height:420px;background:var(--fondo);border:1px solid var(--gris-borde);border-radius:14px;box-shadow:0 16px 48px rgba(15,45,94,.22);display:none;flex-direction:column;overflow:hidden;z-index:1001}
 .chat-panel.open{display:flex;animation:chatPanelIn .2s ease}
 @keyframes chatPanelIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -3519,9 +3530,12 @@ function renderSim(){
      Reemplaza la antigua sección inline. El chat conserva los mismos
      IDs (chat-msgs / chat-form / chat-input / chat-send) y la misma
      función chatSend() que envía al Worker. -->
-<button type="button" class="chat-fab" id="chat-fab" onclick="toggleChatPanel()" aria-label="Abrir asistente" aria-expanded="false" aria-controls="chat-panel">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49 56" aria-hidden="true"><rect x="0" y="0" width="9" height="56" rx="4.5" fill="#ffffff"/><path d="M13 0 C13 0 22 0 22 28 C22 56 31 56 31 56" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/><rect x="40" y="0" width="9" height="56" rx="4.5" fill="#ffffff"/></svg>
-</button>
+<div class="chat-fab-wrap" id="chat-fab-wrap">
+  <button type="button" class="chat-fab-label" onclick="toggleChatPanel()">¿Tienes dudas? Pregúntame</button>
+  <button type="button" class="chat-fab" id="chat-fab" onclick="toggleChatPanel()" aria-label="Abrir asistente" aria-expanded="false" aria-controls="chat-panel">
+    <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" fill="#ffffff"/><circle cx="8.8" cy="11.6" r="1.15" fill="#0f2d5e"/><circle cx="12.4" cy="11.6" r="1.15" fill="#0f2d5e"/><circle cx="16" cy="11.6" r="1.15" fill="#0f2d5e"/></svg>
+  </button>
+</div>
 <div class="chat-panel" id="chat-panel" role="dialog" aria-modal="false" aria-label="Asistente One2One Pro" aria-hidden="true">
   <div class="chat-panel-header">
     <div class="chat-panel-title">
@@ -3553,6 +3567,8 @@ function toggleChatPanel(){
   var open=panel.classList.toggle('open');
   panel.setAttribute('aria-hidden',open?'false':'true');
   if(fab)fab.setAttribute('aria-expanded',open?'true':'false');
+  var wrap=document.getElementById('chat-fab-wrap');
+  if(wrap)wrap.classList.toggle('panel-open',open);
   if(open){
     var inp=document.getElementById('chat-input');
     if(inp)inp.focus();
