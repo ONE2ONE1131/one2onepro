@@ -1670,7 +1670,7 @@ function calcular(){
    SIMULADOR LIBRE (público, sin login)
    Autocontenido: NO depende de st.act/st.ubic ni del flujo de expediente.
    Tipos vigentes del Régimen Especial de Artistas 2026 (Orden PJC/297/2026):
-   SS 6,50% (cuota trabajador), comisión One2One 10%, IRPF medio orientativo 8%.
+   SS 6,50% (cuota trabajador), comisión One2One 10%, IRPF medio orientativo 2%.
    Caché mínimo: 150€.
    ────────────────────────────────────────────────────────────────── */
 const SL_CACHE_MIN=150;
@@ -1681,7 +1681,7 @@ function calcSimple(cache,dias){
   if(dias<1)dias=1;
   const ss=cache*0.065;        // 6,50% cuota trabajador 2026
   const com=cache*0.10;        // 10% comisión One2One
-  const irpf=cache*0.08;       // 8% media orientativa artistas
+  const irpf=cache*0.02;       // 2% retención media orientativa (trabajos puntuales)
   const neto=cache-ss-com-irpf;
   const iva=cache*0.21;
   const totalPromotor=cache*1.21;
@@ -1709,13 +1709,13 @@ function simLibreCalc(){
         <div class="sl-sep"></div>
         <div class="sl-row neg"><span class="sl-l">SS (cuota trabajador 6,50%)</span><span class="sl-v">-${slFmt(r.ss)}</span></div>
         <div class="sl-row neg"><span class="sl-l">Comisión One2One (10%)</span><span class="sl-v">-${slFmt(r.com)}</span></div>
-        <div class="sl-row neg"><span class="sl-l">IRPF estimado (8%)</span><span class="sl-v">-${slFmt(r.irpf)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">IRPF estimado (2%)</span><span class="sl-v">-${slFmt(r.irpf)}</span></div>
         <div class="sl-sep"></div>
         <div class="sl-row sl-neto"><span class="sl-l">Cobrarás aproximadamente</span><span class="sl-v">${slFmt(r.neto)}</span></div>
         <div class="sl-row sl-promotor"><span class="sl-l">El promotor pagará</span><span class="sl-v">${slFmt(r.totalPromotor)}<small>IVA 21% incluido</small></span></div>
       </div>
       <p class="sl-note-gray">Cálculo orientativo basado en los tipos de cotización vigentes del Régimen Especial de Artistas 2026 (Orden PJC/297/2026). La base de cotización real y la retención de IRPF se determinan en el momento de tramitar el alta según tu situación fiscal y los tramos establecidos por la TGSS.</p>
-      <p class="sl-note-green">Calculamos la Seguridad Social sobre tu base de cotización real según la normativa vigente. Nuestra comisión es solo el 10% sobre el caché acordado. Sin letra pequeña.</p>
+      <p class="sl-note-green">Nuestra comisión es solo el 10% sobre el caché acordado. Y no la cobramos solo por la gestión: actuamos como tu manager y tu respaldo, damos la cara por ti ante el promotor y te acompañamos en todo momento — antes, durante y después de cada trabajo.</p>
     </div>
     <div class="sl-cta">
       <h3 class="sl-cta-title">¿Listo para hacerlo de verdad?</h3>
