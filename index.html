@@ -898,6 +898,35 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
   .sl-cta{padding:32px 22px}
   .sl-cta-btn{width:100%}
 }
+
+/* ─────────────────────────────────────────────
+   MODAL LEGAL — aviso legal, privacidad, cookies, condiciones
+   ───────────────────────────────────────────── */
+.legal-modal{position:fixed;inset:0;z-index:3000;display:none;align-items:center;justify-content:center;padding:20px}
+.legal-modal.show{display:flex}
+.legal-modal-overlay{position:absolute;inset:0;background:rgba(9,29,61,.6);backdrop-filter:blur(2px)}
+.legal-modal-box{position:relative;background:#fff;border-radius:14px;max-width:720px;width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(9,29,61,.35);animation:lmIn .2s ease;overflow:hidden}
+@keyframes lmIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.legal-modal-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 26px;border-bottom:1px solid var(--gris-borde);flex-shrink:0}
+.legal-modal-head h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--azul);letter-spacing:-.4px;line-height:1.15}
+.legal-modal-close{background:none;border:none;font-size:28px;line-height:1;color:var(--gris-suave);cursor:pointer;padding:0 6px;font-family:inherit;transition:color .15s}
+.legal-modal-close:hover{color:var(--azul)}
+.legal-modal-body{padding:24px 26px 28px;overflow-y:auto;font-size:13.5px;line-height:1.7;color:var(--gris-texto);font-weight:300}
+.legal-modal-body h3{font-size:13px;font-weight:700;color:var(--azul);margin:22px 0 8px;letter-spacing:.2px}
+.legal-modal-body h3:first-child{margin-top:0}
+.legal-modal-body p{margin-bottom:10px}
+.legal-modal-body ul{margin:6px 0 12px 18px;padding-left:4px;list-style:disc}
+.legal-modal-body li{margin-bottom:5px}
+.legal-modal-body strong{color:var(--azul);font-weight:600}
+.legal-modal-body a{color:var(--verde);text-decoration:underline}
+.legal-modal-updated{font-size:11px;color:var(--gris-suave);margin-top:20px;padding-top:14px;border-top:1px solid var(--gris-borde)}
+@media(max-width:768px){
+  .legal-modal{padding:0}
+  .legal-modal-box{max-height:100vh;height:100vh;border-radius:0}
+  .legal-modal-head{padding:16px 18px}
+  .legal-modal-head h2{font-size:19px}
+  .legal-modal-body{padding:18px 18px 24px;font-size:13px}
+}
 </style>
 </head>
 <body>
@@ -1329,10 +1358,10 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
   </div>
   <div class="foot-right">
     <div class="foot-links">
-      <a href="#">Aviso legal</a>
-      <a href="#">Política de privacidad</a>
-      <a href="#">Cookies</a>
-      <a href="#">Condiciones de uso</a>
+      <a href="#" onclick="event.preventDefault();openLegal('aviso')">Aviso legal</a>
+      <a href="#" onclick="event.preventDefault();openLegal('privacidad')">Política de privacidad</a>
+      <a href="#" onclick="event.preventDefault();openLegal('cookies')">Cookies</a>
+      <a href="#" onclick="event.preventDefault();openLegal('condiciones')">Condiciones de uso</a>
     </div>
     <div class="foot-copy">Operamos conforme a la normativa laboral española vigente.</div>
     <div class="foot-copy" style="margin-top:6px">One2One Pro no es una cooperativa de facturación. Es una empresa gestora de altas laborales.</div>
@@ -3722,6 +3751,156 @@ function renderSim(){
     <div id="auth-modal-content"></div>
   </div>
 </div>
+
+<!-- ─── MODAL LEGAL — aviso legal / privacidad / cookies / condiciones ─── -->
+<div class="legal-modal" id="legal-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="legal-modal-title">
+  <div class="legal-modal-overlay" onclick="closeLegal()"></div>
+  <div class="legal-modal-box">
+    <div class="legal-modal-head">
+      <h2 id="legal-modal-title">Aviso legal</h2>
+      <button type="button" class="legal-modal-close" onclick="closeLegal()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="legal-modal-body" id="legal-modal-body"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const LEGAL_DOCS={
+    aviso:{title:'Aviso legal', html:`
+<h3>1. Titular del sitio web</h3>
+<p>En cumplimiento del artículo 10 de la Ley 34/2002, de Servicios de la Sociedad de la Información y de Comercio Electrónico (LSSI-CE), se informa de que el titular de este sitio web es:</p>
+<ul>
+<li><strong>Denominación social:</strong> ONE2ONE SOLUTIONS S.L.</li>
+<li><strong>CIF:</strong> B19428846</li>
+<li><strong>Domicilio social:</strong> Calle Pintor Madrazo 6, 11630 Arcos de la Frontera, Cádiz (España)</li>
+<li><strong>Correo electrónico:</strong> info@one2onepro.es</li>
+<li><strong>Sitio web:</strong> one2onepro.es</li>
+<li><strong>Nombre comercial:</strong> One2One Pro</li>
+</ul>
+<h3>2. Objeto y actividad</h3>
+<p>One2One Pro es una plataforma que permite a profesionales del sector del espectáculo (músicos, DJs, técnicos, actores, bailarines y similares) y a promotores o empresas contratantes gestionar la contratación laboral de actuaciones puntuales al amparo del <strong>Real Decreto 1435/1985</strong>, regulador de la relación laboral especial de los artistas.</p>
+<p>ONE2ONE SOLUTIONS S.L. actúa como <strong>empresa empleadora y organizadora del espectáculo</strong>: tramita el alta y la baja en la Seguridad Social del profesional, formaliza el contrato laboral, emite la factura al promotor y liquida el importe neto al profesional. <strong>One2One Pro no es una cooperativa de facturación</strong> ni un mero intermediario administrativo.</p>
+<h3>3. Condiciones de uso</h3>
+<p>El acceso y la navegación por este sitio atribuyen la condición de usuario e implican la aceptación de este Aviso legal, de las Condiciones de uso y de la Política de privacidad. El usuario se compromete a hacer un uso lícito del sitio y a no emplearlo para fines contrarios a la ley o a los derechos de terceros.</p>
+<h3>4. Propiedad intelectual e industrial</h3>
+<p>Todos los contenidos del sitio (textos, marcas, logotipos, diseño, código y elementos gráficos) son titularidad de ONE2ONE SOLUTIONS S.L. o de terceros que han autorizado su uso, y están protegidos por la normativa de propiedad intelectual e industrial. Queda prohibida su reproducción, distribución o transformación sin autorización expresa.</p>
+<h3>5. Responsabilidad</h3>
+<p>El titular no se hace responsable de los daños derivados de un uso indebido del sitio, ni garantiza la ausencia de interrupciones o errores en el acceso. El sitio puede contener enlaces a páginas de terceros sobre cuyo contenido el titular no ejerce control alguno.</p>
+<h3>6. Protección de datos</h3>
+<p>El tratamiento de los datos personales recogidos a través del sitio se rige por la <a href="#" onclick="event.preventDefault();openLegal('privacidad')">Política de privacidad</a>.</p>
+<h3>7. Legislación aplicable y jurisdicción</h3>
+<p>Estas condiciones se rigen por la legislación española. Para la resolución de cualquier controversia, las partes se someten a los Juzgados y Tribunales del domicilio del consumidor o usuario cuando este tenga tal condición; en su defecto, a los de Cádiz.</p>
+<p class="legal-modal-updated">Última actualización: mayo de 2026.</p>`},
+    privacidad:{title:'Política de privacidad', html:`
+<h3>1. Responsable del tratamiento</h3>
+<ul>
+<li><strong>Responsable:</strong> ONE2ONE SOLUTIONS S.L.</li>
+<li><strong>CIF:</strong> B19428846</li>
+<li><strong>Domicilio:</strong> Calle Pintor Madrazo 6, 11630 Arcos de la Frontera, Cádiz</li>
+<li><strong>Contacto:</strong> info@one2onepro.es</li>
+</ul>
+<h3>2. Datos que tratamos</h3>
+<p>Según tu relación con nosotros, podemos tratar las siguientes categorías de datos:</p>
+<ul>
+<li><strong>Profesional (artista o técnico):</strong> nombre y apellidos, DNI/NIE e imagen del documento, fecha de nacimiento, nacionalidad, domicilio, teléfono, email, número de afiliación a la Seguridad Social (NAF) e IBAN para la liquidación.</li>
+<li><strong>Promotor o empresa:</strong> nombre de contacto, razón social, CIF, domicilio fiscal, teléfono y email de facturación.</li>
+<li><strong>Datos de cada expediente:</strong> caché acordado, fechas y tipo de actuación.</li>
+<li><strong>Datos de navegación:</strong> los descritos en la <a href="#" onclick="event.preventDefault();openLegal('cookies')">Política de cookies</a>.</li>
+</ul>
+<h3>3. Finalidades</h3>
+<ul>
+<li>Gestionar tu registro y tu cuenta de usuario.</li>
+<li>Tramitar el alta y la baja en la Seguridad Social bajo el RD 1435/1985.</li>
+<li>Formalizar el contrato laboral, emitir la factura al promotor y liquidar el neto al profesional.</li>
+<li>Verificar la identidad mediante el documento aportado.</li>
+<li>Prestar soporte y enviarte comunicaciones relativas al servicio.</li>
+<li>Cumplir nuestras obligaciones legales laborales, fiscales y contables.</li>
+</ul>
+<h3>4. Base jurídica</h3>
+<ul>
+<li><strong>Ejecución del contrato</strong> (art. 6.1.b RGPD) para la prestación del servicio.</li>
+<li><strong>Obligación legal</strong> (art. 6.1.c) frente a la Seguridad Social y la Agencia Tributaria.</li>
+<li><strong>Consentimiento</strong> (art. 6.1.a) para la verificación documental y las comunicaciones no esenciales.</li>
+<li><strong>Interés legítimo</strong> (art. 6.1.f) en la seguridad de la plataforma y la prevención del fraude.</li>
+</ul>
+<h3>5. Destinatarios</h3>
+<p>Tus datos podrán comunicarse a la <strong>Tesorería General de la Seguridad Social</strong> y a la <strong>Agencia Estatal de Administración Tributaria</strong>, a entidades bancarias y a la <strong>pasarela de pago</strong>, así como a la asesoría laboral y a los proveedores tecnológicos que actúan como encargados del tratamiento (alojamiento web, almacenamiento en la nube y verificación documental). No cedemos datos a terceros con fines comerciales.</p>
+<h3>6. Transferencias internacionales</h3>
+<p>Algunos proveedores tecnológicos pueden estar ubicados fuera del Espacio Económico Europeo. En tal caso, las transferencias se amparan en garantías adecuadas, como las cláusulas contractuales tipo aprobadas por la Comisión Europea.</p>
+<h3>7. Conservación</h3>
+<p>Conservamos los datos durante la vigencia de la relación y, después, durante los plazos legalmente exigidos en materia laboral, fiscal y de Seguridad Social (con carácter general, hasta 4 años y los que resulten aplicables para la prescripción de responsabilidades).</p>
+<h3>8. Tus derechos</h3>
+<p>Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a <strong>info@one2onepro.es</strong>, indicando el derecho que deseas ejercer. Si consideras que no hemos atendido correctamente tu solicitud, puedes reclamar ante la Agencia Española de Protección de Datos (<a href="https://www.aepd.es" target="_blank" rel="noopener">www.aepd.es</a>).</p>
+<h3>9. Seguridad y menores</h3>
+<p>Aplicamos medidas técnicas y organizativas para proteger tus datos. El servicio está dirigido exclusivamente a personas mayores de edad; no recogemos conscientemente datos de menores.</p>
+<p class="legal-modal-updated">Última actualización: mayo de 2026.</p>`},
+    cookies:{title:'Política de cookies', html:`
+<h3>1. ¿Qué tecnologías utilizamos?</h3>
+<p>Este sitio <strong>no utiliza cookies publicitarias ni de seguimiento de terceros</strong>. Para funcionar, emplea almacenamiento local del navegador (<em>localStorage</em> y <em>sessionStorage</em>), estrictamente necesario para la prestación del servicio.</p>
+<h3>2. Almacenamiento técnico necesario</h3>
+<ul>
+<li><strong>Sesión y cuenta:</strong> mantenemos tu sesión iniciada y los datos de tu cuenta para que no tengas que identificarte en cada página.</li>
+<li><strong>Verificación y recuperación:</strong> tokens temporales para verificar tu email y restablecer la contraseña.</li>
+<li><strong>Simulador:</strong> el caché y los días que introduces se guardan temporalmente para pre-rellenar tu expediente si decides registrarte.</li>
+</ul>
+<p>Este almacenamiento permanece en tu dispositivo y no se utiliza con fines analíticos ni publicitarios.</p>
+<h3>3. Servicios de terceros</h3>
+<p>Cargamos tipografías desde <strong>Google Fonts</strong>, lo que implica una conexión con sus servidores. Además, la tramitación del servicio se apoya en proveedores tecnológicos (alojamiento, almacenamiento y verificación) que tratan los datos conforme a nuestra <a href="#" onclick="event.preventDefault();openLegal('privacidad')">Política de privacidad</a>.</p>
+<h3>4. Cómo gestionarlo</h3>
+<p>Puedes borrar o bloquear el almacenamiento local y las cookies desde la configuración de tu navegador. Ten en cuenta que, si lo deshabilitas, algunas funciones (como mantener la sesión iniciada) podrían dejar de funcionar correctamente.</p>
+<p class="legal-modal-updated">Última actualización: mayo de 2026.</p>`},
+    condiciones:{title:'Condiciones de uso', html:`
+<h3>1. Objeto</h3>
+<p>Estas Condiciones regulan el acceso y uso de la plataforma one2onepro.es y la contratación de los servicios prestados por <strong>ONE2ONE SOLUTIONS S.L.</strong> (en adelante, One2One Pro).</p>
+<h3>2. Descripción del servicio</h3>
+<p>One2One Pro actúa como <strong>empresa empleadora y organizadora del espectáculo</strong> al amparo del Real Decreto 1435/1985. Para cada actuación puntual formaliza el contrato laboral con el profesional, lo da de alta en la Seguridad Social, emite la factura al promotor y le liquida el importe neto. El servicio está diseñado <strong>exclusivamente para trabajos puntuales y no recurrentes</strong> del sector del espectáculo.</p>
+<h3>3. Requisitos de uso</h3>
+<ul>
+<li>Ser mayor de edad y aportar datos veraces y actualizados.</li>
+<li>Que el trabajo sea genuinamente puntual, sin encubrir una relación laboral continuada.</li>
+<li>Disponer de la documentación necesaria para el alta (documento de identidad, NAF e IBAN, en el caso del profesional).</li>
+</ul>
+<h3>4. Precio, comisión e impuestos</h3>
+<p>One2One Pro percibe una <strong>comisión del 10% sobre el caché acordado</strong>. El promotor abona el caché más el IVA (21%). Sobre el caché se aplican las cuotas de Seguridad Social a cargo del trabajador y la retención de IRPF que corresponda según la situación fiscal de cada profesional. Las cantidades del simulador son <strong>orientativas</strong>; el importe definitivo se determina al tramitar el alta.</p>
+<h3>5. Contratación y pago</h3>
+<p>La contratación se realiza mediante un enlace de pago seguro. El alta en la Seguridad Social se tramita una vez confirmado el pago y siempre que se solicite con antelación suficiente a la fecha de la actuación.</p>
+<h3>6. Desistimiento y cancelaciones</h3>
+<p>Al tratarse de un servicio que se ejecuta en una fecha determinada y a petición expresa del usuario, una vez iniciada la tramitación del alta el servicio se considera prestado y no procede su reembolso, salvo error imputable a One2One Pro. Cuando resulte aplicable el derecho de desistimiento, este decae si el servicio ha comenzado a ejecutarse con tu consentimiento, conforme al artículo 103 del texto refundido de la Ley General para la Defensa de los Consumidores y Usuarios.</p>
+<h3>7. Obligaciones del usuario</h3>
+<p>El usuario es responsable de la veracidad de los datos aportados y, en su caso, de comunicar al SEPE la realización del trabajo antes de iniciarlo si percibe prestación por desempleo. El uso fraudulento o contrario a la ley faculta a One2One Pro para suspender o cancelar la operación.</p>
+<h3>8. Responsabilidad</h3>
+<p>One2One Pro responde de la correcta tramitación administrativa y laboral del servicio contratado. No se hace responsable de la actuación en sí, de las relaciones entre profesional y promotor, ni de incumplimientos ajenos a su gestión. One2One Pro se reserva el derecho a revisar o rechazar operaciones que presenten indicios de recurrencia o fraude.</p>
+<h3>9. Modificaciones y legislación aplicable</h3>
+<p>One2One Pro podrá actualizar estas Condiciones, publicando la versión vigente en este sitio. Se rigen por la legislación española, con sumisión a los Juzgados y Tribunales del domicilio del consumidor o, en su defecto, de Cádiz.</p>
+<p class="legal-modal-updated">Última actualización: mayo de 2026.</p>`}
+  };
+  window.openLegal=function(k){
+    const doc=LEGAL_DOCS[k];if(!doc)return;
+    const t=document.getElementById('legal-modal-title');
+    const b=document.getElementById('legal-modal-body');
+    const m=document.getElementById('legal-modal');
+    if(!t||!b||!m)return;
+    t.textContent=doc.title;
+    b.innerHTML=doc.html;
+    b.scrollTop=0;
+    m.classList.add('show');
+    m.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+  };
+  window.closeLegal=function(){
+    const m=document.getElementById('legal-modal');
+    if(!m)return;
+    m.classList.remove('show');
+    m.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+  };
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    const m=document.getElementById('legal-modal');
+    if(m&&m.classList.contains('show'))closeLegal();
+  });
+})();
+</script>
 
 <!-- ─── ASISTENTE IA — BOTÓN FLOTANTE + PANEL ──────────────────────────
      Reemplaza la antigua sección inline. El chat conserva los mismos
