@@ -851,25 +851,22 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 .sl-empty{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;height:100%;min-height:240px;color:var(--gris-suave);font-size:13px;font-weight:300;line-height:1.7;border:1px dashed var(--gris-borde);border-radius:14px;padding:32px}
 .sl-empty svg{width:34px;height:34px;margin-bottom:14px;opacity:.5}
 .sl-breakdown{background:var(--fondo);border:1px solid var(--gris-borde);border-radius:14px;padding:24px;animation:ru .3s ease}
-/* Neto protagonista — lo primero y más grande que se ve */
-.sl-hero{background:linear-gradient(135deg,rgba(0,168,107,.12),rgba(0,168,107,.04));border:1px solid rgba(0,168,107,.32);border-radius:12px;padding:22px 20px;text-align:center;margin-bottom:18px}
-.sl-hero-label{font-size:11px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--verde);margin-bottom:6px}
-.sl-hero-val{font-family:'Playfair Display',serif;font-size:clamp(38px,7vw,48px);font-weight:700;color:var(--verde);letter-spacing:-1.5px;line-height:1}
-.sl-hero-sub{font-size:12px;color:var(--gris-texto);font-weight:300;margin-top:8px}
 .sl-row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:9px 0;font-size:14px}
 .sl-row .sl-l{color:var(--gris-texto);font-weight:400}
 .sl-row .sl-v{font-variant-numeric:tabular-nums;font-weight:500;color:var(--azul);white-space:nowrap}
 .sl-row.sl-cache .sl-l{font-weight:600;color:var(--azul)}
 .sl-row.neg .sl-v{color:#b4453a}
-.sl-l-note{display:block;font-size:11px;font-weight:400;color:var(--verde);margin-top:3px;line-height:1.4;max-width:280px}
 .sl-sep{height:1px;background:var(--gris-borde);margin:8px 0}
-.sl-row.sl-promotor{margin-top:6px}
+/* Neto destacado */
+.sl-row.sl-neto{padding:14px 0 4px}
+.sl-row.sl-neto .sl-l{font-weight:700;color:var(--azul);font-size:15px}
+.sl-row.sl-neto .sl-v{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--verde);letter-spacing:-.5px}
+.sl-row.sl-promotor{margin-top:14px;padding-top:14px;border-top:1px dashed var(--gris-borde)}
 .sl-row.sl-promotor .sl-l{font-weight:600;color:var(--azul)}
 .sl-row.sl-promotor .sl-v small{display:block;font-weight:300;font-size:10px;color:var(--gris-suave);text-align:right;margin-top:2px}
-/* Aviso de costes SS — visible, no letra pequeña */
-.sl-disclaimer{display:flex;gap:10px;align-items:flex-start;margin-top:18px;background:#fff7ed;border:1px solid #fed7aa;border-left:3px solid #f59e0b;border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.55;color:#92400e}
-.sl-disclaimer-icon{flex-shrink:0;font-size:14px;line-height:1.35}
-.sl-disclaimer strong{font-weight:700}
+/* Dos notas bajo el resultado */
+.sl-note-gray{font-size:11px;color:var(--gris-suave);font-weight:300;line-height:1.6;margin-top:16px}
+.sl-note-green{font-size:11px;color:var(--verde);font-weight:400;line-height:1.6;margin-top:10px}
 /* CTA impactante tras el cálculo */
 .sl-cta{margin-top:28px;background:#0f2d5e;border-radius:14px;padding:40px 32px;text-align:center;position:relative;overflow:hidden}
 .sl-cta::before{content:'';position:absolute;top:-120px;right:-120px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(26,74,138,.45) 0%,transparent 70%);pointer-events:none}
@@ -1672,27 +1669,23 @@ function calcular(){
 /* ──────────────────────────────────────────────────────────────────
    SIMULADOR LIBRE (público, sin login)
    Autocontenido: NO depende de st.act/st.ubic ni del flujo de expediente.
-   Usa un ATEP medio del 1.5% (representativo del sector). No incluye IRPF:
-   la retención se calcula caso a caso según la situación fiscal de cada
-   profesional, así que mostrarla en un simulador genérico despista.
+   Tipos vigentes del Régimen Especial de Artistas 2026 (Orden PJC/297/2026):
+   SS 6,50% (cuota trabajador), comisión One2One 10%, IRPF medio orientativo 8%.
+   Caché mínimo: 150€.
    ────────────────────────────────────────────────────────────────── */
-const SL_ATEP_PCT=0.015; /* tipo medio de accidentes de trabajo del sector */
+const SL_CACHE_MIN=150;
 function slFmt(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'}
 function calcSimple(cache,dias){
   cache=parseFloat(cache)||0;
   dias=parseInt(dias)||1;
   if(dias<1)dias=1;
-  const baseMinDia=1424.40/30;
-  const baseMaxDia=170.04;
-  const baseDia=Math.min(Math.max(cache/dias,baseMinDia),baseMaxDia);
-  const base=baseDia*dias;
-  const cc=base*0.236,des=base*0.055,atep=base*SL_ATEP_PCT,fog=base*0.002,fp=base*0.006,mei=base*0.0075;
-  const ss=cc+des+atep+fog+fp+mei;
-  const com=cache*COM;
-  const neto=cache-ss-com;
+  const ss=cache*0.065;        // 6,50% cuota trabajador 2026
+  const com=cache*0.10;        // 10% comisión One2One
+  const irpf=cache*0.08;       // 8% media orientativa artistas
+  const neto=cache-ss-com-irpf;
   const iva=cache*0.21;
-  const totalPromotor=cache+iva;
-  return{cache,dias,ss,com,neto,iva,totalPromotor};
+  const totalPromotor=cache*1.21;
+  return{cache,dias,ss,com,irpf,neto,iva,totalPromotor};
 }
 function simLibreCalc(){
   const cacheEl=document.getElementById('sl-cache');
@@ -1701,38 +1694,32 @@ function simLibreCalc(){
   if(!cacheEl||!diasEl||!out)return;
   const cache=parseFloat(cacheEl.value)||0;
   let dias=parseInt(diasEl.value)||1;if(dias<1)dias=1;
-  if(cache<=0){
-    out.innerHTML='<div class="sl-empty">Introduce un caché válido para calcular los números.</div>';
+  if(cache<SL_CACHE_MIN){
+    out.innerHTML='<div class="sl-empty">El caché mínimo para gestionar el alta es de 150€.</div>';
     cacheEl.focus();
     return;
   }
   const r=calcSimple(cache,dias);
   /* Guardamos en memoria para pre-rellenar el expediente tras el login/registro */
   slSavePrefill(cache,dias);
-  const diasTxt=`${r.dias} día${r.dias>1?'s':''}`;
   out.innerHTML=`
     <div class="sl-breakdown">
-      <div class="sl-hero">
-        <div class="sl-hero-label">El profesional cobra</div>
-        <div class="sl-hero-val">${slFmt(r.neto)}</div>
-        <div class="sl-hero-sub">de un caché de ${slFmt(r.cache)} · ${diasTxt}</div>
-      </div>
       <div class="sl-rows">
         <div class="sl-row sl-cache"><span class="sl-l">Caché acordado</span><span class="sl-v">${slFmt(r.cache)}</span></div>
         <div class="sl-sep"></div>
-        <div class="sl-row neg"><span class="sl-l">Seguridad Social<small class="sl-l-note">Cotización que genera derechos: paro, jubilación y sanidad</small></span><span class="sl-v">-${slFmt(r.ss)}</span></div>
-        <div class="sl-row neg"><span class="sl-l">Comisión One2One (10%)<small class="sl-l-note">No solo gestión: acompañamiento y asistencia real, de personas reales, antes, durante y después.</small></span><span class="sl-v">-${slFmt(r.com)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">SS (cuota trabajador 6,50%)</span><span class="sl-v">-${slFmt(r.ss)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">Comisión One2One (10%)</span><span class="sl-v">-${slFmt(r.com)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">IRPF estimado (8%)</span><span class="sl-v">-${slFmt(r.irpf)}</span></div>
         <div class="sl-sep"></div>
-        <div class="sl-row sl-promotor"><span class="sl-l">El promotor paga</span><span class="sl-v">${slFmt(r.totalPromotor)}<small>IVA 21% incluido</small></span></div>
+        <div class="sl-row sl-neto"><span class="sl-l">Cobrarás aproximadamente</span><span class="sl-v">${slFmt(r.neto)}</span></div>
+        <div class="sl-row sl-promotor"><span class="sl-l">El promotor pagará</span><span class="sl-v">${slFmt(r.totalPromotor)}<small>IVA 21% incluido</small></span></div>
       </div>
-      <div class="sl-disclaimer">
-        <span class="sl-disclaimer-icon" aria-hidden="true">ⓘ</span>
-        <span>Los costes de <strong>Seguridad Social son orientativos</strong>. La cuota exacta depende de las bases de cotización que aplique la Tesorería, así que el importe final puede variar.</span>
-      </div>
+      <p class="sl-note-gray">Cálculo orientativo basado en los tipos de cotización vigentes del Régimen Especial de Artistas 2026 (Orden PJC/297/2026). La base de cotización real y la retención de IRPF se determinan en el momento de tramitar el alta según tu situación fiscal y los tramos establecidos por la TGSS.</p>
+      <p class="sl-note-green">Calculamos la Seguridad Social sobre tu base de cotización real según la normativa vigente. Nuestra comisión es solo el 10% sobre el caché acordado. Sin letra pequeña.</p>
     </div>
     <div class="sl-cta">
       <h3 class="sl-cta-title">¿Listo para hacerlo de verdad?</h3>
-      <p class="sl-cta-sub">Alta, factura y cobro — gestionados de principio a fin.</p>
+      <p class="sl-cta-sub">Tu alta, tu factura y tu cobro — gestionados.</p>
       <button type="button" class="sl-cta-btn" onclick="crearExpediente()">Crear mi expediente →</button>
       <p class="sl-cta-note">Gratis registrarse. Solo pagas cuando tramitas.</p>
     </div>`;
