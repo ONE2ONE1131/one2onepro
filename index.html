@@ -3804,11 +3804,27 @@ document.addEventListener('keydown',function(e){
     if(t==='number')return '1';
     return 'Prueba';
   }
+  /* Botón primario de "avance" del paso activo (Continuar/Siguiente…), nunca
+     un botón de retroceso/cancelar. */
+  function devAdvanceBtn(scope){
+    var btns=scope.querySelectorAll('button');
+    for(var i=0;i<btns.length;i++){
+      var b=btns[i];
+      if(b.disabled||b.offsetParent===null)continue;
+      var tx=(b.textContent||'').trim().toLowerCase();
+      if(/volver|atr[aá]s|cancelar/.test(tx))continue;
+      /* Solo navegación entre pasos (Continuar/Siguiente). NUNCA un botón de
+         envío/pago/confirmación: el envío final lo pulsa el usuario a mano,
+         así el dev jamás dispara el webhook de Make por accidente. */
+      if(/^continuar|continuar a|siguiente/.test(tx))return b;
+    }
+    return null;
+  }
   function devFill(){
     var scope=document;
     var am=document.getElementById('auth-modal');
     if(am&&am.classList.contains('show'))scope=am;
-    else{var sc=document.getElementById('sim-c'); if(sc&&sc.querySelector('input,select,textarea'))scope=sc;}
+    else{var sc=document.getElementById('sim-c'); if(sc&&sc.querySelector('input,select,textarea,.opt-card,.bif-card'))scope=sc;}
     var fields=scope.querySelectorAll('input,select,textarea');
     var n=0;
     fields.forEach(function(el){
@@ -3822,16 +3838,53 @@ document.addEventListener('keydown',function(e){
       if(el.tagName==='SELECT'){ var sv=pickSelect(el,key); if(sv!==null){el.value=sv; fire(el); n++;} return; }
       el.value=valueFor(el,key,t); fire(el); n++;
     });
+    /* Si el paso activo no tiene campos pero sí tarjetas de selección
+       (actividad/ubicación/bifurcación), elige la primera sin seleccionar.
+       Clicks sucesivos del botón avanzan por estos pasos. */
+    if(n===0 && scope!==document){
+      var hasCards=scope.querySelector('.opt-card,.bif-card');
+      if(hasCards && !scope.querySelector('.opt-card.sel,.bif-card.sel')){
+        hasCards.click(); /* selecciona la 1ª opción; renderSim re-renderiza #sim-c */
+      }
+      var adv=devAdvanceBtn(scope);
+      if(adv){ adv.click(); if(typeof showFlash==='function')showFlash('DEV: paso avanzado','success'); return; }
+      if(hasCards){ if(typeof showFlash==='function')showFlash('DEV: opción seleccionada','success'); return; }
+    }
     if(typeof showFlash==='function')showFlash('DEV: '+n+' campos rellenados','success');
+  }
+
+  /* Crea (si hace falta) una cuenta de prueba de empresa, verificada, y hace
+     login directo SIN abrir el modal. Devuelve true si la creó/logueó. */
+  function devEnsureSession(){
+    if(typeof aGetCurrentUser==='function' && aGetCurrentUser())return false; /* ya hay sesión */
+    var email='test@one2onepro.es';
+    var users=aGetUsers();
+    if(!users[email]){
+      users[email]={nombre:'Empresa de Prueba S.L.',password:'Prueba1234',accountType:'empresa',verified:true,verifiedAt:new Date().toISOString(),createdAt:new Date().toISOString(),profile:null,profileStatus:'pendiente'};
+    }else{
+      users[email].verified=true; /* por si existía sin verificar */
+    }
+    aSaveUsers(users);
+    aSetSession(email);
+    if(typeof closeAuthModal==='function')closeAuthModal();
+    if(typeof renderSim==='function')renderSim();
+    return true;
+  }
+  /* Un solo click: sin sesión → crear+verificar+login (sin modal) y rellenar;
+     con sesión → ir directo a rellenar el formulario activo. */
+  function devRun(){
+    var created=devEnsureSession();
+    if(created&&typeof showFlash==='function')showFlash('DEV: sesión de prueba (empresa) iniciada','success');
+    devFill();
   }
 
   var btn=document.createElement('button');
   btn.type='button';
   btn.id='dev-fill-btn';
-  btn.textContent='⚙ Rellenar';
-  btn.title='DEV: rellenar el formulario activo con datos de prueba';
+  btn.textContent='⚙ Dev';
+  btn.title='DEV: login de prueba (si no hay sesión) + rellenar el formulario activo';
   btn.style.cssText='position:fixed;left:16px;bottom:16px;z-index:4000;background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:10px 14px;font:600 12px/1 \'DM Sans\',sans-serif;letter-spacing:.3px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.28)';
-  btn.onclick=devFill;
+  btn.onclick=devRun;
   document.body.appendChild(btn);
 })();
 </script>
