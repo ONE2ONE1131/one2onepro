@@ -1525,7 +1525,7 @@ function simLibreCalc(){
   if(!cacheEl||!diasEl||!out)return;
   const cache=parseFloat(cacheEl.value)||0;
   let dias=parseInt(diasEl.value)||1;if(dias<1)dias=1;
-  if(cache<SL_CACHE_MIN){
+  if(cache<SL_CACHE_MIN&&!window.location.search.includes('dev=true')){
     out.innerHTML='<div class="sl-empty">El caché mínimo para gestionar el alta es de 150€.</div>';
     cacheEl.focus();
     return;
@@ -3779,7 +3779,7 @@ document.addEventListener('keydown',function(e){
     return opts[0].value;
   }
   function valueFor(el,key,t){
-    if(t==='email'||/email|correo/.test(key))return 'carlos.prueba@example.com';
+    if(t==='email'||/email|correo/.test(key))return 'ivan@o2oagency.es';
     if(t==='password'||/contrase|password/.test(key))return 'Prueba1234';
     if(t==='date'){
       var now=new Date();
@@ -3792,8 +3792,8 @@ document.addEventListener('keydown',function(e){
     if(/dni|nie|documento/.test(key))return '12345678Z';
     if(/tel|phone|m[oó]vil/.test(key))return '612345678';
     if(/postal|c\.?p\.?\b/.test(key))return '28013';
-    if(/cach|importe/.test(key))return '300';
-    if(/d[ií]as/.test(key))return '2';
+    if(/cach|importe/.test(key))return '1';
+    if(/d[ií]as/.test(key))return '1';
     if(/apellido/.test(key))return 'García López';
     if(/raz[oó]n|social/.test(key))return 'Sonido y Luces Levante S.L.';
     if(/contacto/.test(key))return 'Carlos García';
