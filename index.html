@@ -3823,6 +3823,33 @@ document.addEventListener('keydown',function(e){
     }
     return null;
   }
+  /* PNG 1×1 válido en base64 — placeholder de DNI para el modo dev. */
+  var DEV_DNI_B64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  function devB64ToFile(b64,filename,mime){
+    var bin=atob(b64),arr=new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+    return new File([arr],filename,{type:mime});
+  }
+  /* Adjunta una imagen placeholder a los inputs file de DNI (anverso/reverso)
+     que aún no tengan archivo, disparando su onchange real (aHandleEmpFile /
+     aHandleFile) para que se habilite "Continuar a confirmación" sin subir
+     nada a mano. Solo se usa con ?dev=true. */
+  function devAttachDni(scope){
+    var inputs=scope.querySelectorAll('input[type=file]');
+    for(var i=0;i<inputs.length;i++){
+      var inp=inputs[i];
+      if(!/dni/i.test(inp.id||''))continue;
+      var label=inp.id?document.querySelector('label[for="'+inp.id+'"]'):null;
+      if(label&&label.classList.contains('has-file'))continue; /* ya tiene archivo */
+      var side=/reverso/i.test(inp.id)?'reverso':'anverso';
+      try{
+        var dt=new DataTransfer();
+        dt.items.add(devB64ToFile(DEV_DNI_B64,'dni-'+side+'-dev.png','image/png'));
+        inp.files=dt.files;
+        inp.dispatchEvent(new Event('change',{bubbles:true}));
+      }catch(e){}
+    }
+  }
   function devFill(){
     var scope=document;
     var am=document.getElementById('auth-modal');
@@ -3841,6 +3868,9 @@ document.addEventListener('keydown',function(e){
       if(el.tagName==='SELECT'){ var sv=pickSelect(el,key); if(sv!==null){el.value=sv; fire(el); n++;} return; }
       el.value=valueFor(el,key,t); fire(el); n++;
     });
+    /* DNI: adjunta imágenes placeholder a los campos de subida (anverso/reverso)
+       para habilitar "Continuar a confirmación" sin intervención manual. */
+    if(scope!==document)devAttachDni(scope);
     /* Si el paso activo no tiene campos pero sí tarjetas de selección
        (actividad/ubicación/bifurcación), elige la primera sin seleccionar.
        Clicks sucesivos del botón avanzan por estos pasos. */
