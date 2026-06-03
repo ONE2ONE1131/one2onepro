@@ -586,6 +586,11 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 .form-field input.invalid,.form-field select.invalid{border-bottom-color:#e53935!important}
 .form-field input.valid,.form-field select.valid{border-bottom-color:#00a86b!important}
 .field-error{font-size:10px;color:#e53935;margin-top:3px;font-weight:400;display:none}
+.concepto-valida{font-size:12px;margin-top:6px;font-weight:500;line-height:1.5;display:none}
+.concepto-valida.loading{display:flex;align-items:center;gap:8px;color:var(--gris-suave)}
+.concepto-valida.err{display:block;color:#e53935}
+.concepto-valida .concepto-spinner{width:13px;height:13px;border:2px solid var(--gris-borde);border-top-color:var(--verde);border-radius:50%;animation:concepto-spin .6s linear infinite;flex-shrink:0}
+@keyframes concepto-spin{to{transform:rotate(360deg)}}
 .field-error.show{display:block}
 
 /* AUTH / PROFILE / DASHBOARD — flujo artista o técnico */
@@ -972,6 +977,20 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 .faq2-head{text-align:center;margin-bottom:36px}
 .faq2-head .section-eyebrow{margin-bottom:14px}
 .faq2 .faq:first-of-type{border-top:1px solid var(--gris-borde)}
+.contacto2{padding:90px 6%;background:var(--fondo);border-top:1px solid var(--gris-borde)}
+.contacto2-inner{max-width:680px;margin:0 auto}
+.contacto2-head{text-align:center;margin-bottom:36px}
+.contacto2-head .section-eyebrow{margin-bottom:14px}
+.contacto2-form{display:flex;flex-direction:column;gap:20px;background:#fff;border:1px solid var(--gris-borde);border-radius:12px;padding:32px}
+.contacto2-form .form-field textarea{width:100%;padding:8px 0;border:none;border-bottom:1.5px solid var(--gris-borde);background:transparent;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--azul);transition:border-color .2s;resize:vertical;min-height:96px}
+.contacto2-form .form-field textarea:focus{border-bottom-color:var(--azul)}
+.contacto2-form .form-field textarea::placeholder{color:var(--gris-borde)}
+.contacto2-form .btn-verde-full{width:100%;padding:14px;background:var(--verde);color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s}
+.contacto2-form .btn-verde-full:hover{opacity:.9}
+.contacto2-form .btn-verde-full:disabled{background:var(--gris-borde);color:var(--gris-suave);cursor:not-allowed}
+.contacto2-status{font-size:13px;font-weight:500;line-height:1.5;text-align:center;display:none}
+.contacto2-status.ok{display:block;color:var(--verde)}
+.contacto2-status.err{display:block;color:#e53935}
 .cta-final{background:#0f2d5e;padding:100px 6%;text-align:center;position:relative;overflow:hidden}
 .cta-final::before{content:'';position:absolute;top:-150px;right:-100px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(26,74,138,.5) 0%,transparent 70%);pointer-events:none}
 .cta-final-inner{position:relative;max-width:640px;margin:0 auto}
@@ -982,7 +1001,8 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
   .hero-marketing{min-height:auto;padding:80px 22px}
   .hm-btns{flex-direction:column;align-items:stretch}
   .hm-btns>button{width:100%}
-  .proceso,.porque,.faq2{padding:56px 20px}
+  .proceso,.porque,.faq2,.contacto2{padding:56px 20px}
+  .contacto2-form{padding:24px 20px}
   .cta-final{padding:64px 22px}
   .proceso-grid{grid-template-columns:1fr 1fr;gap:24px}
   .porque-grid{grid-template-columns:1fr;gap:16px}
@@ -995,9 +1015,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 <nav>
   <a href="/" class="logo" onclick="navLogoClick(event)" aria-label="One2One Pro"><svg class="brand-logo" viewBox="0 0 49 56" aria-hidden="true"><rect class="bar" x="0" y="0" width="9" height="56" rx="4.5"/><path class="curve" d="M13 0 C13 0 22 0 22 28 C22 56 31 56 31 56"/><rect class="bar" x="40" y="0" width="9" height="56" rx="4.5"/></svg><span>One2One<em>Pro</em></span></a>
   <ul class="nav-links">
-    <li><a href="#quienes">Quiénes somos</a></li>
     <li><a href="#como">Cómo funciona</a></li>
-    <li><a href="#sectores">Sectores</a></li>
     <li><a href="#" onclick="event.preventDefault();openChatPanel()">Asistente</a></li>
     <li><a href="#faq">Preguntas frecuentes</a></li>
     <li><a href="#contacto">Contacto</a></li>
@@ -1131,6 +1149,62 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
   </div>
 </section>
 
+<!-- 11. CONTACTO -->
+<section class="contacto2" id="contacto">
+  <div class="contacto2-inner">
+    <div class="contacto2-head">
+      <p class="section-eyebrow">¿Tienes alguna duda?</p>
+      <h2 class="section-title">Escríbenos. Te respondemos en menos de 24 horas.</h2>
+    </div>
+    <form class="contacto2-form" id="contacto-form" onsubmit="return enviarContacto(event)">
+      <div class="form-grid">
+        <div class="form-field"><label>Nombre *</label><input type="text" id="cf-nombre" placeholder="Nombre y apellidos" maxlength="100" required></div>
+        <div class="form-field"><label>Email *</label><input type="email" id="cf-email" placeholder="tu@email.com" maxlength="120" required></div>
+      </div>
+      <div class="form-field"><label>Asunto *</label>
+        <select id="cf-asunto" required>
+          <option value="Tengo un bolo y quiero informarme">Tengo un bolo y quiero informarme</option>
+          <option value="Soy promotor y quiero contratar">Soy promotor y quiero contratar</option>
+          <option value="Tengo una incidencia">Tengo una incidencia</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="form-field"><label>Mensaje *</label><textarea id="cf-mensaje" placeholder="Cuéntanos en qué podemos ayudarte..." maxlength="1500" required></textarea></div>
+      <button type="submit" class="btn-verde-full" id="cf-submit">Enviar mensaje</button>
+      <p class="contacto2-status" id="cf-status"></p>
+    </form>
+  </div>
+</section>
+<script>
+async function enviarContacto(ev){
+  ev.preventDefault();
+  const btn=document.getElementById('cf-submit');
+  const status=document.getElementById('cf-status');
+  const nombre=(document.getElementById('cf-nombre').value||'').trim();
+  const email=(document.getElementById('cf-email').value||'').trim().toLowerCase();
+  const asunto=document.getElementById('cf-asunto').value||'';
+  const mensaje=(document.getElementById('cf-mensaje').value||'').trim();
+  status.className='contacto2-status';status.textContent='';
+  if(!nombre||!email||!mensaje){status.className='contacto2-status err';status.textContent='Completa todos los campos antes de enviar.';return false;}
+  btn.disabled=true;const prev=btn.textContent;btn.textContent='Enviando...';
+  try{
+    await fetch('https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tipo:'contacto',nombre:nombre,email:email,asunto:asunto,mensaje:mensaje})
+    });
+    document.getElementById('contacto-form').reset();
+    status.className='contacto2-status ok';status.textContent='¡Mensaje enviado! Te responderemos en menos de 24 horas.';
+  }catch(e){
+    console.error('[contacto]',e);
+    status.className='contacto2-status err';status.textContent='No hemos podido enviar el mensaje. Inténtalo de nuevo o escríbenos a info@one2onepro.es.';
+  }finally{
+    btn.disabled=false;btn.textContent=prev;
+  }
+  return false;
+}
+</script>
+
 <footer>
   <div>
     <div class="foot-logo"><svg class="brand-logo" viewBox="0 0 49 56" aria-hidden="true"><rect class="bar" x="0" y="0" width="9" height="56" rx="4.5"/><path class="curve" d="M13 0 C13 0 22 0 22 28 C22 56 31 56 31 56"/><rect class="bar" x="40" y="0" width="9" height="56" rx="4.5"/></svg><span>One2One<em>Pro</em></span></div>
@@ -1159,6 +1233,18 @@ const ACTS=[
   {id:'presentador',label:'Presentador / Animador',sub:'Maestros de ceremonias, animadores de eventos',regimen:'artistas',atep:1.5,grupo:7},
   {id:'artista',label:'Artista de calle / Circo',sub:'Malabaristas, acróbatas, artistas urbanos',regimen:'artistas',atep:1.5,grupo:7},
   {id:'otro',label:'Otro artista o técnico',sub:'Cualquier actividad artística o técnica en espectáculos',regimen:'artistas',atep:1.5,grupo:7},
+];
+const CONCEPTOS_ACTUACION=[
+  'Actuación musical en directo',
+  'DJ set',
+  'Técnico de sonido',
+  'Técnico de iluminación',
+  'Producción audiovisual',
+  'Fotografía de eventos',
+  'Mezcla y mastering',
+  'Presentación/presentador',
+  'Actuación artística (teatro, danza, circo...)',
+  'Otro (especificar)'
 ];
 const UBICS=[
   {id:'int',label:'En un espacio interior',sub:'Local, sala, estudio, oficina',factor:1.0},
@@ -1236,6 +1322,7 @@ let st={
   fechaInicio:'',fechaFin:'',
   /* Detalles de la actuación */
   lugarCelebracion:'',descripcionEvento:'',
+  conceptoActuacion:'',conceptoOtro:'',conceptoValido:true,
   /* Cuenta artista — datos del PROMOTOR */
   pNombre:'',pCif:'',pEmail:'',
   /* Cuenta empresa — datos del ARTISTA (dirección desglosada: calle/cp/municipio/provincia) */
@@ -1252,6 +1339,7 @@ function resetExpedienteState(){
   st.step=0;st.act=null;st.ubic=null;st.imp='';st.dias='';
   st.fechaInicio='';st.fechaFin='';
   st.lugarCelebracion='';st.descripcionEvento='';
+  st.conceptoActuacion='';st.conceptoOtro='';st.conceptoValido=true;
   st.pNombre='';st.pCif='';st.pEmail='';
   st.aNombre='';st.aApellidos='';st.aDni='';st.aFechaNac='';st.aNacionalidad='';
   st.aDireccion='';st.aCalle='';st.aCp='';st.aMunicipio='';st.aProvincia='';st.aIban='';st.aNaf='';st.aTel='';st.aEmail='';
@@ -1421,9 +1509,7 @@ function renderMobileMenu(){
     html+='<button class="mobile-menu-item" type="button" onclick="closeMobileMenu();openAuthModal(\'login\')">Iniciar sesión</button>';
     html+='<button class="mobile-menu-item" type="button" onclick="closeMobileMenu();openAuthModal(\'register\')">Crear cuenta</button>';
     html+='<hr class="mobile-menu-divider">';
-    html+='<a class="mobile-menu-item" href="#quienes" onclick="closeMobileMenu()">Quiénes somos</a>';
     html+='<a class="mobile-menu-item" href="#como" onclick="closeMobileMenu()">Cómo funciona</a>';
-    html+='<a class="mobile-menu-item" href="#sectores" onclick="closeMobileMenu()">Sectores</a>';
     html+='<a class="mobile-menu-item" href="#" onclick="event.preventDefault();closeMobileMenu();openChatPanel()">Asistente</a>';
     html+='<a class="mobile-menu-item" href="#faq" onclick="closeMobileMenu()">Preguntas frecuentes</a>';
     html+='<a class="mobile-menu-item" href="#contacto" onclick="closeMobileMenu()">Contacto</a>';
@@ -2908,6 +2994,8 @@ function renderExpedienteEmpresa(user){
   if(st.step===3){
     const r=calcular();
     const aProvOpts=PROVINCIAS_ES.map(pr=>`<option value="${pr}" ${st.aProvincia===pr?'selected':''}>${pr}</option>`).join('');
+    const conceptoOpts=CONCEPTOS_ACTUACION.map(co=>`<option value="${aEscape(co)}" ${st.conceptoActuacion===co?'selected':''}>${co}</option>`).join('');
+    const esConceptoOtro=st.conceptoActuacion==='Otro (especificar)';
     c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
 ${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del profesional</p>
 <p class="sim-q">Datos del profesional que contratas</p>
@@ -2916,6 +3004,8 @@ ${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del profesional</
 <div class="form-section">
 <div class="form-section-title">Detalles de la actuación</div>
 <div class="form-grid">
+<div class="form-field full"><label>Concepto de la actuación *</label><select onchange="onConceptoChange(this.value)"><option value="">Selecciona el concepto...</option>${conceptoOpts}</select></div>
+${esConceptoOtro?`<div class="form-field full"><label>Especifica el concepto *</label><input type="text" id="concepto-otro-input" placeholder="Describe la actividad (industria musical o cultural)" maxlength="100" value="${aEscape(st.conceptoOtro)}" oninput="st.conceptoOtro=this.value;rBtn('exp-bs3',artistaDatosValidos)" onblur="validarConcepto(this.value)"><div class="concepto-valida" id="concepto-valida"></div></div>`:''}
 <div class="form-field full"><label>Lugar de la actuación *</label><input type="text" placeholder="Sala, recinto o dirección del evento" maxlength="160" value="${aEscape(st.lugarCelebracion)}" oninput="st.lugarCelebracion=this.value;rBtn('exp-bs3',artistaDatosValidos)" onchange="st.lugarCelebracion=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
 <div class="form-field full"><label>Descripción del evento (opcional)</label><input type="text" placeholder="Concierto, boda, festival, sesión..." maxlength="200" value="${aEscape(st.descripcionEvento)}" oninput="st.descripcionEvento=this.value" onchange="st.descripcionEvento=this.value"></div>
 </div>
@@ -3077,7 +3167,65 @@ function aSyncFormFromDOM(){
 }
 function aSyncEmpresaDatosFromDOM(){aSyncFormFromDOM();}
 
+/* ─── Concepto de la actuación ─── */
+function onConceptoChange(v){
+  st.conceptoActuacion=v;
+  /* Al cambiar de opción reseteamos el texto libre y el estado de validación.
+     Las opciones predefinidas son siempre válidas; solo "Otro" requiere IA. */
+  if(v!=='Otro (especificar)'){st.conceptoOtro='';}
+  st.conceptoValido=true;
+  renderSim();
+  rBtn('exp-bs3',artistaDatosValidos);
+}
+
+/* Valida con IA el concepto libre introducido en "Otro". Spinner mientras
+   valida; si tarda >3s o hay error, permitimos continuar igualmente. */
+async function validarConcepto(concepto){
+  const box=document.getElementById('concepto-valida');
+  concepto=(concepto||'').trim();
+  if(!concepto){st.conceptoValido=true;if(box){box.className='concepto-valida';box.innerHTML='';}rBtn('exp-bs3',artistaDatosValidos);return;}
+  if(box){box.className='concepto-valida loading';box.innerHTML='<span class="concepto-spinner"></span><span>Validando concepto...</span>';}
+  const prompt=`Eres un validador de conceptos para One2One Pro, empresa de gestión laboral bajo el RD 1435/1985.\n\nAnaliza si este concepto es válido para la industria musical, cultural o del entretenimiento:\n\n"${concepto}"\n\nSon VÁLIDOS: cualquier actividad relacionada con música, espectáculos, eventos, producción artística o cultural. Ejemplos: músicos, DJs, técnicos de sonido, técnicos de luces, fotógrafos de eventos, videógrafos, ingenieros de mezcla y mastering, presentadores, actores, bailarines, malabaristas, magos, animadores, decoradores de eventos, técnicos de escenografía, productores de eventos, community managers de artistas, influencers de contenido musical, podcasters, locutores, estilistas de artistas, managers, booking agents, y cualquier actividad artística, técnica o de apoyo relacionada con la industria musical y cultural.\n\nNo son VÁLIDOS: limpieza, reparto, hostelería, construcción, administración general, o cualquier actividad sin relación con la música, el entretenimiento o la cultura.\n\nResponde ÚNICAMENTE con JSON sin texto adicional: {"valido": true, "motivo": "explicación breve"}`;
+  let resultado=null;
+  try{
+    const fetchPromise=fetch(WORKER_URL+'/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:prompt,history:[]})
+    }).then(r=>r.json());
+    const timeoutPromise=new Promise(res=>setTimeout(()=>res('__timeout__'),3000));
+    const race=await Promise.race([fetchPromise,timeoutPromise]);
+    if(race!=='__timeout__'){
+      const txt=(race&&race.text)||'';
+      const m=txt.match(/\{[\s\S]*\}/);
+      if(m){try{resultado=JSON.parse(m[0]);}catch(e){resultado=null;}}
+    }
+  }catch(e){
+    console.error('[validarConcepto]',e);
+    resultado=null;
+  }
+  if(resultado&&resultado.valido===false){
+    st.conceptoValido=false;
+    if(box){box.className='concepto-valida err';box.textContent='Este concepto no corresponde a una actividad de la industria musical o cultural. Por favor introduce una actividad relacionada.';}
+  }else{
+    /* valido:true, timeout o error → permitir continuar */
+    st.conceptoValido=true;
+    if(box){box.className='concepto-valida';box.innerHTML='';}
+  }
+  rBtn('exp-bs3',artistaDatosValidos);
+}
+
+function conceptoActuacionValido(){
+  if(!st.conceptoActuacion)return false;
+  if(st.conceptoActuacion==='Otro (especificar)'){
+    if(!st.conceptoOtro||st.conceptoOtro.trim().length<2)return false;
+    if(st.conceptoValido===false)return false;
+  }
+  return true;
+}
+
 function artistaDatosValidos(){
+  if(!conceptoActuacionValido())return false;
   if(!st.aNombre||st.aNombre.trim().length<2)return false;
   if(!st.aApellidos||st.aApellidos.trim().length<2)return false;
   if(!aValidDniNie(st.aDni))return false;
@@ -3174,6 +3322,7 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
     fecha_fin:st.fechaFin,
     lugar_celebracion:st.lugarCelebracion,
     descripcion_evento:st.descripcionEvento,
+    concepto_actuacion:st.conceptoActuacion==='Otro (especificar)'?(st.conceptoOtro||'').trim():st.conceptoActuacion,
     cache_acordado:parseFloat(st.imp),
     seguridad_social:r.ss,
     comision_one2one:r.com,
