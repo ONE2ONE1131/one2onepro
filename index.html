@@ -3508,6 +3508,23 @@ function renderSim(){
 
 /* ─── Init ─── */
 (function(){
+  /* Pago confirmado: si la pasarela redirige a ...?pago=ok mostramos al
+     promotor una pantalla de confirmación a pantalla completa y NO
+     renderizamos el resto de la web. */
+  if(new URLSearchParams(window.location.search).get('pago')==='ok'){
+    document.body.innerHTML=`
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fff;padding:48px 24px;box-sizing:border-box">
+  <div style="max-width:520px;width:100%;text-align:center">
+    <div style="font-size:88px;line-height:1;margin-bottom:28px">✅</div>
+    <h1 style="font-family:'Playfair Display',serif;font-size:34px;font-weight:700;color:#0f2d5e;letter-spacing:-.5px;line-height:1.2;margin:0 0 18px">¡Pago recibido correctamente!</h1>
+    <p style="font-family:'DM Sans',sans-serif;font-size:17px;font-weight:400;color:#4a6080;line-height:1.6;margin:0 0 28px">Hemos notificado al profesional para que firme la documentación necesaria. En cuanto esté todo tramitado te avisaremos.</p>
+    <p style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:300;color:#8899aa;line-height:1.6;margin:0 0 32px">¿Tienes alguna duda? Escríbenos a <a href="mailto:info@one2onepro.es" style="color:#8899aa">info@one2onepro.es</a></p>
+    <button onclick="window.location.href='/'" style="background:#00a86b;color:#fff;border:none;border-radius:8px;padding:15px 34px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Volver al inicio</button>
+  </div>
+</div>`;
+    return;
+  }
+
   const u=aGetCurrentUser();
   if(u)perfil=u.accountType;
   updateChromeUI();
