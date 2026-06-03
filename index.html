@@ -893,6 +893,15 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 /* Dos notas bajo el resultado */
 .sl-note-gray{font-size:11px;color:var(--gris-suave);font-weight:300;line-height:1.6;margin-top:16px}
 .sl-note-green{font-size:11px;color:var(--verde);font-weight:400;line-height:1.6;margin-top:10px}
+/* Nota informativa cuota de afiliación SS (amarillo/naranja) */
+.sl-note-amber{display:flex;align-items:flex-start;gap:8px;font-size:11.5px;color:#92400e;font-weight:400;line-height:1.55;margin-top:14px;background:#fff8e6;border:1px solid #f7d27a;border-left:3px solid #f59e0b;border-radius:8px;padding:12px 14px}
+.sl-note-amber .sl-note-amber-ico{flex-shrink:0;font-size:13px;line-height:1.3}
+/* Aviso cuota de afiliación SS en el perfil del artista */
+.perfil-afiliacion-aviso{display:none;align-items:flex-start;gap:8px;font-size:12px;color:#92400e;font-weight:400;line-height:1.55;margin-top:10px;background:#fff8e6;border:1px solid #f7d27a;border-left:3px solid #f59e0b;border-radius:8px;padding:12px 14px}
+.perfil-afiliacion-aviso.show{display:flex}
+.perfil-afiliacion-aviso .pa-ico{flex-shrink:0;font-size:14px;line-height:1.25}
+.perfil-check{display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--gris-texto);font-weight:400;line-height:1.45;padding:4px 0}
+.perfil-check input[type=checkbox]{width:17px;height:17px;margin:1px 0 0 0;flex-shrink:0;cursor:pointer;accent-color:var(--azul)}
 /* CTA impactante tras el cálculo */
 .sl-cta{margin-top:28px;background:#0f2d5e;border-radius:14px;padding:40px 32px;text-align:center;position:relative;overflow:hidden}
 .sl-cta::before{content:'';position:absolute;top:-120px;right:-120px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(26,74,138,.45) 0%,transparent 70%);pointer-events:none}
@@ -1636,6 +1645,7 @@ function simLibreCalc(){
       </div>
       <p class="sl-note-gray">Cálculo orientativo basado en los tipos de cotización vigentes del Régimen Especial de Artistas 2026 (Orden PJC/297/2026). La base de cotización real y la retención de IRPF se determinan en el momento de tramitar el alta según tu situación fiscal y los tramos establecidos por la TGSS.</p>
       <p class="sl-note-green">Nuestra comisión es solo el 10% sobre el caché acordado. Y no la cobramos solo por la gestión: actuamos como tu manager y tu respaldo, damos la cara por ti ante el promotor y te acompañamos en todo momento — antes, durante y después de cada trabajo.</p>
+      <p class="sl-note-amber"><span class="sl-note-amber-ico">⚠️</span><span>Si es tu primera vez cotizando en España, la Seguridad Social aplica una cuota de afiliación de 30€. Este coste no es de One2One Pro — es un pago directo a la Seguridad Social que se descontará de tu primera liquidación.</span></p>
     </div>
     <div class="sl-cta">
       <h3 class="sl-cta-title">¿Listo para hacerlo de verdad?</h3>
@@ -1690,7 +1700,8 @@ function resumenArtista(r){
       <div class="rti-row"><span class="rti-l">Comisión One2One (10%)</span><span class="rti-v">-${fmt(r.com)}</span></div>
       <div class="rti-row"><span class="rti-l" style="font-weight:600">Recibirás aprox.</span><span class="rti-v verde" style="font-size:16px">${fmt(r.neto)}</span></div>
     </div>
-    <div class="res-trab-aviso">El IRPF depende de tu situación fiscal. Este cálculo es orientativo — recibirás el importe exacto una vez estudiemos qué retención te corresponde.</div>`;
+    <div class="res-trab-aviso">El IRPF depende de tu situación fiscal. Este cálculo es orientativo — recibirás el importe exacto una vez estudiemos qué retención te corresponde.</div>
+    <p class="sl-note-amber"><span class="sl-note-amber-ico">⚠️</span><span>Si es tu primera vez cotizando en España, la Seguridad Social aplica una cuota de afiliación de 30€. Este coste no es de One2One Pro — es un pago directo a la Seguridad Social que se descontará de tu primera liquidación.</span></p>`;
 }
 
 function resumenEmpresa(r){
@@ -2220,10 +2231,29 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 <div class="form-field full"><label>IBAN *</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" maxlength="29" value="${aEscape(p.iban||'')}" oninput="artistAuth.form.iban=aFormatIban(this.value);this.value=artistAuth.form.iban" onblur="aShowFieldError(this,aValidIbanES(this.value)?null:'IBAN español inválido (ES + 22 dígitos)')"><div class="field-error"></div></div>
 <div class="form-field"><label>Nº Afiliación SS / NAF (opcional)</label><input type="text" placeholder="12 dígitos" maxlength="12" value="${aEscape(p.naf||'')}" oninput="artistAuth.form.naf=this.value.replace(/\D/g,'').substring(0,12);this.value=artistAuth.form.naf"></div>
 <div class="form-field"><label>Profesión artística *</label><input type="text" placeholder="DJ, músico, actor, técnico de sonido..." maxlength="80" value="${aEscape(p.profesion||'')}" oninput="artistAuth.form.profesion=this.value"></div>
+<div class="form-field full">
+<label class="perfil-check"><input type="checkbox" id="art-primera-afiliacion" ${p.primeraAfiliacion?'checked':''} onchange="aTogglePrimeraAfiliacion(this)"><span>Es mi primera vez cotizando en la Seguridad Social en España</span></label>
+<div class="perfil-afiliacion-aviso ${p.primeraAfiliacion?'show':''}" id="art-afiliacion-aviso"><span class="pa-ico">⚠️</span><span>La Seguridad Social aplica una cuota de afiliación de 30€ en tu primer alta. Este importe no lo cobra One2One Pro — es un coste directo de la SS que se descontará de tu primera liquidación.</span></div>
+</div>
 </div>
 </div>
 <button class="btn-verde-full" onclick="submitArtProfile()">Enviar perfil a revisión</button>`;
   artistAuth.error='';
+}
+
+/* Casilla "primera vez cotizando en la SS": guarda el valor en el estado
+   (aSyncFormFromDOM solo capta `=this.value`, no checkboxes) y muestra/oculta
+   el aviso de la cuota de afiliación de 30€. */
+function aTogglePrimeraAfiliacion(cb){
+  artistAuth.form.primeraAfiliacion=!!cb.checked;
+  const aviso=document.getElementById('art-afiliacion-aviso');
+  if(aviso)aviso.classList.toggle('show',cb.checked);
+}
+/* Misma casilla en el editor de perfil (estado editForm). */
+function aTogglePrimeraAfiliacionEdit(cb){
+  artistAuth.editForm.primeraAfiliacion=!!cb.checked;
+  const aviso=document.getElementById('edit-afiliacion-aviso');
+  if(aviso)aviso.classList.toggle('show',cb.checked);
 }
 
 function profileArtValido(){
@@ -2314,6 +2344,7 @@ ${(val.discrepancias&&val.discrepancias.length)?'<ul style="text-align:left;marg
       iban:p.iban||'',
       naf:p.naf||'',
       profesionArtistica:p.profesion||'',
+      primera_afiliacion:!!p.primeraAfiliacion,
       dniAnversoURL:dniAnversoURL,
       dniReversoURL:dniReversoURL,
       validacionIA:val||null,
@@ -2326,6 +2357,7 @@ ${(val.discrepancias&&val.discrepancias.length)?'<ul style="text-align:left;marg
        perfil queda directamente en estado 'validado' — no hay revisión
        manual posterior. */
     const profileToStore=Object.assign({},p);
+    profileToStore.primera_afiliacion=!!p.primeraAfiliacion;
     if(profileToStore.dniAnverso)profileToStore.dniAnverso={name:profileToStore.dniAnverso.name,size:profileToStore.dniAnverso.size,type:profileToStore.dniAnverso.type,url:dniAnversoURL};
     if(profileToStore.dniReverso)profileToStore.dniReverso={name:profileToStore.dniReverso.name,size:profileToStore.dniReverso.size,type:profileToStore.dniReverso.type,url:dniReversoURL};
     aUpdateUser(user.email,{profile:profileToStore,profileStatus:'validado',profileSubmittedAt:new Date().toISOString(),profileValidatedAt:new Date().toISOString()});
@@ -2564,6 +2596,10 @@ ${dniThumb('dniReverso','DNI / NIE reverso')}
 <div class="form-field full"><label>IBAN *</label><input type="text" maxlength="29" value="${aEscape(ef.iban||'')}" oninput="artistAuth.editForm.iban=aFormatIban(this.value);this.value=artistAuth.editForm.iban" onblur="aShowFieldError(this,aValidIbanES(this.value)?null:'IBAN español inválido')"><div class="field-error"></div></div>
 <div class="form-field"><label>Nº Afiliación SS / NAF</label><input type="text" maxlength="12" value="${aEscape(ef.naf||'')}" oninput="artistAuth.editForm.naf=this.value.replace(/\\D/g,'').substring(0,12);this.value=artistAuth.editForm.naf"></div>
 <div class="form-field"><label>Profesión artística *</label><input type="text" maxlength="80" value="${aEscape(ef.profesion||'')}" oninput="artistAuth.editForm.profesion=this.value"></div>
+<div class="form-field full">
+<label class="perfil-check"><input type="checkbox" id="edit-primera-afiliacion" ${ef.primeraAfiliacion?'checked':''} onchange="aTogglePrimeraAfiliacionEdit(this)"><span>Es mi primera vez cotizando en la Seguridad Social en España</span></label>
+<div class="perfil-afiliacion-aviso ${ef.primeraAfiliacion?'show':''}" id="edit-afiliacion-aviso"><span class="pa-ico">⚠️</span><span>La Seguridad Social aplica una cuota de afiliación de 30€ en tu primer alta. Este importe no lo cobra One2One Pro — es un coste directo de la SS que se descontará de tu primera liquidación.</span></div>
+</div>
 </div>
 </div>
 <button class="btn-verde-full" onclick="saveProfileEdits()" ${ef._uploading||ef._dniAnversoUploading||ef._dniReversoUploading?'disabled':''}>Guardar cambios</button>
@@ -2712,6 +2748,7 @@ async function saveProfileEdits(){
       if(k.startsWith('_')||k==='avatarPreview'||k==='avatarUrl')return;
       cleanProfile[k]=ef[k];
     });
+    cleanProfile.primera_afiliacion=!!ef.primeraAfiliacion;
     aUpdateUser(u.email,{
       avatarUrl:ef.avatarUrl||u.avatarUrl||'',
       profile:cleanProfile,
