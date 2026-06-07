@@ -57,6 +57,9 @@ export default {
       if (request.method === 'POST' && url.pathname === '/validate-dni') {
         return await handleValidateDni(request, env, corsBase);
       }
+      if (request.method === 'POST' && url.pathname === '/expedientes') {
+        return await handleExpedientes(request, env, corsBase);
+      }
       if (request.method === 'GET' && url.pathname === '/') {
         return jsonResponse({ ok: true, service: 'one2one-worker' }, 200, corsBase);
       }
@@ -224,6 +227,30 @@ async function handleValidateDni(request, env, cors) {
     try { parsed = JSON.parse(jsonMatch[0]); } catch (e) {}
   }
   return jsonResponse({ result: parsed, raw: text, usage: data.usage || null }, 200, cors);
+}
+
+/* ─── /expedientes ─────────────────────────────────────────────────────── */
+
+async function handleExpedientes(request, env, cors) {
+  const body = await request.json().catch(() => ({}));
+  const { email, tipo } = body || {};
+  if (!email) return jsonResponse({ error: 'Missing email' }, 400, cors);
+
+  const campo = tipo === 'empresa' ? 'empresa_email' : 'trabajador_email';
+  const formula = encodeURIComponent(`{${campo}}="${email}"`);
+  const url = `https://api.airtable.com/v0/app0vdAQfCNFz721B/tblN88xyEJuot1ZAu?filterByFormula=${formula}&fields[]=N%C2%BA%20Expediente&fields[]=Estado&fields[]=actividad&fields[]=fecha_inicio&fields[]=fecha_fin&fields[]=cache_acordado&fields[]=empresa_razon_social&fields[]=trabajador_nombre&fields[]=dias`;
+
+  const resp = await fetch(url, {
+    headers: {
+      'Authorization': 'Bearer ' + env.AIRTABLE_TOKEN,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const data = await resp.json();
+  if (!resp.ok) return jsonResponse({ error: 'Airtable error', detail: data }, 502, cors);
+
+  return jsonResponse({ expedientes: data.records || [] }, 200, cors);
 }
 
 

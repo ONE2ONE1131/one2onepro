@@ -597,6 +597,20 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 @keyframes concepto-spin{to{transform:rotate(360deg)}}
 .field-error.show{display:block}
 
+/* Mis expedientes (dashboard) */
+.exp-loading{display:flex;align-items:center;gap:10px;color:var(--gris-suave);font-size:13px;font-weight:300;padding:8px 0}
+.exp-spinner{width:16px;height:16px;border:2px solid var(--gris-borde);border-top-color:var(--verde);border-radius:50%;animation:concepto-spin .6s linear infinite;flex-shrink:0}
+.exp-empty{color:var(--gris-suave);font-size:13px;font-weight:300;padding:6px 0;line-height:1.5}
+.exp-card{border:1px solid var(--gris-borde);border-radius:10px;padding:14px 16px;margin-bottom:12px;background:#fff}
+.exp-card:last-child{margin-bottom:0}
+.exp-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.exp-num{font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--gris-suave)}
+.exp-estado{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:4px 9px;border-radius:99px;white-space:nowrap}
+.exp-actividad{font-size:15px;font-weight:500;color:var(--azul);margin-bottom:10px;line-height:1.3}
+.exp-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:4px 0;border-top:1px solid var(--fondo)}
+.exp-lbl{color:var(--gris-suave);font-weight:300;flex-shrink:0}
+.exp-val{color:var(--gris-texto);font-weight:500;text-align:right}
+
 /* AUTH / PROFILE / DASHBOARD — flujo artista o técnico */
 .auth-hero{margin-bottom:24px}
 .auth-eyebrow{font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--verde);margin-bottom:10px}
@@ -1148,7 +1162,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
     <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Cuánto cuesta el servicio? <span class="faq-arr">↓</span></div><div class="faq-a">Nuestra comisión es el 10% sobre el caché acordado. Sin cuotas mensuales, sin permanencia. Solo pagas cuando tramitas.</div></div>
     <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Puedo usar el servicio si estoy cobrando el paro? <span class="faq-arr">↓</span></div><div class="faq-a">Sí, pero debes comunicarlo al SEPE antes de empezar a trabajar. El SEPE suspende la prestación los días exactos que trabajas y la reanuda automáticamente. Si no lo comunicas previamente, el SEPE puede reclamarte las prestaciones cobradas.</div></div>
     <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Para quién es One2One Pro? <span class="faq-arr">↓</span></div><div class="faq-a">Para músicos, DJs, técnicos de sonido, técnicos de luces, actores, bailarines, presentadores y cualquier profesional del sector del espectáculo que realice trabajos puntuales.</div></div>
-    <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Cómo funciona el pago? <span class="faq-arr">↓</span></div><div class="faq-a">El artista genera un enlace de pago y se lo envía al promotor. El promotor paga de forma segura online. One2One Pro tramita el alta en cuanto confirma el pago. Sin riesgo para ninguna de las dos partes.</div></div>
+    <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Cómo funciona el pago? <span class="faq-arr">↓</span></div><div class="faq-a">El profesional genera un enlace de pago y se lo envía al promotor. El promotor paga de forma segura online. One2One Pro tramita el alta en cuanto confirma el pago. Sin riesgo para ninguna de las dos partes.</div></div>
   </div>
 </section>
 
@@ -1245,7 +1259,7 @@ const ACTS=[
   {id:'escena',label:'Actor / Bailarín / Performer',sub:'Teatro, danza, circo, espectáculos en vivo',regimen:'artistas',atep:1.5,grupo:7},
   {id:'presentador',label:'Presentador / Animador',sub:'Maestros de ceremonias, animadores de eventos',regimen:'artistas',atep:1.5,grupo:7},
   {id:'artista',label:'Artista de calle / Circo',sub:'Malabaristas, acróbatas, artistas urbanos',regimen:'artistas',atep:1.5,grupo:7},
-  {id:'otro',label:'Otro artista o técnico',sub:'Cualquier actividad artística o técnica en espectáculos',regimen:'artistas',atep:1.5,grupo:7},
+  {id:'otro',label:'Otro profesional o técnico',sub:'Cualquier actividad artística o técnica en espectáculos',regimen:'artistas',atep:1.5,grupo:7},
 ];
 const CONCEPTOS_ACTUACION=[
   'Actuación musical en directo',
@@ -2004,7 +2018,7 @@ ${err}
   const isArt=perfil==='artista';
   const selector=`<div class="auth-perfil-sel">
 <button type="button" class="auth-perfil-btn ${perfil==='artista'?'active':''}" onclick="setPerfil('artista')">
-<strong>Soy artista o técnico</strong>
+<strong>Soy profesional o técnico</strong>
 <span>Músico, DJ, técnico de sonido, bailarín, actor...</span>
 </button>
 <button type="button" class="auth-perfil-btn ${perfil==='empresa'?'active':''}" onclick="setPerfil('empresa')">
@@ -2017,7 +2031,7 @@ ${err}
 <div class="form-field full"><label>Email</label><input type="email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
 <div class="form-field full"><label>Contraseña</label><input type="password" id="art-reg-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value)" onkeydown="if(event.key==='Enter')doRegister()"><span id="art-pass-strength" class="password-strength"></span></div>
 </div>
-<button class="btn-verde-full" onclick="doRegister()">Crear cuenta ${isArt?'como profesional':'de empresa'}</button>`:`<p class="auth-hint">Elige arriba si eres <strong>artista/técnico</strong> o <strong>promotor/empresa</strong> para continuar.</p>`;
+<button class="btn-verde-full" onclick="doRegister()">Crear cuenta ${isArt?'como profesional':'de empresa'}</button>`:`<p class="auth-hint">Elige arriba si eres <strong>profesional/técnico</strong> o <strong>promotor/empresa</strong> para continuar.</p>`;
   c.innerHTML=`${logoBlock}<h2 class="auth-modal-title" id="auth-modal-title">Crea tu <em>cuenta</em></h2>
 ${tabs}
 ${err}
@@ -2397,6 +2411,81 @@ function renderDashboardHeader(user){
 </div>`;
 }
 
+/* ─── MIS EXPEDIENTES ──────────────────────────────────────────────────
+   Sección común a ambos dashboards. Al renderizar el dashboard se inserta
+   aExpedientesSection() (tarjeta con spinner) y se dispara aLoadExpedientes(),
+   que consulta el Worker (/expedientes) y pinta las tarjetas. El profesional
+   ve al promotor; la empresa ve al profesional contratado.
+   ──────────────────────────────────────────────────────────────────── */
+function aExpedientesSection(){
+  return `<div class="dashboard-card">
+<div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:14px">Mis expedientes</div>
+<div id="mis-expedientes-list"><div class="exp-loading"><div class="exp-spinner"></div><span>Cargando expedientes…</span></div></div>
+</div>`;
+}
+
+function aExpEstadoColor(estado){
+  const e=String(estado||'').toLowerCase();
+  if(e.indexOf('pago')>=0)return '#e8830c';            /* naranja · Pago confirmado */
+  if(e.indexOf('pendiente')>=0)return 'var(--azul)';   /* azul · Pendiente firma */
+  if(e.indexOf('firmado')>=0)return 'var(--verde)';    /* verde · Firmado */
+  if(e.indexOf('alta')>=0)return 'var(--gris-suave)';  /* gris · Alta tramitada */
+  return 'var(--gris-suave)';
+}
+
+function aExpFechas(f){
+  const ini=f.fecha_inicio||'',fin=f.fecha_fin||'';
+  if(ini&&fin&&ini!==fin)return aEscape(ini)+' → '+aEscape(fin);
+  return aEscape(ini||fin||'—');
+}
+
+function aExpCache(v){
+  if(v===undefined||v===null||v==='')return '—';
+  const n=Number(v);
+  if(isNaN(n))return aEscape(String(v));
+  return n.toLocaleString('es-ES')+' €';
+}
+
+function aExpedienteCard(rec,tipo){
+  const f=(rec&&rec.fields)||{};
+  const estado=f.Estado||'—';
+  const color=aExpEstadoColor(estado);
+  const esEmpresa=tipo==='empresa';
+  const contraLbl=esEmpresa?'Profesional contratado':'Promotor';
+  const contraVal=esEmpresa?(f.trabajador_nombre||'—'):(f.empresa_razon_social||'—');
+  const num=f['Nº Expediente']||rec.id||'—';
+  return `<div class="exp-card">
+<div class="exp-card-top">
+<span class="exp-num">#${aEscape(num)}</span>
+<span class="exp-estado" style="background:${color}">${aEscape(estado)}</span>
+</div>
+<div class="exp-actividad">${aEscape(f.actividad||'Sin actividad')}</div>
+<div class="exp-row"><span class="exp-lbl">Fechas</span><span class="exp-val">${aExpFechas(f)}</span></div>
+<div class="exp-row"><span class="exp-lbl">Caché</span><span class="exp-val">${aExpCache(f.cache_acordado)}</span></div>
+<div class="exp-row"><span class="exp-lbl">${contraLbl}</span><span class="exp-val">${aEscape(contraVal)}</span></div>
+</div>`;
+}
+
+async function aLoadExpedientes(user){
+  if(!user||!user.email)return;
+  const set=html=>{const box=document.getElementById('mis-expedientes-list');if(box)box.innerHTML=html;};
+  try{
+    const r=await fetch(WORKER_URL+'/expedientes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:user.email,tipo:user.accountType})
+    });
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok){set('<div class="exp-empty">No se pudieron cargar tus expedientes. Inténtalo de nuevo más tarde.</div>');return;}
+    const recs=data.expedientes||[];
+    if(!recs.length){set('<div class="exp-empty">Aún no tienes expedientes todavía.</div>');return;}
+    const tipo=user.accountType==='empresa'?'empresa':'profesional';
+    set(recs.map(rec=>aExpedienteCard(rec,tipo)).join(''));
+  }catch(e){
+    set('<div class="exp-empty">No se pudieron cargar tus expedientes. Inténtalo de nuevo más tarde.</div>');
+  }
+}
+
 function renderArtDashboard(user){
   const c=document.getElementById('sim-c');
   const p=user.profile||{};
@@ -2411,7 +2500,9 @@ function renderArtDashboard(user){
 <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:10px">Crea un nuevo expediente</div>
 <p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Define el caché de un trabajo puntual y genera el enlace de pago para enviárselo al promotor.</p>
 <button class="btn-verde-full" style="margin-top:0" onclick="iniciarExpediente()">+ Nuevo expediente</button>
-</div>`;
+</div>
+${aExpedientesSection()}`;
+  aLoadExpedientes(user);
 }
 
 function renderEmpresaDashboard(user){
@@ -2426,7 +2517,9 @@ function renderEmpresaDashboard(user){
 <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:10px">Crea un nuevo expediente</div>
 <p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Contrata a un profesional para un trabajo puntual. Introducirás los datos fiscales de tu empresa (razón social, CIF, dirección fiscal, email de facturación) al crear el expediente.</p>
 <button class="btn-verde-full" style="margin-top:0" onclick="iniciarExpediente()">+ Nuevo expediente</button>
-</div>`;
+</div>
+${aExpedientesSection()}`;
+  aLoadExpedientes(user);
 }
 
 /* ─── EDITOR DE PERFIL ─────────────────────────────────────────────────
@@ -2920,7 +3013,7 @@ function continueFromCache(){
 
 function continueEmpresaPaso3(){
   aSyncFormFromDOM();
-  if(!artistaDatosValidos()){alert('Revisa los datos del artista antes de continuar.');return;}
+  if(!artistaDatosValidos()){alert('Revisa los datos del profesional antes de continuar.');return;}
   next();
 }
 
@@ -2956,7 +3049,7 @@ ${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del promotor</p>
   } else if(st.step===4){
     const res=artistAuth.expedienteResult||{};
     const r=calcular();
-    const msg=`Hola ${st.pNombre}, te paso el presupuesto para tramitar mi alta como artista a través de One2One Pro.
+    const msg=`Hola ${st.pNombre}, te paso el presupuesto para tramitar mi alta como profesional a través de One2One Pro.
 
 Actividad: ${st.act.label}
 Caché acordado: ${fmt(r.cache)}
@@ -3023,11 +3116,11 @@ function renderExpedienteEmpresa(user){
   const STEPS=5;
   const labels={
     paso1Meta:'Tipo de actividad',
-    paso1Q:'¿Qué tipo de trabajo va a realizar el artista?',
+    paso1Q:'¿Qué tipo de trabajo va a realizar el profesional?',
     paso1Hint:'Selecciona la opción que mejor describe la actividad.',
-    paso3Q:'¿Cuál es el caché acordado con el artista?',
+    paso3Q:'¿Cuál es el caché acordado con el profesional?',
     paso3Hint:'Verás el importe total que pagas (IVA incluido).',
-    paso3Btn:'Continuar a datos del artista →'
+    paso3Btn:'Continuar a datos del profesional →'
   };
   renderExpedienteCommon(user,STEPS,labels);
   if(st.step<3)return;
@@ -3128,7 +3221,7 @@ ${autofilledFromProfile?'<div class="autofill-hint">💡 Hemos cargado los datos
 <div class="contrato-box">
 <strong>CONDICIONES DEL SERVICIO — ONE2ONE PRO</strong><br><br>
 ONE2ONE SOLUTIONS S.L. (CIF B19428846) presta un servicio de gestión del alta en la Seguridad Social y emisión de factura, exclusivamente para trabajos puntuales, esporádicos y no recurrentes.<br><br>
-El Cliente declara expresamente que el trabajo tiene naturaleza puntual y no continuada, que no existe relación laboral estable entre el Cliente y el artista, y asume plena responsabilidad por la veracidad de los datos facilitados.<br><br>
+El Cliente declara expresamente que el trabajo tiene naturaleza puntual y no continuada, que no existe relación laboral estable entre el Cliente y el profesional, y asume plena responsabilidad por la veracidad de los datos facilitados.<br><br>
 One2One Pro tramita el alta y emite la factura. El pago es condición previa imprescindible. Para cualquier controversia, las partes se someten a los Juzgados y Tribunales de Cádiz.
 </div>
 <label class="contrato-check">
@@ -3818,7 +3911,7 @@ function renderSim(){
 <h3>2. Datos que tratamos</h3>
 <p>Según tu relación con nosotros, podemos tratar las siguientes categorías de datos:</p>
 <ul>
-<li><strong>Profesional (artista o técnico):</strong> nombre y apellidos, DNI/NIE e imagen del documento, fecha de nacimiento, nacionalidad, domicilio, teléfono, email, número de afiliación a la Seguridad Social (NAF) e IBAN para la liquidación.</li>
+<li><strong>Profesional o técnico:</strong> nombre y apellidos, DNI/NIE e imagen del documento, fecha de nacimiento, nacionalidad, domicilio, teléfono, email, número de afiliación a la Seguridad Social (NAF) e IBAN para la liquidación.</li>
 <li><strong>Promotor o empresa:</strong> nombre de contacto, razón social, CIF, domicilio fiscal, teléfono y email de facturación.</li>
 <li><strong>Datos de cada expediente:</strong> caché acordado, fechas y tipo de actuación.</li>
 <li><strong>Datos de navegación:</strong> los descritos en la <a href="#" onclick="event.preventDefault();openLegal('cookies')">Política de cookies</a>.</li>
