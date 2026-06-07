@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://one2onepro.es/sitemap.xml
