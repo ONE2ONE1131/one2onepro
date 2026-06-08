@@ -2475,6 +2475,7 @@ async function aLoadExpedientes(user){
   if(!user||!user.email)return;
   const set=html=>{const box=document.getElementById('mis-expedientes-list');if(box)box.innerHTML=html;};
   try{
+    console.log('expedientes request:', {email: user.email, tipo: user.accountType});
     const r=await fetch(WORKER_URL+'/expedientes',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
