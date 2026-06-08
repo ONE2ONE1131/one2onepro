@@ -605,7 +605,6 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 .exp-card:last-child{margin-bottom:0}
 .exp-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
 .exp-num{font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--gris-suave)}
-.exp-estado{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:4px 9px;border-radius:99px;white-space:nowrap}
 .exp-actividad{font-size:15px;font-weight:500;color:var(--azul);margin-bottom:10px;line-height:1.3}
 .exp-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:4px 0;border-top:1px solid var(--fondo)}
 .exp-lbl{color:var(--gris-suave);font-weight:300;flex-shrink:0}
@@ -2423,12 +2422,16 @@ function renderDashboardHeader(user){
    promotor; la empresa ve al profesional contratado.
    ──────────────────────────────────────────────────────────────────── */
 function aExpEstadoColor(estado){
-  const e=String(estado||'').toLowerCase();
-  if(e.indexOf('pago')>=0)return '#e8830c';            /* naranja · Pago confirmado */
-  if(e.indexOf('pendiente')>=0)return 'var(--azul)';   /* azul · Pendiente firma */
-  if(e.indexOf('firmado')>=0)return 'var(--verde)';    /* verde · Firmado */
-  if(e.indexOf('alta')>=0)return 'var(--gris-suave)';  /* gris · Alta tramitada */
-  return 'var(--gris-suave)';
+  const estados={
+    'Enlace enviado':     { bg:'#EFF6FF', color:'#1D4ED8', label:'Enlace de pago enviado' },
+    'Pago confirmado':    { bg:'#ECFDF5', color:'#065F46', label:'Pago confirmado' },
+    'Contrato enviado':   { bg:'#EEF2FF', color:'#3730A3', label:'Contrato enviado al profesional' },
+    'Pendiente de firma': { bg:'#FFF7ED', color:'#C2410C', label:'Pendiente de firma' },
+    'Firmado':            { bg:'#F0FDF4', color:'#00A86B', label:'Firmado' },
+    'Alta tramitada':     { bg:'#F0FDF4', color:'#0F2D5E', label:'Alta tramitada' },
+    'Baja tramitada':     { bg:'#F9FAFB', color:'#6B7280', label:'Baja tramitada' },
+  };
+  return estados[estado] || { bg:'#F9FAFB', color:'#6B7280', label:estado || 'Sin estado' };
 }
 
 function aExpFechas(f){
@@ -2446,8 +2449,8 @@ function aExpCache(v){
 
 function aExpedienteCard(rec,tipo){
   const f=(rec&&rec.fields)||{};
-  const estado=f.Estado||'—';
-  const color=aExpEstadoColor(estado);
+  const estado=f.Estado||'';
+  const e=aExpEstadoColor(estado);
   const esEmpresa=tipo==='empresa';
   const contraLbl=esEmpresa?'Profesional contratado':'Promotor';
   const contraVal=esEmpresa?(f['Trabajador Nombre']||'—'):(f['Empresa Razón Social']||'—');
@@ -2455,7 +2458,7 @@ function aExpedienteCard(rec,tipo){
   return `<div class="exp-card">
 <div class="exp-card-top">
 <span class="exp-num">#${aEscape(num)}</span>
-<span class="exp-estado" style="background:${color}">${aEscape(estado)}</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:${e.bg};color:${e.color}"><span style="width:7px;height:7px;border-radius:50%;background:${e.color};flex-shrink:0"></span>${aEscape(e.label)}</span>
 </div>
 <div class="exp-actividad">${aEscape(f['Actividad']||'Sin actividad')}</div>
 <div class="exp-row"><span class="exp-lbl">Fechas</span><span class="exp-val">${aExpFechas(f)}</span></div>
