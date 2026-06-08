@@ -284,6 +284,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;ali
 .form-field input,.form-field select{width:100%;padding:8px 0;border:none;border-bottom:1.5px solid var(--gris-borde);background:transparent;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--azul);transition:border-color .2s;appearance:none}
 .form-field input:focus,.form-field select:focus{border-bottom-color:var(--azul)}
 .form-field input::placeholder{color:var(--gris-borde)}
+/* Campos no editables (autorrellenados desde el perfil) */
+.field-readonly{display:flex;align-items:center;min-height:38px;width:100%;padding:8px 10px;background:var(--fondo);border:1px solid var(--gris-borde);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--gris-texto);word-break:break-word}
+.readonly-lock{display:flex;align-items:center;gap:8px;background:rgba(15,45,94,.05);border:1px solid var(--gris-borde);border-left:3px solid var(--gris-suave);color:var(--gris-texto);font-size:12.5px;font-weight:400;line-height:1.5;padding:10px 14px;border-radius:6px;margin:0 0 14px}
+.readonly-lock svg{flex-shrink:0;stroke:var(--gris-suave)}
 
 .contrato-box{background:var(--fondo);border:1px solid var(--gris-borde);padding:14px;margin-bottom:12px;max-height:120px;overflow-y:auto;font-size:11px;color:var(--gris-texto);line-height:1.7;font-weight:300}
 .contrato-check{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;cursor:pointer}
@@ -3200,6 +3204,10 @@ ${esConceptoOtro?`<div class="form-field full"><label>Especifica el concepto *</
     if(!st.eTipoVia)st.eTipoVia='Calle';
     if(!st.ePais)st.ePais='España';
     const autofilledFromProfile=!!(user.companyProfile && user.companyProfile.razon);
+    const roDir=[st.eTipoVia,st.eCalle,st.eNumero,st.ePiso].filter(Boolean).join(' ')
+      +([st.eCp,st.eMunicipio].filter(Boolean).length?', '+[st.eCp,st.eMunicipio].filter(Boolean).join(' '):'')
+      +(st.eProvincia?', '+st.eProvincia:'')
+      +(st.ePais&&st.ePais!=='España'?' ('+st.ePais+')':'');
     const r=calcular();
     const provOpts=PROVINCIAS_ES.map(pr=>`<option value="${pr}" ${st.eProvincia===pr?'selected':''}>${pr}</option>`).join('');
     const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${st.eTipoVia===v?'selected':''}>${v}</option>`).join('');
@@ -3208,8 +3216,31 @@ ${esConceptoOtro?`<div class="form-field full"><label>Especifica el concepto *</
 ${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Datos de tu empresa, confirmación y pago</p>
 <p class="sim-q">Datos fiscales y confirmación</p>
 <p class="sim-hint">Necesitamos los datos fiscales de tu empresa para emitir la factura legal del servicio.</p>
-${autofilledFromProfile?'<div class="autofill-hint">💡 Hemos cargado los datos de tu cuenta. Revisa y confirma antes de continuar.</div>':''}
+${autofilledFromProfile?'<div class="readonly-lock"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Datos de tu perfil. No son editables aquí; para cambiarlos, edita tu perfil.</span></div>':''}
 <div class="res" style="margin-bottom:14px">${resumenEmpresa(r)}</div>
+${autofilledFromProfile?`
+<div class="form-section">
+<div class="form-section-title">Persona de contacto</div>
+<div class="form-grid">
+<div class="form-field"><label>Nombre de contacto</label><div class="field-readonly">${aEscape(st.eContacto||'—')}</div></div>
+<div class="form-field"><label>Teléfono</label><div class="field-readonly">${aEscape(st.eTel||'—')}</div></div>
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">Identificación fiscal</div>
+<div class="form-grid">
+<div class="form-field"><label>Razón social</label><div class="field-readonly">${aEscape(st.eRazon||'—')}</div></div>
+<div class="form-field"><label>CIF / DNI / NIE</label><div class="field-readonly">${aEscape(st.eCif||'—')}</div></div>
+<div class="form-field full"><label>Email de facturación</label><div class="field-readonly">${aEscape(st.eEmailFact||'—')}</div></div>
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">Dirección fiscal</div>
+<div class="form-grid">
+<div class="form-field full"><label>Dirección fiscal</label><div class="field-readonly">${aEscape(roDir||'—')}</div></div>
+</div>
+</div>
+`:`
 <div class="form-section">
 <div class="form-section-title">Persona de contacto</div>
 <div class="form-grid">
@@ -3237,7 +3268,7 @@ ${autofilledFromProfile?'<div class="autofill-hint">💡 Hemos cargado los datos
 <div class="form-field"><label>Provincia *</label><select class="prov-sel" onchange="st.eProvincia=this.value;rBtn('exp-bs4',empresaDatosValidos)"><option value="">Seleccionar provincia...</option>${provOpts}</select></div>
 <div class="form-field"><label>País *</label><select onchange="st.ePais=this.value;rBtn('exp-bs4',empresaDatosValidos)">${paisOpts}</select></div>
 </div>
-</div>
+</div>`}
 <div class="contrato-box">
 <strong>CONDICIONES DEL SERVICIO — ONE2ONE PRO</strong><br><br>
 ONE2ONE SOLUTIONS S.L. (CIF B19428846) presta un servicio de gestión del alta en la Seguridad Social y emisión de factura, exclusivamente para trabajos puntuales, esporádicos y no recurrentes.<br><br>
@@ -3402,6 +3433,26 @@ async function finalizarExpedienteEmpresa(){
   const user=aGetCurrentUser();if(!user)return;
   /* Sincronización defensiva desde el DOM por si autofill no disparó oninput */
   aSyncEmpresaDatosFromDOM();
+  /* Blindaje: si la empresa tiene perfil guardado, los datos fiscales del
+     payload SIEMPRE provienen del perfil del usuario logueado (mismos campos
+     que se muestran como texto fijo no editable), nunca de un input que se
+     hubiera podido manipular. */
+  const _cp=user.companyProfile;
+  if(_cp && _cp.razon){
+    st.eContacto=_cp.contacto||user.nombre||'';
+    st.eTel=_cp.tel||'';
+    st.eRazon=_cp.razon||'';
+    st.eCif=_cp.cif||'';
+    st.eEmailFact=_cp.emailFact||user.email||'';
+    st.eTipoVia=_cp.tipoVia||'Calle';
+    st.eCalle=_cp.calle||'';
+    st.eNumero=_cp.numero||'';
+    st.ePiso=_cp.piso||'';
+    st.eCp=_cp.cp||'';
+    st.eMunicipio=_cp.municipio||'';
+    st.eProvincia=_cp.provincia||'';
+    st.ePais=_cp.pais||'España';
+  }
   if(!empresaDatosValidos()){
     alert('Revisa los datos de tu empresa antes de continuar.');
     return;
