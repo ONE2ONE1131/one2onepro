@@ -4178,7 +4178,15 @@ document.addEventListener('keydown',function(e){
     return opts[0].value;
   }
   function valueFor(el,key,t){
-    if(t==='email'||/email|correo/.test(key))return 'ivan@o2oagency.es';
+    if(t==='email'||/email|correo/.test(key)){
+      /* Email de facturación de la empresa: NO autorrellenar — se respeta el
+         email del usuario logueado que ya está fijo en el formulario. */
+      if(/factur/.test(key))return null;
+      /* Email del trabajador/profesional contratado. */
+      if(/trabajador/.test(key))return 'itronkyy01@icloud.com';
+      /* Resto (login/registro de prueba). */
+      return 'ivan@o2oagency.es';
+    }
     if(t==='password'||/contrase|password/.test(key))return 'Prueba1234';
     if(t==='date'){
       var now=new Date();
@@ -4191,7 +4199,7 @@ document.addEventListener('keydown',function(e){
     if(/dni|nie|documento/.test(key))return '12345678Z';
     if(/tel|phone|m[oó]vil/.test(key))return '612345678';
     if(/postal|c\.?p\.?\b/.test(key))return '28013';
-    if(/cach|importe/.test(key))return '300';
+    if(/cach|importe/.test(key))return '0.50';
     if(/d[ií]as/.test(key))return '1';
     if(/apellido/.test(key))return 'García López';
     if(/raz[oó]n|social/.test(key))return 'Sonido y Luces Levante S.L.';
@@ -4267,7 +4275,9 @@ document.addEventListener('keydown',function(e){
       var key=((el.id||'')+' '+(el.name||'')+' '+(el.placeholder||'')+' '+lbl(el)+' '+(el.getAttribute('autocomplete')||'')).toLowerCase();
       if(t==='checkbox'||t==='radio'){ if(!el.checked){el.checked=true; fire(el);} n++; return; }
       if(el.tagName==='SELECT'){ var sv=pickSelect(el,key); if(sv!==null){el.value=sv; fire(el); n++;} return; }
-      el.value=valueFor(el,key,t); fire(el); n++;
+      var v=valueFor(el,key,t);
+      if(v===null||v===undefined)return; /* DEV: campo intencionadamente sin autorrellenar (p.ej. email de facturación de la empresa) */
+      el.value=v; fire(el); n++;
     });
     /* DNI: adjunta imágenes placeholder a los campos de subida (anverso/reverso)
        para habilitar "Continuar a confirmación" sin intervención manual. */
