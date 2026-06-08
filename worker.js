@@ -236,9 +236,9 @@ async function handleExpedientes(request, env, cors) {
   const { email, tipo } = body || {};
   if (!email) return jsonResponse({ error: 'Missing email' }, 400, cors);
 
-  const campo = tipo === 'empresa' ? 'empresa_email' : 'trabajador_email';
+  const campo = tipo === 'empresa' ? 'Empresa Email' : 'Trabajador Email';
   const formula = encodeURIComponent(`{${campo}}="${email}"`);
-  const url = `https://api.airtable.com/v0/app0vdAQfCNFz721B/tblN88xyEJuot1ZAu?filterByFormula=${formula}&fields[]=N%C2%BA%20Expediente&fields[]=Estado&fields[]=actividad&fields[]=fecha_inicio&fields[]=fecha_fin&fields[]=cache_acordado&fields[]=empresa_razon_social&fields[]=trabajador_nombre&fields[]=dias`;
+  const url = `https://api.airtable.com/v0/app0vdAQfCNFz721B/tblN88xyEJuot1ZAu?filterByFormula=${formula}&fields[]=${encodeURIComponent('Nº Expediente')}&fields[]=${encodeURIComponent('Estado')}&fields[]=${encodeURIComponent('Actividad')}&fields[]=${encodeURIComponent('Fecha inicio')}&fields[]=${encodeURIComponent('Fecha fin')}&fields[]=${encodeURIComponent('Importe trabajador')}&fields[]=${encodeURIComponent('Empresa Razón Social')}&fields[]=${encodeURIComponent('Trabajador Nombre')}&fields[]=${encodeURIComponent('Días')}`;
 
   const resp = await fetch(url, {
     headers: {
