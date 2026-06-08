@@ -2432,7 +2432,7 @@ function aExpEstadoColor(estado){
 }
 
 function aExpFechas(f){
-  const ini=f.fecha_inicio||'',fin=f.fecha_fin||'';
+  const ini=f['Fecha inicio']||'',fin=f['Fecha fin']||'';
   if(ini&&fin&&ini!==fin)return aEscape(ini)+' → '+aEscape(fin);
   return aEscape(ini||fin||'—');
 }
@@ -2450,16 +2450,16 @@ function aExpedienteCard(rec,tipo){
   const color=aExpEstadoColor(estado);
   const esEmpresa=tipo==='empresa';
   const contraLbl=esEmpresa?'Profesional contratado':'Promotor';
-  const contraVal=esEmpresa?(f.trabajador_nombre||'—'):(f.empresa_razon_social||'—');
+  const contraVal=esEmpresa?(f['Trabajador Nombre']||'—'):(f['Empresa Razón Social']||'—');
   const num=f['Nº Expediente']||rec.id||'—';
   return `<div class="exp-card">
 <div class="exp-card-top">
 <span class="exp-num">#${aEscape(num)}</span>
 <span class="exp-estado" style="background:${color}">${aEscape(estado)}</span>
 </div>
-<div class="exp-actividad">${aEscape(f.actividad||'Sin actividad')}</div>
+<div class="exp-actividad">${aEscape(f['Actividad']||'Sin actividad')}</div>
 <div class="exp-row"><span class="exp-lbl">Fechas</span><span class="exp-val">${aExpFechas(f)}</span></div>
-<div class="exp-row"><span class="exp-lbl">Caché</span><span class="exp-val">${aExpCache(f.cache_acordado)}</span></div>
+<div class="exp-row"><span class="exp-lbl">Caché</span><span class="exp-val">${aExpCache(f['Importe trabajador'])}</span></div>
 <div class="exp-row"><span class="exp-lbl">${contraLbl}</span><span class="exp-val">${aEscape(contraVal)}</span></div>
 </div>`;
 }
