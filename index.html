@@ -3099,7 +3099,8 @@ ${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Enlace listo</p>
 <button class="cp-btn" id="btn-copiar" onclick="copiarEnlace(${JSON.stringify(res.url||'').replace(/"/g,'&quot;')})"><div class="cp-btn-icon lk">URL</div><div class="cp-btn-text"><strong>Copiar enlace</strong><span>Copia el enlace al portapapeles</span></div></button>
 </div>
 </div>
-<p class="legal">El enlace está vinculado a este expediente. El promotor sólo tiene que pinchar y pagar — sin registro.</p>`;
+<button class="btn-n" style="margin-top:16px" onclick="artistAuth.expedienteOpen=false;artistAuth.expedienteResult=null;resetExpedienteState();aShowExpedientes()">Ver mis expedientes</button>
+<p class="legal">El enlace está vinculado a este expediente. El promotor sólo tiene que pinchar y pagar — sin registro. Te llevaremos a <strong>Mis expedientes</strong> en unos segundos.</p>`;
   }
 }
 
@@ -3134,6 +3135,16 @@ function generarEnlaceArtista(){
   const url='https://one2onepro.es/pago.html?'+params.toString();
   artistAuth.expedienteResult={code:code,url:url,createdAt:new Date().toISOString()};
   next();
+  /* Redirección automática a "Mis expedientes" 3s después de generar el enlace.
+     Guard: solo si el usuario sigue en la pantalla de confirmación (no salió
+     manualmente con "Volver al panel"). */
+  setTimeout(function(){
+    if(!artistAuth.expedienteOpen)return;
+    artistAuth.expedienteOpen=false;
+    artistAuth.expedienteResult=null;
+    if(typeof resetExpedienteState==='function')resetExpedienteState();
+    aShowExpedientes();
+  },3000);
 }
 
 function renderExpedienteEmpresa(user){
@@ -3199,6 +3210,27 @@ ${esConceptoOtro?`<div class="form-field full"><label>Especifica el concepto *</
          iniciarExpediente ya vuelca todo en st.eX. Aquí solo cubrimos
          huecos con datos de la cuenta (contacto + email).
        - Si NO existe companyProfile, ponemos defaults razonables. */
+    /* Refresco en CADA render: si la empresa tiene perfil guardado, volcamos
+       st.eX desde el perfil ACTUAL (localStorage, vía el aGetCurrentUser de
+       arriba). Así, si el usuario edita su perfil mientras el expediente está
+       abierto, los datos nuevos se reflejan en este display, en la validación
+       (empresaDatosValidos lee st.eX) y en el payload — sin datos cacheados. */
+    const _cpR=user.companyProfile;
+    if(_cpR && _cpR.razon){
+      st.eContacto=_cpR.contacto||user.nombre||'';
+      st.eTel=_cpR.tel||'';
+      st.eRazon=_cpR.razon||'';
+      st.eCif=_cpR.cif||'';
+      st.eEmailFact=_cpR.emailFact||user.email||'';
+      st.eTipoVia=_cpR.tipoVia||'Calle';
+      st.eCalle=_cpR.calle||'';
+      st.eNumero=_cpR.numero||'';
+      st.ePiso=_cpR.piso||'';
+      st.eCp=_cpR.cp||'';
+      st.eMunicipio=_cpR.municipio||'';
+      st.eProvincia=_cpR.provincia||'';
+      st.ePais=_cpR.pais||'España';
+    }
     if(!st.eContacto)st.eContacto=user.nombre||'';
     if(!st.eEmailFact)st.eEmailFact=user.email||'';
     if(!st.eTipoVia)st.eTipoVia='Calle';
@@ -3602,9 +3634,19 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
 <div class="exito-title">Solicitud recibida</div>
 <div class="exito-sub">Hemos recibido su solicitud. En breve recibirá un email en <strong>${aEscape(payload.empresa_email)}</strong> con el enlace de pago y el importe exacto.</div>
 <div class="exito-exp">Nº de expediente: ${expNum}</div>
-<p class="exito-note">En cuanto confirme el pago tramitamos el alta del profesional con la máxima agilidad.</p>
-<button class="btn-n" style="margin-top:18px" onclick="cerrarExpediente()">Volver al panel</button>
+<p class="exito-note">En cuanto confirme el pago tramitamos el alta del profesional con la máxima agilidad. Te llevaremos a <strong>Mis expedientes</strong> en unos segundos.</p>
+<button class="btn-n" style="margin-top:18px" onclick="artistAuth.expedienteOpen=false;artistAuth.expedienteResult=null;resetExpedienteState();aShowExpedientes()">Ver mis expedientes</button>
+<button class="btn-b" style="margin-top:10px" onclick="cerrarExpediente()">Volver al panel</button>
 </div>`;
+    /* Redirección automática a "Mis expedientes" 3s después de enviar el enlace,
+       salvo que el usuario ya haya salido manualmente. */
+    setTimeout(function(){
+      if(!artistAuth.expedienteOpen)return;
+      artistAuth.expedienteOpen=false;
+      artistAuth.expedienteResult=null;
+      if(typeof resetExpedienteState==='function')resetExpedienteState();
+      aShowExpedientes();
+    },3000);
   }catch(err){
     document.getElementById('sim-c').innerHTML=`<div class="exito">
 <div class="exito-icon" style="background:#fee2e2;color:#dc2626">!</div>
