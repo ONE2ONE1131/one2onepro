@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Confirma la gestión · One2One Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon.svg">
+<meta name="theme-color" content="#0f2d5e">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --azul:#0f2d5e;--azul-medio:#1a4a8a;--azul-claro:#e8f0fe;
+  --verde:#00a86b;--fondo:#f5f7fa;
+  --gris-texto:#4a6080;--gris-borde:#d0dae8;--gris-suave:#8899aa;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--fondo);color:var(--azul);min-height:100vh;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 25% 20%,rgba(15,45,94,.04) 0%,transparent 50%),radial-gradient(circle at 75% 80%,rgba(0,168,107,.04) 0%,transparent 50%);pointer-events:none;z-index:0}
+
+nav{position:sticky;top:0;left:0;right:0;z-index:10;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(15,45,94,.97);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)}
+.logo{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:10px;line-height:1}
+.logo em{font-style:italic;font-weight:400;color:rgba(255,255,255,.5);padding-left:2px}
+.brand-logo{display:inline-block;width:auto;flex-shrink:0;vertical-align:middle}
+.brand-logo .bar{fill:currentColor}
+.brand-logo .curve{fill:none;stroke:#00a86b;stroke-width:5;stroke-linecap:round}
+.logo .brand-logo{height:28px;color:#fff}
+.nav-tag{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45)}
+
+main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:48px 20px 64px;position:relative;z-index:1}
+.card{width:100%;max-width:560px;background:#fff;border:1px solid var(--gris-borde);border-radius:12px;box-shadow:0 8px 32px rgba(15,45,94,.06),0 2px 8px rgba(15,45,94,.04);overflow:hidden}
+
+.head{padding:32px 36px 24px;background:linear-gradient(135deg,var(--azul) 0%,var(--azul-medio) 100%);color:#fff;position:relative;overflow:hidden}
+.head::after{content:'';position:absolute;top:-80px;right:-80px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(0,168,107,.25) 0%,transparent 70%);pointer-events:none}
+.eyebrow{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:10px;position:relative;z-index:1}
+.title{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;line-height:1.18;letter-spacing:-.5px;position:relative;z-index:1}
+
+.body{padding:26px 36px 32px}
+.lead{font-size:14px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:22px}
+.lead strong{font-weight:600;color:var(--azul)}
+
+.sec-t{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--azul);margin:0 0 12px}
+.meta{display:grid;gap:12px;margin-bottom:24px}
+.meta-row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;border-bottom:1px solid var(--gris-borde);padding-bottom:11px}
+.meta-row:last-child{border-bottom:none;padding-bottom:0}
+.meta-l{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--gris-suave)}
+.meta-r{font-size:15px;font-weight:500;color:var(--azul);text-align:right}
+.meta-r.imp{font-family:'Playfair Display',serif;font-size:20px;font-weight:700}
+
+.fields{display:grid;gap:14px;margin-bottom:22px}
+.f{display:flex;flex-direction:column;gap:6px}
+.f.full{grid-column:1/-1}
+.f label{font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--gris-texto)}
+.f input{width:100%;padding:12px 14px;border:1.5px solid var(--gris-borde);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--azul);background:#fff;transition:border-color .15s}
+.f input:focus{outline:none;border-color:var(--azul)}
+.f input[readonly]{background:var(--fondo);color:var(--gris-texto);cursor:default}
+.f .err{font-size:11px;color:#dc2626;min-height:0;display:none}
+.f.invalid .err{display:block}
+.f.invalid input{border-color:#dc2626}
+@media(min-width:480px){.fields{grid-template-columns:1fr 1fr}}
+
+.iban-box{background:var(--azul-claro);border:1px solid var(--gris-borde);border-radius:8px;padding:16px 18px;margin-bottom:22px}
+.iban-box-t{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--azul);margin-bottom:8px}
+.iban-box-d{font-size:12px;color:var(--gris-texto);font-weight:300;line-height:1.55;margin-bottom:12px}
+.iban-box-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:5px 0;border-top:1px solid rgba(15,45,94,.1);font-size:13px}
+.iban-box-row span{color:var(--gris-suave);font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+.iban-box-row strong{color:var(--azul);font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+
+.contrato-box{background:var(--fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:14px;margin-bottom:16px;max-height:150px;overflow-y:auto;font-size:11px;color:var(--gris-texto);line-height:1.7;font-weight:300}
+.check{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;cursor:pointer}
+.check input[type=checkbox]{margin-top:2px;width:18px;height:18px;flex-shrink:0;accent-color:var(--azul)}
+.check-text{font-size:13px;color:var(--gris-texto);line-height:1.55;font-weight:300}
+.check-text strong{font-weight:600;color:var(--azul)}
+
+.btn{width:100%;padding:18px;background:var(--verde);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .2s,transform .1s;margin-top:6px}
+.btn:hover{opacity:.9}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{background:var(--gris-borde);color:var(--gris-suave);cursor:not-allowed;opacity:1}
+
+.legal{margin-top:16px;font-size:11px;color:var(--gris-suave);text-align:center;line-height:1.6;font-weight:300}
+
+.state{padding:48px 36px;text-align:center}
+.state .ico{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px;font-weight:700}
+.state .ico.ok{background:#d1fae5;color:var(--verde)}
+.state .ico.err{background:#fee2e2;color:#dc2626}
+.state h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:10px}
+.state p{font-size:14px;color:var(--gris-texto);line-height:1.6;font-weight:300}
+.state p strong{color:var(--azul)}
+
+footer{padding:24px 5%;text-align:center;font-size:11px;color:var(--gris-suave);font-weight:300;position:relative;z-index:1}
+footer a{color:var(--gris-suave);text-decoration:none}
+footer a:hover{color:var(--azul)}
+
+@media(max-width:560px){
+  .head{padding:26px 22px 20px}
+  .body{padding:22px 22px 26px}
+  .title{font-size:22px}
+}
+</style>
+</head>
+<body>
+<nav>
+  <a href="https://one2onepro.es" class="logo" aria-label="One2One Pro"><svg class="brand-logo" viewBox="0 0 49 56" aria-hidden="true"><rect class="bar" x="0" y="0" width="9" height="56" rx="4.5"/><path class="curve" d="M13 0 C13 0 22 0 22 28 C22 56 31 56 31 56"/><rect class="bar" x="40" y="0" width="9" height="56" rx="4.5"/></svg><span>One2One<em>Pro</em></span></a>
+  <span class="nav-tag">Confirmación de gestión</span>
+</nav>
+
+<main>
+  <div class="card" id="card">
+    <div class="head">
+      <p class="eyebrow">Régimen Especial de Artistas · RD 1435/1985</p>
+      <h1 class="title">Confirma la gestión</h1>
+    </div>
+    <div class="body" id="bodyContent"></div>
+  </div>
+</main>
+
+<footer>
+  One2One Pro · <a href="https://one2onepro.es">one2onepro.es</a> · administracion@one2onepro.es
+</footer>
+
+<script>
+(function(){
+  /* ─── Configuración (página estática, sin backend propio) ───────────────
+     Recibe el resumen del encargo por la URL para renderizar sin consultar
+     Airtable. token = Nº de expediente. Al confirmar hace POST al webhook de
+     Make, que actualiza Airtable a "Promotor confirmado", guarda la aceptación
+     (nombre, email, IP, timestamp), dispara Docuseal al artista y avisa a
+     administracion@one2onepro.es. */
+  var WEBHOOK = 'https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku';
+  var RAZON = 'ONE2ONE SOLUTIONS S.L.';
+  var CIF_O2O = 'B19428846';
+  var IBAN = 'ES04 1583 0001 1193 3104 4940';
+  var PLAZO = 7;
+
+  function esc(s){
+    if(s==null)return '';
+    return String(s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
+  }
+  function fmtEUR(v){
+    var n = parseFloat(String(v||'').replace(',','.'));
+    if(!isFinite(n)) return '—';
+    return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  }
+  function fmtDate(s){
+    if(!s) return '';
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+    if(!m) return s;
+    return m[3]+'/'+m[2]+'/'+m[1];
+  }
+  function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e||'').trim()); }
+  function validCif(c){ return /^[A-Za-z0-9]{8,9}$/.test((c||'').trim()); }
+  function getIP(){
+    return fetch('https://api.ipify.org?format=json',{cache:'no-store'})
+      .then(function(r){ return r.ok?r.json():{}; })
+      .then(function(d){ return (d&&d.ip)||''; })
+      .catch(function(){ return ''; });
+  }
+
+  var p = new URLSearchParams(window.location.search);
+  var token = p.get('token') || '';
+  var flujo = (p.get('flujo') || 'B').toUpperCase();
+  var artista = p.get('artista') || '';
+  var actividad = p.get('actividad') || '';
+  var lugar = p.get('lugar') || '';
+  var fi = p.get('fechaInicio') || '';
+  var ff = p.get('fechaFin') || '';
+  var total = p.get('total');
+  /* Datos del promotor pre-rellenados por el profesional (solo Flujo A) */
+  var pre = {
+    nombre: p.get('pNombre') || '',
+    cif: p.get('pCif') || '',
+    email: p.get('pEmail') || '',
+    tel: p.get('pTel') || '',
+    dir: p.get('pDireccion') || ''
+  };
+  var readonlyA = (flujo === 'A');
+
+  var body = document.getElementById('bodyContent');
+
+  if(!token){
+    document.getElementById('card').innerHTML =
+      '<div class="state"><div class="ico err">!</div>'+
+      '<h2>Enlace no válido</h2>'+
+      '<p>Este enlace no contiene el identificador del expediente. Pide al profesional que te lo reenvíe completo, o escríbenos a <strong>administracion@one2onepro.es</strong>.</p></div>';
+    return;
+  }
+
+  var per = '';
+  if(fi && ff && fi !== ff) per = fmtDate(fi)+' — '+fmtDate(ff);
+  else if(fi) per = fmtDate(fi);
+
+  body.innerHTML =
+    '<p class="lead">Un profesional ha iniciado un trámite contigo a través de <strong>One2One Pro</strong>. Revisa el resumen, completa tus datos fiscales y confirma la gestión. El pago se realiza después por transferencia bancaria — no se solicita ningún pago en esta página.</p>'+
+    '<div class="sec-t">Resumen del encargo</div>'+
+    '<div class="meta">'+
+      '<div class="meta-row"><span class="meta-l">Expediente</span><span class="meta-r">'+esc(token)+'</span></div>'+
+      '<div class="meta-row"><span class="meta-l">Artista</span><span class="meta-r">'+(esc(artista)||'—')+'</span></div>'+
+      '<div class="meta-row"><span class="meta-l">Actividad</span><span class="meta-r">'+(esc(actividad)||'—')+'</span></div>'+
+      (lugar?'<div class="meta-row"><span class="meta-l">Lugar</span><span class="meta-r">'+esc(lugar)+'</span></div>':'')+
+      '<div class="meta-row"><span class="meta-l">Fecha</span><span class="meta-r">'+(esc(per)||'—')+'</span></div>'+
+      '<div class="meta-row"><span class="meta-l">Importe total (IVA incl.)</span><span class="meta-r imp">'+(total==null?'—':fmtEUR(total))+'</span></div>'+
+    '</div>'+
+    '<div class="sec-t">'+(readonlyA?'Tus datos fiscales':'Completa tus datos fiscales')+'</div>'+
+    '<div class="fields">'+
+      '<div class="f full" data-f="nombre"><label>Nombre o razón social</label><input id="f-nombre" type="text" maxlength="120" value="'+esc(pre.nombre)+'" '+(readonlyA?'readonly':'placeholder="Empresa S.L. / Nombre completo"')+'><span class="err">Indica el nombre o la razón social.</span></div>'+
+      '<div class="f" data-f="cif"><label>NIF / CIF</label><input id="f-cif" type="text" maxlength="9" value="'+esc(pre.cif)+'" '+(readonlyA?'readonly':'placeholder="B12345678 / 12345678A"')+'><span class="err">NIF o CIF no válido.</span></div>'+
+      '<div class="f" data-f="tel"><label>Teléfono</label><input id="f-tel" type="tel" maxlength="16" value="'+esc(pre.tel)+'" '+(readonlyA?'readonly':'placeholder="+34 600 000 000"')+'><span class="err">Indica un teléfono.</span></div>'+
+      '<div class="f full" data-f="email"><label>Email</label><input id="f-email" type="email" maxlength="120" value="'+esc(pre.email)+'" '+(readonlyA?'readonly':'placeholder="tu@email.com"')+'><span class="err">Email no válido.</span></div>'+
+      '<div class="f full" data-f="dir"><label>Dirección fiscal</label><input id="f-dir" type="text" maxlength="200" value="'+esc(pre.dir)+'" '+(readonlyA?'readonly':'placeholder="Calle, número, CP, municipio, provincia"')+'><span class="err">Indica la dirección fiscal.</span></div>'+
+    '</div>'+
+    '<div class="iban-box">'+
+      '<div class="iban-box-t">Forma de pago — transferencia bancaria</div>'+
+      '<p class="iban-box-d">No pagues nada ahora. Tras confirmar recibirás la pro-forma con el importe exacto. El pago se realiza por transferencia a:</p>'+
+      '<div class="iban-box-row"><span>Beneficiario</span><strong>'+RAZON+'</strong></div>'+
+      '<div class="iban-box-row"><span>CIF</span><strong>'+CIF_O2O+'</strong></div>'+
+      '<div class="iban-box-row"><span>IBAN</span><strong>'+IBAN+'</strong></div>'+
+    '</div>'+
+    '<div class="contrato-box">'+
+      '<strong>CONDICIONES DEL SERVICIO — '+RAZON+' (CIF '+CIF_O2O+')</strong><br><br>'+
+      RAZON+' presta un servicio de gestión del alta en la Seguridad Social y emisión de factura, exclusivamente para trabajos puntuales, esporádicos y no recurrentes, al amparo del Real Decreto 1435/1985.<br><br>'+
+      'El promotor declara que el trabajo tiene naturaleza puntual y no continuada, que no existe relación laboral estable con el profesional, y asume plena responsabilidad por la veracidad de los datos facilitados. El pago se realiza por transferencia bancaria en un plazo máximo de '+PLAZO+' días naturales. Para cualquier controversia, las partes se someten a los Juzgados y Tribunales de Cádiz.'+
+    '</div>'+
+    '<label class="check"><input type="checkbox" id="c1"><span class="check-text">He leído y acepto las <strong>condiciones del servicio de '+RAZON+'</strong>.</span></label>'+
+    '<label class="check"><input type="checkbox" id="c2"><span class="check-text">Me comprometo a efectuar el pago en un plazo máximo de <strong>'+PLAZO+' días naturales</strong> desde la recepción de este documento.</span></label>'+
+    '<button class="btn" id="btnConfirm" disabled>Confirmo la gestión</button>'+
+    '<p class="legal">Tu aceptación se registra con tu nombre, email, IP, fecha y hora. Al confirmar, One2One Pro tramita el alta del artista y te envía la pro-forma.</p>';
+
+  var inEls = {
+    nombre: document.getElementById('f-nombre'),
+    cif: document.getElementById('f-cif'),
+    tel: document.getElementById('f-tel'),
+    email: document.getElementById('f-email'),
+    dir: document.getElementById('f-dir')
+  };
+  var c1 = document.getElementById('c1');
+  var c2 = document.getElementById('c2');
+  var btn = document.getElementById('btnConfirm');
+
+  function vals(){
+    return {
+      nombre: (inEls.nombre.value||'').trim(),
+      cif: (inEls.cif.value||'').trim().toUpperCase(),
+      tel: (inEls.tel.value||'').trim(),
+      email: (inEls.email.value||'').trim().toLowerCase(),
+      dir: (inEls.dir.value||'').trim()
+    };
+  }
+  function datosValidos(){
+    var v = vals();
+    if(v.nombre.length < 2) return false;
+    if(!validCif(v.cif)) return false;
+    if(v.tel.length < 6) return false;
+    if(!validEmail(v.email)) return false;
+    if(v.dir.length < 5) return false;
+    return true;
+  }
+  function refresh(){
+    btn.disabled = !(datosValidos() && c1.checked && c2.checked);
+  }
+  Object.keys(inEls).forEach(function(k){ inEls[k].addEventListener('input', refresh); });
+  c1.addEventListener('change', refresh);
+  c2.addEventListener('change', refresh);
+  refresh();
+
+  btn.addEventListener('click', function(){
+    if(btn.disabled) return;
+    btn.disabled = true;
+    btn.textContent = 'Confirmando…';
+    var v = vals();
+    getIP().then(function(ip){
+      var ts = new Date().toISOString();
+      var payload = {
+        tipo: 'promotor_confirma',
+        expediente: token,
+        flujo: flujo,
+        estado_nuevo: 'Promotor confirmado',
+        promotor_razon_social: v.nombre,
+        promotor_cif: v.cif,
+        promotor_telefono: v.tel,
+        promotor_email: v.email,
+        promotor_direccion: v.dir,
+        condiciones_aceptadas: true,
+        compromiso_pago_aceptado: true,
+        plazo_pago_dias: PLAZO,
+        iban_cobro: IBAN,
+        aceptacion_nombre: v.nombre,
+        aceptacion_email: v.email,
+        aceptacion_ip: ip,
+        aceptacion_timestamp: ts,
+        importe_total: total || ''
+      };
+      return fetch(WEBHOOK, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+    }).then(function(){
+      document.getElementById('card').innerHTML =
+        '<div class="state"><div class="ico ok">✓</div>'+
+        '<h2>¡Gestión confirmada!</h2>'+
+        '<p>Hemos registrado tu confirmación del expediente <strong>'+esc(token)+'</strong>. En breve recibirás en <strong>'+esc(v.email)+'</strong> la pro-forma con el importe exacto y los datos para la transferencia a '+RAZON+' (IBAN '+IBAN+').</p>'+
+        '<p style="margin-top:14px">One2One Pro tramita ahora el alta del artista en la Seguridad Social. Gracias por confiar en nosotros.</p></div>';
+      window.scrollTo(0,0);
+    }).catch(function(e){
+      console.error('[promotor] confirm error', e);
+      btn.disabled = false;
+      btn.textContent = 'Reintentar confirmación';
+      alert('No hemos podido registrar tu confirmación. Inténtalo de nuevo en unos segundos o escríbenos a administracion@one2onepro.es.');
+    });
+  });
+})();
+</script>
+</body>
+</html>

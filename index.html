@@ -294,6 +294,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;ali
 .contrato-check input[type=checkbox]{margin-top:2px;width:16px;height:16px;flex-shrink:0;accent-color:var(--azul)}
 .contrato-check-text{font-size:12px;color:var(--gris-texto);line-height:1.6;font-weight:300}
 .contrato-check-text a{color:var(--azul);text-decoration:underline}
+.iban-box{background:var(--azul-claro);border:1px solid var(--gris-borde);border-radius:8px;padding:16px 18px;margin-bottom:16px}
+.iban-box-t{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--azul);margin-bottom:8px}
+.iban-box-d{font-size:12px;color:var(--gris-texto);font-weight:300;line-height:1.55;margin-bottom:12px}
+.iban-box-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:5px 0;border-top:1px solid rgba(15,45,94,.1);font-size:13px}
+.iban-box-row span{color:var(--gris-suave);font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+.iban-box-row strong{color:var(--azul);font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
 
 .res-incluye{font-size:11px;color:var(--gris-suave);text-align:center;padding:8px 0;letter-spacing:.3px;font-weight:300}
 .res-incluye span{color:var(--verde);font-weight:500}
@@ -1143,8 +1149,8 @@ src="https://www.facebook.com/tr?id=862116863606514&ev=PageView&noscript=1"
     </div>
     <div class="proceso-grid">
       <div class="proceso-step"><span class="proceso-num">01</span><div class="proceso-t">Calcula</div><div class="proceso-d">Introduce el caché acordado y ve lo que cobrarás antes de comprometerte.</div></div>
-      <div class="proceso-step"><span class="proceso-num">02</span><div class="proceso-t">Crea tu expediente</div><div class="proceso-d">Regístrate, completa tu perfil y añade los datos del promotor.</div></div>
-      <div class="proceso-step"><span class="proceso-num">03</span><div class="proceso-t">El promotor paga</div><div class="proceso-d">Le envías el enlace. Él paga de forma segura. Sin registrarse.</div></div>
+      <div class="proceso-step"><span class="proceso-num">02</span><div class="proceso-t">Crea tu expediente</div><div class="proceso-d">Regístrate, completa tu perfil y añade los datos del promotor (o solo su email).</div></div>
+      <div class="proceso-step"><span class="proceso-num">03</span><div class="proceso-t">El promotor confirma</div><div class="proceso-d">Recibe un enlace, acepta la gestión sin registro y paga por transferencia.</div></div>
       <div class="proceso-step"><span class="proceso-num">04</span><div class="proceso-t">Actúa y cobra</div><div class="proceso-d">Tramitamos el alta y recibes tu liquidación en tu cuenta.</div></div>
     </div>
   </div>
@@ -1182,7 +1188,7 @@ src="https://www.facebook.com/tr?id=862116863606514&ev=PageView&noscript=1"
     <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Cuánto cuesta el servicio? <span class="faq-arr">↓</span></div><div class="faq-a">Nuestra comisión es el 10% sobre el caché acordado. Sin cuotas mensuales, sin permanencia. Solo pagas cuando tramitas.</div></div>
     <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Puedo usar el servicio si estoy cobrando el paro? <span class="faq-arr">↓</span></div><div class="faq-a">Sí, pero debes comunicarlo al SEPE antes de empezar a trabajar. El SEPE suspende la prestación los días exactos que trabajas y la reanuda automáticamente. Si no lo comunicas previamente, el SEPE puede reclamarte las prestaciones cobradas.</div></div>
     <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Para quién es One2One Pro? <span class="faq-arr">↓</span></div><div class="faq-a">Para músicos, DJs, técnicos de sonido, técnicos de luces, actores, bailarines, presentadores y cualquier profesional del sector del espectáculo que realice trabajos puntuales.</div></div>
-    <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Cómo funciona el pago? <span class="faq-arr">↓</span></div><div class="faq-a">El profesional genera un enlace de pago y se lo envía al promotor. El promotor paga de forma segura online. One2One Pro tramita el alta en cuanto confirma el pago. Sin riesgo para ninguna de las dos partes.</div></div>
+    <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Cómo funciona el pago? <span class="faq-arr">↓</span></div><div class="faq-a">El promotor recibe un enlace donde revisa el encargo y confirma la gestión sin registrarse. El pago se realiza por transferencia bancaria a ONE2ONE SOLUTIONS S.L. en un plazo máximo de 7 días. One2One Pro tramita el alta en cuanto el promotor confirma. Sin riesgo para ninguna de las dos partes.</div></div>
   </div>
 </section>
 
@@ -1301,16 +1307,16 @@ const UBICS=[
 const PASOS_EMP=[
   {n:'01',t:'Calcule el coste total',d:'Introduce el caché acordado con el profesional, el tipo de actividad y los días. El total aparece al instante.'},
   {n:'02',t:'Introduce los datos del profesional y los tuyos',d:'Razón social, CIF, dirección fiscal y datos del profesional. Todo en el mismo formulario.'},
-  {n:'03',t:'Paga de forma segura',d:'Pago online seguro con tarjeta. En cuanto se confirma, empezamos a tramitar.'},
+  {n:'03',t:'Confirma y paga por transferencia',d:'Aceptas la gestión en el formulario y pagas por transferencia. En cuanto confirmas, empezamos a tramitar.'},
   {n:'04',t:'Tramitamos el alta',d:'Tramitamos el alta con la máxima agilidad en cuanto se confirma el pago. Siempre antes del trabajo.'},
   {n:'05',t:'Recibes tu factura',d:'Factura emitida a tu empresa. Deducible al 100% si estás en IVA.'},
 ];
 const PASOS_TRAB=[
   {n:'01',t:'Crea tu cuenta',d:'Regístrate en One2One Pro, verifica tu email y completa tu perfil con tus datos y documentación.'},
-  {n:'02',t:'Nuevo expediente',d:'Introduce el caché acordado, el tipo de actividad y los datos del promotor.'},
-  {n:'03',t:'Envía el enlace al promotor',d:'One2One Pro genera el enlace de pago. Mándaselo por WhatsApp o email.'},
-  {n:'04',t:'El promotor paga',d:'El promotor pincha el enlace y paga de forma segura. Sin registrarse.'},
-  {n:'05',t:'Tramitamos el alta',d:'En cuanto confirmamos el pago gestionamos tu alta en la Seguridad Social.'},
+  {n:'02',t:'Nuevo expediente',d:'Introduce el caché, el tipo de actividad y los datos del promotor (o solo su email).'},
+  {n:'03',t:'Envía el enlace al promotor',d:'One2One Pro genera el enlace de aceptación con la pro-forma. Mándaselo por WhatsApp o email.'},
+  {n:'04',t:'El promotor confirma',d:'Acepta la gestión sin registrarse y paga por transferencia bancaria.'},
+  {n:'05',t:'Tramitamos el alta',d:'En cuanto el promotor confirma gestionamos tu alta en la Seguridad Social.'},
   {n:'06',t:'Trabaja y cobra',d:'Haz tu trabajo y recibe tu liquidación en tu cuenta bancaria.'},
 ];
 
@@ -1331,6 +1337,27 @@ let perfil=null;
    URL apuntando a un worker desplegado: la subida del DNI a Drive, la
    validación con IA y el asistente NO funcionarán. */
 const WORKER_URL = 'https://one2one-worker.oneonepro26.workers.dev';
+
+/* ─── Datos de cobro de ONE2ONE SOLUTIONS S.L. ─────────────────────────────
+   El promotor paga por transferencia bancaria. Ya NO hay pasarela Stripe.
+   Estos valores se muestran en el formulario, en la página de aceptación
+   (promotor.html) y los consume Make para generar la pro-forma. */
+const O2O_RAZON_SOCIAL = 'ONE2ONE SOLUTIONS S.L.';
+const O2O_CIF = 'B19428846';
+const O2O_IBAN = 'ES04 1583 0001 1193 3104 4940';
+const O2O_PLAZO_PAGO_DIAS = 7;
+
+/* Obtiene la IP pública del cliente para registrar la aceptación. Devuelve
+   '' si falla (no bloquea el flujo). Make también puede capturarla del
+   propio webhook como respaldo. */
+async function o2oGetIP(){
+  try{
+    const r=await fetch('https://api.ipify.org?format=json',{cache:'no-store'});
+    if(!r.ok)return '';
+    const d=await r.json().catch(()=>({}));
+    return (d&&d.ip)||'';
+  }catch(e){return '';}
+}
 
 /* Sube un fileObj {name,size,type,data:'data:...;base64,...'} al endpoint
    /upload-drive del worker y devuelve la URL pública de Drive. */
@@ -1370,14 +1397,19 @@ let st={
   /* Detalles de la actuación */
   lugarCelebracion:'',descripcionEvento:'',
   conceptoActuacion:'',conceptoOtro:'',conceptoValido:true,
-  /* Cuenta artista — datos del PROMOTOR */
-  pNombre:'',pCif:'',pEmail:'',
+  /* Cuenta artista — datos del PROMOTOR.
+     tieneDatosPromotor: 'si' (Flujo A, rellena datos fiscales) |
+                         'no' (Flujo B, solo email del promotor) | '' */
+  tieneDatosPromotor:'',
+  pNombre:'',pCif:'',pEmail:'',pDireccion:'',pTel:'',
   /* Cuenta empresa — datos del ARTISTA (dirección desglosada: calle/cp/municipio/provincia) */
   aNombre:'',aApellidos:'',aDni:'',aFechaNac:'',aNacionalidad:'',aDireccion:'',aCalle:'',aCp:'',aMunicipio:'',aProvincia:'',aIban:'',aNaf:'',aTel:'',aEmail:'',
   /* Cuenta empresa — datos fiscales de la EMPRESA (se piden en cada expediente) */
   eContacto:'',eTel:'',eRazon:'',eCif:'',eEmailFact:'',
   eTipoVia:'Calle',eCalle:'',eNumero:'',ePiso:'',eCp:'',eMunicipio:'',eProvincia:'',ePais:'España',
-  condAceptadas:false
+  condAceptadas:false,
+  /* Compromiso de pago en 7 días (2º checkbox de empresa y de la aceptación) */
+  compromisoPago:false
 };
 
 function fmt(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}
@@ -1387,7 +1419,8 @@ function resetExpedienteState(){
   st.fechaInicio='';st.fechaFin='';
   st.lugarCelebracion='';st.descripcionEvento='';
   st.conceptoActuacion='';st.conceptoOtro='';st.conceptoValido=true;
-  st.pNombre='';st.pCif='';st.pEmail='';
+  st.tieneDatosPromotor='';st.pNombre='';st.pCif='';st.pEmail='';st.pDireccion='';st.pTel='';
+  st.compromisoPago=false;
   st.aNombre='';st.aApellidos='';st.aDni='';st.aFechaNac='';st.aNacionalidad='';
   st.aDireccion='';st.aCalle='';st.aCp='';st.aMunicipio='';st.aProvincia='';st.aIban='';st.aNaf='';st.aTel='';st.aEmail='';
   st.aDniAnverso=null;st.aDniReverso=null;
@@ -2443,14 +2476,21 @@ function renderDashboardHeader(user){
    promotor; la empresa ve al profesional contratado.
    ──────────────────────────────────────────────────────────────────── */
 function aExpEstadoColor(estado){
+  /* Estados oficiales del nuevo flujo (sin Stripe). El color se aplica al
+     punto y al texto del badge; bg es el tinte de fondo. */
   const estados={
-    'Enlace enviado':     { bg:'#EFF6FF', color:'#1D4ED8', label:'Enlace de pago enviado' },
-    'Pago confirmado':    { bg:'#ECFDF5', color:'#065F46', label:'Pago confirmado' },
-    'Contrato enviado':   { bg:'#EEF2FF', color:'#3730A3', label:'Contrato enviado al profesional' },
-    'Pendiente de firma': { bg:'#FFF7ED', color:'#C2410C', label:'Pendiente de firma' },
-    'Firmado':            { bg:'#F0FDF4', color:'#00A86B', label:'Firmado' },
-    'Alta tramitada':     { bg:'#F0FDF4', color:'#0F2D5E', label:'Alta tramitada' },
-    'Baja tramitada':     { bg:'#F9FAFB', color:'#6B7280', label:'Baja tramitada' },
+    'Pendiente datos promotor': { bg:'#FFF7ED', color:'#C2410C', label:'Pendiente datos promotor' },
+    'Promotor confirmado':      { bg:'#EFF6FF', color:'#1D4ED8', label:'Promotor confirmado' },
+    'Contrato enviado':         { bg:'#EEF2FF', color:'#4338CA', label:'Contrato enviado' },
+    'Pendiente de firma':       { bg:'#FEFCE8', color:'#A16207', label:'Pendiente de firma' },
+    'Firmado':                  { bg:'#ECFDF5', color:'#00A86B', label:'Firmado' },
+    'Alta tramitada':           { bg:'#F0FDF4', color:'#166534', label:'Alta tramitada' },
+    'Pendiente de pago':        { bg:'#FFF7ED', color:'#C2410C', label:'Pendiente de pago' },
+    'Pago recibido':            { bg:'#F0FDF4', color:'#16A34A', label:'Pago recibido' },
+    'Baja tramitada':           { bg:'#F9FAFB', color:'#6B7280', label:'Baja tramitada' },
+    /* Alias heredados (registros antiguos del flujo Stripe). */
+    'Enlace enviado':           { bg:'#FFF7ED', color:'#C2410C', label:'Pendiente datos promotor' },
+    'Pago confirmado':          { bg:'#EFF6FF', color:'#1D4ED8', label:'Promotor confirmado' },
   };
   return estados[estado] || { bg:'#F9FAFB', color:'#6B7280', label:estado || 'Sin estado' };
 }
@@ -2543,7 +2583,7 @@ function renderArtDashboard(user){
 </div>
 <div class="dashboard-card">
 <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:10px">Crea un nuevo expediente</div>
-<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Define el caché de un trabajo puntual y genera el enlace de pago para enviárselo al promotor.</p>
+<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Define el caché de un trabajo puntual y genera el enlace de aceptación para enviárselo al promotor.</p>
 <button class="btn-verde-full" style="margin-top:0" onclick="iniciarExpediente()">+ Nuevo expediente</button>
 </div>`;
 }
@@ -2949,8 +2989,8 @@ function iniciarExpediente(){
     slClearPrefill();
   }
   /* Autorrelleno desde el perfil guardado. Para el artista volcamos sus
-     datos personales en st.aX (los usa generarEnlaceArtista para componer
-     el enlace de pago). Para la empresa volcamos los datos fiscales en
+     datos personales en st.aX (los usa enviarExpedienteProfesional para componer
+     el enlace de aceptación). Para la empresa volcamos los datos fiscales en
      st.eX desde companyProfile (guardado tras el primer expediente). */
   const u=aGetCurrentUser();
   if(u && u.accountType==='artista' && u.profile){
@@ -3073,95 +3113,203 @@ function renderExpedienteArtista(user){
   const c=document.getElementById('sim-c');
   if(st.step===3){
     const r=calcular();
-    c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
-${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del promotor</p>
-<p class="sim-q">Datos del promotor que te contrata</p>
-<p class="sim-hint">Le mandaremos un enlace personalizado con el importe exacto que tiene que pagar.</p>
-<div class="res" style="margin-bottom:14px">${resumenArtista(r)}</div>
+    const tieneA=st.tieneDatosPromotor==='si';
+    const tieneB=st.tieneDatosPromotor==='no';
+    const camposPromotor=tieneA?`
 <div class="form-section">
-<div class="form-section-title">Promotor / Empresa contratante</div>
+<div class="form-section-title">Datos fiscales del promotor</div>
 <div class="form-grid">
 <div class="form-field full"><label>Nombre o razón social *</label><input type="text" placeholder="Empresa S.L. / Nombre del promotor" maxlength="120" value="${aEscape(st.pNombre)}" oninput="st.pNombre=this.value;rBtn('exp-bs3',promotorDatosValidos)"></div>
-<div class="form-field"><label>CIF / DNI *</label><input type="text" placeholder="B12345678 / 12345678A" maxlength="9" value="${aEscape(st.pCif)}" oninput="st.pCif=this.value.toUpperCase();this.value=st.pCif;rBtn('exp-bs3',promotorDatosValidos)" onblur="aShowFieldError(this,aValidCifDniNie(this.value)?null:'CIF, DNI o NIE inválido')"><div class="field-error"></div></div>
-<div class="form-field"><label>Email del promotor *</label><input type="email" placeholder="promotor@empresa.com" value="${aEscape(st.pEmail)}" oninput="st.pEmail=this.value.trim().toLowerCase();rBtn('exp-bs3',promotorDatosValidos)" onblur="aShowFieldError(this,aValidEmail(this.value)?null:'Email inválido')"><div class="field-error"></div></div>
+<div class="form-field"><label>NIF / CIF *</label><input type="text" placeholder="B12345678 / 12345678A" maxlength="9" value="${aEscape(st.pCif)}" oninput="st.pCif=this.value.toUpperCase();this.value=st.pCif;rBtn('exp-bs3',promotorDatosValidos)" onblur="aShowFieldError(this,aValidCifDniNie(this.value)?null:'CIF, DNI o NIE inválido')"><div class="field-error"></div></div>
+<div class="form-field"><label>Teléfono *</label><input type="tel" placeholder="+34 600 000 000" maxlength="16" value="${aEscape(st.pTel)}" oninput="st.pTel=this.value;rBtn('exp-bs3',promotorDatosValidos)" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido')"><div class="field-error"></div></div>
+<div class="form-field full"><label>Email del promotor *</label><input type="email" placeholder="promotor@empresa.com" value="${aEscape(st.pEmail)}" oninput="st.pEmail=this.value.trim().toLowerCase();rBtn('exp-bs3',promotorDatosValidos)" onblur="aShowFieldError(this,aValidEmail(this.value)?null:'Email inválido')"><div class="field-error"></div></div>
+<div class="form-field full"><label>Dirección fiscal *</label><input type="text" placeholder="Calle, número, CP, municipio, provincia" maxlength="200" value="${aEscape(st.pDireccion)}" oninput="st.pDireccion=this.value;rBtn('exp-bs3',promotorDatosValidos)" onchange="st.pDireccion=this.value;rBtn('exp-bs3',promotorDatosValidos)"></div>
 </div>
 </div>
-<button class="btn-n" id="exp-bs3" onclick="generarEnlaceArtista()" ${!promotorDatosValidos()?'disabled':''}>Generar enlace de pago →</button>`;
+<p class="legal">Enviaremos al promotor un email con la pro-forma y un enlace de aceptación. Tramitamos tu alta en cuanto confirme la gestión.</p>
+<button class="btn-n" id="exp-bs3" onclick="enviarExpedienteProfesional()" ${!promotorDatosValidos()?'disabled':''}>Enviar al promotor para que confirme →</button>`:tieneB?`
+<div class="form-section">
+<div class="form-section-title">Email del promotor</div>
+<div class="form-grid">
+<div class="form-field full"><label>Email del promotor *</label><input type="email" placeholder="promotor@empresa.com" value="${aEscape(st.pEmail)}" oninput="st.pEmail=this.value.trim().toLowerCase();rBtn('exp-bs3',promotorDatosValidos)" onblur="aShowFieldError(this,aValidEmail(this.value)?null:'Email inválido')"><div class="field-error"></div></div>
+</div>
+</div>
+<p class="legal">El expediente quedará en <strong>Pendiente datos promotor</strong>. El promotor recibirá un enlace donde rellenará sus datos fiscales y confirmará la gestión. Entonces tramitamos tu alta.</p>
+<button class="btn-n" id="exp-bs3" onclick="enviarExpedienteProfesional()" ${!promotorDatosValidos()?'disabled':''}>Enviar enlace al promotor →</button>`:'';
+    c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
+${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del promotor</p>
+<p class="sim-q">¿Tienes los datos del promotor?</p>
+<p class="sim-hint">Si los tienes, los rellenas tú. Si no, solo necesitamos su email y se los pediremos a él.</p>
+<div class="res" style="margin-bottom:14px">${resumenArtista(r)}</div>
+<div class="opts-grid" style="margin-bottom:4px">
+<div class="opt-card${tieneA?' sel':''}" onclick="setTieneDatosPromotor('si')"><div class="opt-card-label">Tengo los datos del promotor</div><div class="opt-card-sub">Rellenas tú sus datos fiscales (razón social, NIF, dirección, email y teléfono).</div></div>
+<div class="opt-card${tieneB?' sel':''}" onclick="setTieneDatosPromotor('no')"><div class="opt-card-label">No tengo los datos del promotor</div><div class="opt-card-sub">Solo pones su email. Él rellenará sus datos fiscales en el enlace de aceptación.</div></div>
+</div>
+${camposPromotor}`;
   } else if(st.step===4){
     const res=artistAuth.expedienteResult||{};
     const r=calcular();
-    const msg=`Hola ${st.pNombre}, te paso el presupuesto para tramitar mi alta como profesional a través de One2One Pro.
+    const nombreDest=st.tieneDatosPromotor==='si'?st.pNombre:(st.pEmail||'el promotor');
+    const msg=`Hola, te paso la solicitud para tramitar mi alta como profesional a través de One2One Pro.
 
 Actividad: ${st.act.label}
 Caché acordado: ${fmt(r.cache)}
 Días: ${r.dias} (${st.fechaInicio} → ${st.fechaFin})
-Total a pagar (IVA 21% incluido): ${fmt(r.totalPromotor)}
+Importe total a abonar por transferencia (IVA 21% incluido): ${fmt(r.totalPromotor)}
 
-Enlace de pago seguro: ${res.url||''}
+Para confirmar la gestión, revisa los datos y acepta aquí:
+${res.url||''}
 
-Una vez confirmes el pago, One2One Pro me dará de alta en la Seguridad Social. Tú recibirás factura legal y deducible.`;
+El pago se realiza por transferencia bancaria a ${O2O_RAZON_SOCIAL} (IBAN ${O2O_IBAN}). En cuanto confirmes, One2One Pro me dará de alta en la Seguridad Social y recibirás la factura legal y deducible.`;
     c.innerHTML=`<button class="btn-b" onclick="cerrarExpediente()">← Volver al panel</button>
-${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Enlace listo</p>
+${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Enviado al promotor</p>
 <div class="exito" style="text-align:left;padding:16px 0">
 <div class="exito-icon" style="margin:0 auto 14px">✓</div>
-<div class="exito-title" style="text-align:center">Enlace de pago generado</div>
-<div class="exito-sub" style="text-align:center">Envíaselo al promotor por WhatsApp o email. Cuando lo abra, podrá pagar de forma segura.</div>
+<div class="exito-title" style="text-align:center">Enlace de aceptación enviado</div>
+<div class="exito-sub" style="text-align:center">Hemos enviado al promotor un email con la pro-forma y el enlace para confirmar la gestión. También puedes hacérselo llegar tú directamente.</div>
 <div class="exito-exp" style="margin-top:14px">Nº de expediente: ${res.code||''}</div>
 </div>
 <div class="compartir-panel">
-<div class="cp-title">Enviar a ${aEscape(st.pNombre)}</div>
+<div class="cp-title">Enviar a ${aEscape(nombreDest)}</div>
 <div class="cp-btns">
 <button class="cp-btn" onclick="compartirWA(${JSON.stringify(msg).replace(/"/g,'&quot;')})"><div class="cp-btn-icon wa">W</div><div class="cp-btn-text"><strong>Enviar por WhatsApp</strong><span>Abre WhatsApp con el mensaje ya redactado</span></div></button>
-<button class="cp-btn" onclick="compartirEmail(${JSON.stringify(msg).replace(/"/g,'&quot;')},${JSON.stringify('Presupuesto One2One Pro').replace(/"/g,'&quot;')})"><div class="cp-btn-icon em">@</div><div class="cp-btn-text"><strong>Enviar por email</strong><span>Abre tu cliente de correo</span></div></button>
+<button class="cp-btn" onclick="compartirEmail(${JSON.stringify(msg).replace(/"/g,'&quot;')},${JSON.stringify('Confirma la gestión · One2One Pro').replace(/"/g,'&quot;')})"><div class="cp-btn-icon em">@</div><div class="cp-btn-text"><strong>Enviar por email</strong><span>Abre tu cliente de correo</span></div></button>
 <button class="cp-btn" id="btn-copiar" onclick="copiarEnlace(${JSON.stringify(res.url||'').replace(/"/g,'&quot;')})"><div class="cp-btn-icon lk">URL</div><div class="cp-btn-text"><strong>Copiar enlace</strong><span>Copia el enlace al portapapeles</span></div></button>
 </div>
 </div>
 <button class="btn-n" style="margin-top:16px" onclick="artistAuth.expedienteOpen=false;artistAuth.expedienteResult=null;resetExpedienteState();aShowExpedientes()">Ver mis expedientes</button>
-<p class="legal">El enlace está vinculado a este expediente. El promotor sólo tiene que pinchar y pagar — sin registro. Te llevaremos a <strong>Mis expedientes</strong> en unos segundos.</p>`;
+<p class="legal">El enlace está vinculado a este expediente. El promotor confirma la gestión sin registro y paga por transferencia. Te llevaremos a <strong>Mis expedientes</strong> en unos segundos.</p>`;
   }
 }
 
-function promotorDatosValidos(){
-  if(!st.pNombre||st.pNombre.trim().length<2)return false;
-  if(!aValidCifDniNie(st.pCif))return false;
-  if(!aValidEmail(st.pEmail))return false;
-  return true;
+function setTieneDatosPromotor(v){
+  st.tieneDatosPromotor=v;
+  /* Al cambiar de modo, limpiamos los datos del otro modo para no arrastrar
+     valores inconsistentes en el payload. */
+  if(v==='no'){st.pNombre='';st.pCif='';st.pDireccion='';st.pTel='';}
+  renderSim();
 }
 
-function generarEnlaceArtista(){
+function promotorDatosValidos(){
+  /* Flujo B (no tiene datos): basta un email válido del promotor.
+     Flujo A (tiene datos): exige todos los datos fiscales. */
+  if(st.tieneDatosPromotor==='no'){
+    return aValidEmail(st.pEmail);
+  }
+  if(st.tieneDatosPromotor==='si'){
+    if(!st.pNombre||st.pNombre.trim().length<2)return false;
+    if(!aValidCifDniNie(st.pCif))return false;
+    if(!aValidTelES(st.pTel))return false;
+    if(!aValidEmail(st.pEmail))return false;
+    if(!st.pDireccion||st.pDireccion.trim().length<5)return false;
+    return true;
+  }
+  return false;
+}
+
+/* Envía el expediente del profesional a Make. NO usa Stripe: el promotor
+   recibirá un email con la pro-forma y el enlace de aceptación (promotor.html).
+   El expediente nace en estado "Pendiente datos promotor" y pasa a
+   "Promotor confirmado" cuando el promotor acepta y se dispara Docuseal. */
+async function enviarExpedienteProfesional(){
   aSyncFormFromDOM();
+  if(!st.tieneDatosPromotor){alert('Indica si tienes los datos del promotor.');return;}
   if(!promotorDatosValidos()){alert('Revisa los datos del promotor.');return;}
+  const user=aGetCurrentUser();
+  if(!user){alert('Sesión no válida.');return;}
+  const flujo=st.tieneDatosPromotor==='si'?'A':'B';
   const code='O2O-'+Math.floor(Math.random()*90000+10000);
-  /* Construye el enlace que el artista enviará al promotor. Apunta a
-     /pago.html con un resumen completo del expediente en la URL para que
-     la página pueda renderizar sin backend. El parámetro `stripe` se
-     añade más tarde (cuando Make cree la sesión de Stripe Checkout)
-     y reescriba el enlace; mientras tanto pago.html mostrará el resumen
-     con el botón deshabilitado y un aviso de "Esperando enlace de pago". */
   const r=calcular();
-  const params=new URLSearchParams({
-    expediente:code,
+
+  const btn=document.getElementById('exp-bs3');
+  if(btn){btn.disabled=true;btn.textContent='Enviando…';}
+
+  /* Enlace de aceptación. El resumen del encargo viaja en la URL para que
+     promotor.html funcione sin backend; flujo=A pre-rellena los datos
+     fiscales que el profesional ya introdujo. token = Nº de expediente. */
+  const linkParams=new URLSearchParams({
+    token:code,
+    flujo:flujo,
     artista:[st.aNombre,st.aApellidos].filter(Boolean).join(' '),
     actividad:(st.act&&st.act.label)||'',
+    lugar:st.lugarCelebracion||'',
     fechaInicio:st.fechaInicio||'',
     fechaFin:st.fechaFin||'',
     baseImponible:r.cache.toFixed(2),
     iva:r.iva.toFixed(2),
     total:r.totalPromotor.toFixed(2)
   });
-  const url='https://one2onepro.es/pago.html?'+params.toString();
-  artistAuth.expedienteResult={code:code,url:url,createdAt:new Date().toISOString()};
+  if(flujo==='A'){
+    linkParams.set('pNombre',st.pNombre||'');
+    linkParams.set('pCif',st.pCif||'');
+    linkParams.set('pEmail',st.pEmail||'');
+    linkParams.set('pTel',st.pTel||'');
+    linkParams.set('pDireccion',st.pDireccion||'');
+  }
+  const url='https://one2onepro.es/promotor.html?'+linkParams.toString();
+
+  const payload={
+    tipo:'expediente_profesional',
+    flujo:flujo,
+    expediente:code,
+    estado_inicial:'Pendiente datos promotor',
+    fecha_solicitud:new Date().toLocaleDateString('es-ES'),
+    actividad:st.act.label,
+    regimen:st.act.regimen,
+    ubicacion:st.ubic.label,
+    dias:st.dias,
+    fecha_inicio:st.fechaInicio,
+    fecha_fin:st.fechaFin,
+    lugar_celebracion:st.lugarCelebracion||'',
+    cache_acordado:parseFloat(st.imp),
+    seguridad_social:r.ss,
+    comision_one2one:r.com,
+    neto_artista:r.neto,
+    base_imponible:r.cache,
+    iva:r.iva,
+    total_factura:r.totalPromotor,
+    /* Profesional (desde su perfil) */
+    trabajador_usuario_email:user.email,
+    trabajador_email:st.aEmail||user.email,
+    trabajador_nombre:st.aNombre,
+    trabajador_apellidos:st.aApellidos,
+    trabajador_dni:st.aDni,
+    trabajador_fecha_nacimiento:st.aFechaNac,
+    trabajador_nacionalidad:st.aNacionalidad,
+    trabajador_direccion:st.aDireccion,
+    trabajador_iban:(st.aIban||'').replace(/\s/g,'').toUpperCase(),
+    trabajador_naf:st.aNaf||'',
+    trabajador_telefono:st.aTel,
+    /* Promotor: email siempre; datos fiscales solo en Flujo A */
+    promotor_email:st.pEmail,
+    promotor_razon_social:flujo==='A'?st.pNombre:'',
+    promotor_cif:flujo==='A'?st.pCif:'',
+    promotor_telefono:flujo==='A'?st.pTel:'',
+    promotor_direccion:flujo==='A'?st.pDireccion:'',
+    /* Cobro por transferencia */
+    iban_cobro:O2O_IBAN,
+    enlace_aceptacion:url
+  };
+
+  try{
+    await fetch(EMPRESA_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  }catch(err){
+    console.error('enviarExpedienteProfesional:',err);
+    if(btn){btn.disabled=false;btn.textContent='Reintentar →';}
+    alert('No hemos podido enviar la solicitud. Inténtalo de nuevo en unos segundos.');
+    return;
+  }
+  artistAuth.expedienteResult={code:code,url:url,flujo:flujo,createdAt:new Date().toISOString()};
   next();
-  /* Redirección automática a "Mis expedientes" 3s después de generar el enlace.
-     Guard: solo si el usuario sigue en la pantalla de confirmación (no salió
-     manualmente con "Volver al panel"). */
+  /* Redirección automática a "Mis expedientes" 4s después, salvo que el
+     usuario ya haya salido manualmente. */
   setTimeout(function(){
     if(!artistAuth.expedienteOpen)return;
     artistAuth.expedienteOpen=false;
     artistAuth.expedienteResult=null;
     if(typeof resetExpedienteState==='function')resetExpedienteState();
     aShowExpedientes();
-  },3000);
+  },4000);
 }
 
 function renderExpedienteEmpresa(user){
@@ -3262,7 +3410,7 @@ ${esConceptoOtro?`<div class="form-field full"><label>Especifica el concepto *</
     const viaOpts=TIPOS_VIA.map(v=>`<option value="${v}" ${st.eTipoVia===v?'selected':''}>${v}</option>`).join('');
     const paisOpts=PAISES.map(pa=>`<option value="${pa}" ${st.ePais===pa?'selected':''}>${pa}</option>`).join('');
     c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
-${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Datos de tu empresa, confirmación y pago</p>
+${prog(STEPS)}<p class="sim-meta">Paso 5 de ${STEPS} — Datos de tu empresa y confirmación</p>
 <p class="sim-q">Datos fiscales y confirmación</p>
 <p class="sim-hint">Necesitamos los datos fiscales de tu empresa para emitir la factura legal del servicio.</p>
 ${autofilledFromProfile?'<div class="readonly-lock"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Datos de tu perfil. No son editables aquí; para cambiarlos, edita tu perfil.</span></div>':''}
@@ -3324,12 +3472,23 @@ ONE2ONE SOLUTIONS S.L. (CIF B19428846) presta un servicio de gestión del alta e
 El Cliente declara expresamente que el trabajo tiene naturaleza puntual y no continuada, que no existe relación laboral estable entre el Cliente y el profesional, y asume plena responsabilidad por la veracidad de los datos facilitados.<br><br>
 One2One Pro tramita el alta y emite la factura. El pago es condición previa imprescindible. Para cualquier controversia, las partes se someten a los Juzgados y Tribunales de Cádiz.
 </div>
+<div class="iban-box">
+<div class="iban-box-t">Forma de pago — transferencia bancaria</div>
+<p class="iban-box-d">Como contratante, tú eres el promotor. Al confirmar, recibirás la pro-forma con el importe exacto. El pago se realiza por transferencia a:</p>
+<div class="iban-box-row"><span>Beneficiario</span><strong>${O2O_RAZON_SOCIAL}</strong></div>
+<div class="iban-box-row"><span>CIF</span><strong>${O2O_CIF}</strong></div>
+<div class="iban-box-row"><span>IBAN</span><strong>${O2O_IBAN}</strong></div>
+</div>
 <label class="contrato-check">
 <input type="checkbox" ${st.condAceptadas?'checked':''} onchange="st.condAceptadas=this.checked;rBtn('exp-bs4',empresaDatosValidos)">
-<span class="contrato-check-text">He leído y acepto las <strong>Condiciones del Servicio</strong>. Declaro que el trabajo es puntual y no recurrente.</span>
+<span class="contrato-check-text">He leído y acepto las <strong>condiciones del servicio de ${O2O_RAZON_SOCIAL}</strong>. Declaro que el trabajo es puntual y no recurrente.</span>
 </label>
-<button class="btn-n" id="exp-bs4" onclick="finalizarExpedienteEmpresa()" ${!empresaDatosValidos()?'disabled':''}>Proceder al pago →</button>
-<p class="legal">Al continuar serás redirigido a la pasarela de pago seguro. La aceptación queda registrada con fecha, hora e identificador.</p>`;
+<label class="contrato-check">
+<input type="checkbox" ${st.compromisoPago?'checked':''} onchange="st.compromisoPago=this.checked;rBtn('exp-bs4',empresaDatosValidos)">
+<span class="contrato-check-text">Me comprometo a efectuar el pago en un plazo máximo de <strong>${O2O_PLAZO_PAGO_DIAS} días naturales</strong> desde la recepción de este documento.</span>
+</label>
+<button class="btn-n" id="exp-bs4" onclick="finalizarExpedienteEmpresa()" ${!empresaDatosValidos()?'disabled':''}>Confirmo la gestión →</button>
+<p class="legal">Al confirmar, tramitamos el alta del profesional y te enviamos la pro-forma con los datos para la transferencia. La aceptación queda registrada con tu nombre, email, IP, fecha y hora.</p>`;
   }
 }
 
@@ -3350,6 +3509,7 @@ function empresaDatosValidos(){
   if(!st.eProvincia)return false;
   if(!st.ePais)return false;
   if(!st.condAceptadas)return false;
+  if(!st.compromisoPago)return false;
   return true;
 }
 
@@ -3509,11 +3669,10 @@ async function finalizarExpedienteEmpresa(){
   const r=calcular();
   const expNum='O2O-'+Math.floor(Math.random()*90000+10000);
   const empresaDir=[st.eTipoVia,st.eCalle,st.eNumero,st.ePiso].filter(Boolean).join(' ')+', '+(st.eCp||'')+' '+(st.eMunicipio||'')+', '+(st.eProvincia||'')+(st.ePais&&st.ePais!=='España'?' ('+st.ePais+')':'');
-  /* Guard defensivo final: el módulo Stripe (Make scenario 5779346, módulo 14)
-     pone este valor en `customer_email`. Si llegase vacío Stripe responde
-     [email_invalid] y aborta el checkout. Saneamos y validamos formato como
-     última línea de defensa por si validación previa fue bypassed (autofill,
-     queue stale, race condition entre render y submit). */
+  /* Guard defensivo final: este email es a donde Make envía la pro-forma y la
+     factura. Si llegase vacío o malformado, el envío fallaría. Saneamos y
+     validamos formato como última línea de defensa por si la validación previa
+     fue bypassed (autofill, queue stale, race condition entre render y submit). */
   const empresaEmail=((st.eEmailFact||'').trim().toLowerCase())||((user.email||'').trim().toLowerCase());
   if(!aValidEmail(empresaEmail)){
     document.getElementById('sim-c').innerHTML=`<div class="exito">
@@ -3564,8 +3723,15 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
 </div>`;
     return;
   }
-  document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Procesando su solicitud...</div><div class="exito-sub">Estamos preparando su enlace de pago. Un momento por favor.</div></div>`;
+  document.getElementById('sim-c').innerHTML=`<div class="exito"><div class="exito-icon" style="background:#e8f0fe;color:#0f2d5e">⏳</div><div class="exito-title">Confirmando la gestión...</div><div class="exito-sub">Estamos registrando tu confirmación y preparando la pro-forma. Un momento por favor.</div></div>`;
+  /* Registro de la aceptación: la empresa es el promotor, así que acepta el
+     compromiso de pago aquí mismo (sin enlace externo). Capturamos IP. */
+  const aceptacionIP=await o2oGetIP();
+  const aceptacionTS=new Date().toISOString();
   const payload={
+    tipo:'expediente_empresa',
+    flujo:'C',
+    estado_inicial:'Promotor confirmado',
     expediente:expNum,
     fecha_solicitud:new Date().toLocaleDateString('es-ES'),
     actividad:st.act.label,
@@ -3584,7 +3750,16 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
     base_imponible:r.cache,
     iva:r.iva,
     total_factura:r.totalPromotor,
-    total_factura_centimos:Math.round(r.totalPromotor*100),
+    /* Cobro por transferencia (ya no hay Stripe). */
+    iban_cobro:O2O_IBAN,
+    /* Aceptación del compromiso de pago (la empresa es el promotor). */
+    condiciones_aceptadas:true,
+    compromiso_pago_aceptado:true,
+    plazo_pago_dias:O2O_PLAZO_PAGO_DIAS,
+    aceptacion_nombre:st.eContacto||user.nombre||'',
+    aceptacion_email:empresaEmail,
+    aceptacion_ip:aceptacionIP,
+    aceptacion_timestamp:aceptacionTS,
     /* Empresa (recogida en este expediente). empresa_email ya saneado y validado arriba. */
     empresa_email:empresaEmail,
     empresa_razon_social:st.eRazon,
@@ -3599,15 +3774,11 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
        Las URLs las generó el Worker tras subir los archivos a la carpeta
        "DNIs One2One Pro". */
     modo_datos_trabajador:'manual',
-    /* trabajador_email viaja en el payload pero el escenario 1 de Make
-       (Integration Webhooks, ID 5779346) NO debe usarlo para notificar
-       al trabajador todavía — el promotor aún no ha pagado.
-       AVISO IMPORTANTE: el módulo Brevo 13 del escenario 1 que enviaba
-       email al trabajador DEBE estar desactivado en Make. El email al
-       trabajador solo se envía desde el escenario 2 post-pago, cuando
-       Stripe dispara checkout.session.completed. Antes del fix, este
-       campo llegaba vacío y Brevo caía a empresa_email → el promotor
-       recibía el aviso dos veces y el trabajador, ninguno. */
+    /* Flujo C (empresa): la empresa es el promotor y confirma el compromiso
+       de pago en este mismo formulario, así que el expediente nace en
+       "Promotor confirmado" y Make debe disparar Docuseal al profesional
+       directamente (ya NO se espera a Stripe). El pago llega después por
+       transferencia y se marca "Pago recibido" manualmente. */
     trabajador_email:st.aEmail,
     trabajador_nombre:st.aNombre,
     trabajador_apellidos:st.aApellidos,
@@ -3648,10 +3819,10 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
     }});
     document.getElementById('sim-c').innerHTML=`<div class="exito">
 <div class="exito-icon">✓</div>
-<div class="exito-title">Solicitud recibida</div>
-<div class="exito-sub">Hemos recibido su solicitud. En breve recibirá un email en <strong>${aEscape(payload.empresa_email)}</strong> con el enlace de pago y el importe exacto.</div>
+<div class="exito-title">Gestión confirmada</div>
+<div class="exito-sub">Hemos registrado tu confirmación y empezamos a tramitar el alta del profesional. En breve recibirás en <strong>${aEscape(payload.empresa_email)}</strong> la pro-forma con el importe exacto y los datos para la transferencia (IBAN ${O2O_IBAN}).</div>
 <div class="exito-exp">Nº de expediente: ${expNum}</div>
-<p class="exito-note">En cuanto confirme el pago tramitamos el alta del profesional con la máxima agilidad. Te llevaremos a <strong>Mis expedientes</strong> en unos segundos.</p>
+<p class="exito-note">El pago se realiza por transferencia a ${O2O_RAZON_SOCIAL} en un máximo de ${O2O_PLAZO_PAGO_DIAS} días. Te llevaremos a <strong>Mis expedientes</strong> en unos segundos.</p>
 <button class="btn-n" style="margin-top:18px" onclick="artistAuth.expedienteOpen=false;artistAuth.expedienteResult=null;resetExpedienteState();aShowExpedientes()">Ver mis expedientes</button>
 <button class="btn-b" style="margin-top:10px" onclick="cerrarExpediente()">Volver al panel</button>
 </div>`;
@@ -3777,9 +3948,9 @@ function renderSim(){
 
 /* ─── Init ─── */
 (function(){
-  /* Pago confirmado: si la pasarela redirige a ...?pago=ok mostramos al
-     promotor una pantalla de confirmación a pantalla completa y NO
-     renderizamos el resto de la web. */
+  /* Compatibilidad: si una URL antigua llega con ...?pago=ok mostramos una
+     pantalla de confirmación a pantalla completa y NO renderizamos el resto
+     de la web. (El flujo nuevo confirma vía /promotor.html, sin esta ruta.) */
   if(new URLSearchParams(window.location.search).get('pago')==='ok'){
     document.body.innerHTML=`
 <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fff;padding:48px 24px;box-sizing:border-box">
@@ -4068,7 +4239,7 @@ function renderSim(){
 <li><strong>Interés legítimo</strong> (art. 6.1.f) en la seguridad de la plataforma y la prevención del fraude.</li>
 </ul>
 <h3>5. Destinatarios</h3>
-<p>Tus datos podrán comunicarse a la <strong>Tesorería General de la Seguridad Social</strong> y a la <strong>Agencia Estatal de Administración Tributaria</strong>, a entidades bancarias y a la <strong>pasarela de pago</strong>, así como a la asesoría laboral y a los proveedores tecnológicos que actúan como encargados del tratamiento (alojamiento web, almacenamiento en la nube y verificación documental). No cedemos datos a terceros con fines comerciales.</p>
+<p>Tus datos podrán comunicarse a la <strong>Tesorería General de la Seguridad Social</strong> y a la <strong>Agencia Estatal de Administración Tributaria</strong>, a entidades bancarias, así como a la asesoría laboral y a los proveedores tecnológicos que actúan como encargados del tratamiento (alojamiento web, almacenamiento en la nube y verificación documental). No cedemos datos a terceros con fines comerciales.</p>
 <h3>6. Transferencias internacionales</h3>
 <p>Algunos proveedores tecnológicos pueden estar ubicados fuera del Espacio Económico Europeo. En tal caso, las transferencias se amparan en garantías adecuadas, como las cláusulas contractuales tipo aprobadas por la Comisión Europea.</p>
 <h3>7. Conservación</h3>
@@ -4107,7 +4278,7 @@ function renderSim(){
 <h3>4. Precio, comisión e impuestos</h3>
 <p>One2One Pro percibe una <strong>comisión del 10% sobre el caché acordado</strong>. El promotor abona el caché más el IVA (21%). Sobre el caché se aplican las cuotas de Seguridad Social a cargo del trabajador y la retención de IRPF que corresponda según la situación fiscal de cada profesional. Las cantidades del simulador son <strong>orientativas</strong>; el importe definitivo se determina al tramitar el alta.</p>
 <h3>5. Contratación y pago</h3>
-<p>La contratación se realiza mediante un enlace de pago seguro. El alta en la Seguridad Social se tramita una vez confirmado el pago y siempre que se solicite con antelación suficiente a la fecha de la actuación.</p>
+<p>La contratación se realiza mediante un enlace de aceptación en el que el promotor confirma la gestión. El pago se efectúa por transferencia bancaria a ONE2ONE SOLUTIONS S.L. en un plazo máximo de 7 días naturales. El alta en la Seguridad Social se tramita una vez el promotor confirma la gestión y siempre que se solicite con antelación suficiente a la fecha de la actuación.</p>
 <h3>6. Desistimiento y cancelaciones</h3>
 <p>Al tratarse de un servicio que se ejecuta en una fecha determinada y a petición expresa del usuario, una vez iniciada la tramitación del alta el servicio se considera prestado y no procede su reembolso, salvo error imputable a One2One Pro. Cuando resulte aplicable el derecho de desistimiento, este decae si el servicio ha comenzado a ejecutarse con tu consentimiento, conforme al artículo 103 del texto refundido de la Ley General para la Defensa de los Consumidores y Usuarios.</p>
 <h3>7. Obligaciones del usuario</h3>
