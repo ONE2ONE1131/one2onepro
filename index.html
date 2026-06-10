@@ -4033,10 +4033,14 @@ function renderSim(){
             renderSim();
             setTimeout(function(){showFlash('✓ Email verificado. Tu cuenta está activa.','success');},80);
           }else{
+            /* Verificación correcta sin sesión activa: mostramos un mensaje de
+               éxito y abrimos el formulario de login automáticamente tras 1s,
+               sin que el usuario tenga que hacer nada más. */
             artistAuth.view='login';
-            artistAuth.info='✓ Email verificado. Inicia sesión para acceder a tu cuenta.';
+            artistAuth.info='¡Cuenta verificada! Inicia sesión para continuar.';
             artistAuth.form={email:email};
-            openAuthModal('login');
+            showFlash('¡Cuenta verificada! Inicia sesión para continuar.','success');
+            setTimeout(function(){openAuthModal('login');},1000);
           }
         }else{
           artistAuth.view='login';
