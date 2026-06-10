@@ -4024,24 +4024,18 @@ function renderSim(){
         const users=aGetUsers();
         if(users[email]){
           aUpdateUser(email,{verified:true,verifiedAt:new Date().toISOString()});
-          const sess=aGetSessionEmail();
-          if(sess===email){
-            /* Pinta un toast de bienvenida y deja que renderSim decida
-               la siguiente vista. Para artistas sin perfil renderSim
-               muestra automáticamente renderArtProfileForm; para empresa
-               o artistas con perfil aterrizan en su dashboard. */
-            renderSim();
-            setTimeout(function(){showFlash('✓ Email verificado. Tu cuenta está activa.','success');},80);
-          }else{
-            /* Verificación correcta sin sesión activa: mostramos un mensaje de
-               éxito y abrimos el formulario de login automáticamente tras 1s,
-               sin que el usuario tenga que hacer nada más. */
-            artistAuth.view='login';
-            artistAuth.info='¡Cuenta verificada! Inicia sesión para continuar.';
-            artistAuth.form={email:email};
-            showFlash('¡Cuenta verificada! Inicia sesión para continuar.','success');
-            setTimeout(function(){openAuthModal('login');},1000);
-          }
+          /* Verificación correcta: tras actualizar el perfil, mostramos un
+             mensaje de éxito y abrimos el formulario de login automáticamente
+             después de 1s, sin que el usuario tenga que hacer nada más.
+             Limpiamos cualquier sesión previa para que openAuthModal pueda
+             abrir el modal (los usuarios logueados no reciben modal). */
+          aClearSession();
+          artistAuth.view='login';
+          artistAuth.info='¡Cuenta verificada! Inicia sesión para continuar.';
+          artistAuth.form={email:email};
+          renderSim();
+          showFlash('¡Cuenta verificada! Inicia sesión para continuar.','success');
+          setTimeout(function(){openAuthModal('login');},1000);
         }else{
           artistAuth.view='login';
           artistAuth.error='La cuenta asociada al enlace ya no existe.';
