@@ -1999,6 +1999,31 @@ function closeAuthModal(){
   m.setAttribute('aria-hidden','true');
   document.body.style.overflow='';
 }
+
+/* Pantalla de confirmación tras verificar el email desde el enlace del correo
+   (URL con ?verified=true). Overlay a pantalla completa que NO destruye el DOM
+   del modal de login, para que el botón pueda abrirlo sin recargar. */
+function aShowVerifiedScreen(){
+  if(document.getElementById('verified-overlay'))return;
+  const ov=document.createElement('div');
+  ov.id='verified-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#fff;padding:48px 24px;box-sizing:border-box';
+  ov.innerHTML='<div style="max-width:520px;width:100%;text-align:center">'
+    +'<div style="font-size:88px;line-height:1;margin-bottom:28px">✅</div>'
+    +'<h1 style="font-family:\'Playfair Display\',serif;font-size:34px;font-weight:700;color:#0f2d5e;letter-spacing:-.5px;line-height:1.2;margin:0 0 18px">¡Email verificado!</h1>'
+    +'<p style="font-family:\'DM Sans\',sans-serif;font-size:17px;font-weight:400;color:#4a6080;line-height:1.6;margin:0 0 32px">Tu cuenta ha sido verificada correctamente. Ya puedes iniciar sesión.</p>'
+    +'<button type="button" onclick="aGoToLoginFromVerified()" style="background:#00a86b;color:#fff;border:none;border-radius:8px;padding:16px 44px;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity=\'.85\'" onmouseout="this.style.opacity=\'1\'">Iniciar sesión</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+  document.body.style.overflow='hidden';
+}
+/* Cierra el overlay de verificación y abre el formulario de login sin recargar. */
+function aGoToLoginFromVerified(){
+  const ov=document.getElementById('verified-overlay');
+  if(ov)ov.remove();
+  document.body.style.overflow='';
+  openAuthModal('login');
+}
 /* Cierre con tecla Escape */
 document.addEventListener('keydown',function(ev){
   if(ev.key!=='Escape')return;
@@ -3981,6 +4006,16 @@ function renderSim(){
     const params=new URLSearchParams(window.location.search);
     const verifyTok=params.get('verify');
     const resetTok=params.get('reset');
+    const verifiedFlag=params.get('verified');
+    /* Enlace de confirmación de Make: https://one2onepro.es/?verified=true
+       El email ya quedó verificado en el backend; aquí solo mostramos la
+       pantalla de confirmación con el botón para iniciar sesión. */
+    if(verifiedFlag==='true'||verifiedFlag==='1'){
+      const cleanUrl=window.location.pathname+window.location.hash;
+      window.history.replaceState({},'',cleanUrl);
+      aShowVerifiedScreen();
+      return;
+    }
     if(verifyTok){
       const email=aConsumeVerifyToken(verifyTok);
       const cleanUrl=window.location.pathname+window.location.hash;
