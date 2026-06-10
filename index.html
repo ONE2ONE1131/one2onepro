@@ -125,6 +125,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;ali
 .password-strength{display:block;font-size:11px;font-weight:300;margin-top:6px;color:var(--gris-suave)}
 .password-strength.ok{color:var(--verde)}
 .password-strength.weak{color:#b45309}
+.password-strength.mismatch{color:#e53935}
 @media(max-width:520px){
   .auth-modal{padding:40px 12px 24px}
   .auth-modal-box{padding:26px 22px 22px}
@@ -1968,6 +1969,24 @@ function aUpdatePassStrength(val){
   else{el.className='password-strength weak';el.textContent='Mínimo 8 caracteres ('+val.length+'/8)';}
 }
 
+/* Valida en tiempo real que la contraseña y su confirmación coincidan en el
+   formulario de registro. Pinta ✓ verde si coinciden, texto rojo si no, y
+   bloquea el botón de registro hasta que coincidan. */
+function aUpdatePassMatch(){
+  const p=document.getElementById('art-reg-pass');
+  const p2=document.getElementById('art-reg-pass2');
+  const span=document.getElementById('art-pass-match');
+  const btn=document.getElementById('art-reg-submit');
+  const v1=p?p.value:'';
+  const v2=p2?p2.value:'';
+  if(span){
+    if(!v2){span.className='password-strength';span.textContent='';}
+    else if(v1===v2){span.className='password-strength ok';span.textContent='✓ Las contraseñas coinciden';}
+    else{span.className='password-strength mismatch';span.textContent='Las contraseñas no coinciden';}
+  }
+  if(btn){btn.disabled=!(v1.length>0 && v1===v2);}
+}
+
 /* ─── Modal de login / registro ─── */
 function isAuthModalOpen(){
   const m=document.getElementById('auth-modal');
@@ -2111,9 +2130,10 @@ ${err}
   const fields=perfil?`<div class="form-grid">
 <div class="form-field full"><label>Nombre</label><input type="text" placeholder="${isArt?'Tu nombre':'Nombre de contacto'}" autocomplete="given-name" maxlength="80" value="${aEscape(f.nombre||'')}" oninput="artistAuth.form.nombre=this.value"></div>
 <div class="form-field full"><label>Email</label><input type="email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
-<div class="form-field full"><label>Contraseña</label><input type="password" id="art-reg-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value)" onkeydown="if(event.key==='Enter')doRegister()"><span id="art-pass-strength" class="password-strength"></span></div>
+<div class="form-field full"><label>Contraseña</label><input type="password" id="art-reg-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value);aUpdatePassMatch()" onkeydown="if(event.key==='Enter')doRegister()"><span id="art-pass-strength" class="password-strength"></span></div>
+<div class="form-field full"><label>Confirmar contraseña</label><input type="password" id="art-reg-pass2" placeholder="Repite la contraseña" autocomplete="new-password" value="${aEscape(f.pass2||'')}" oninput="artistAuth.form.pass2=this.value;aUpdatePassMatch()" onkeydown="if(event.key==='Enter')doRegister()"><span id="art-pass-match" class="password-strength"></span></div>
 </div>
-<button class="btn-verde-full" onclick="doRegister()">Crear cuenta ${isArt?'como profesional':'de empresa'}</button>`:`<p class="auth-hint">Elige arriba si eres <strong>profesional/técnico</strong> o <strong>promotor/empresa</strong> para continuar.</p>`;
+<button class="btn-verde-full" id="art-reg-submit" onclick="doRegister()" ${(f.pass&&f.pass===f.pass2)?'':'disabled'}>Crear cuenta ${isArt?'como profesional':'de empresa'}</button>`:`<p class="auth-hint">Elige arriba si eres <strong>profesional/técnico</strong> o <strong>promotor/empresa</strong> para continuar.</p>`;
   c.innerHTML=`${logoBlock}<h2 class="auth-modal-title" id="auth-modal-title">Crea tu <em>cuenta</em></h2>
 ${tabs}
 ${err}
@@ -2121,6 +2141,7 @@ ${selector}
 ${fields}
 <p class="auth-footer-modal">¿Ya tienes cuenta? <button class="auth-link" type="button" onclick="setAuthTab('login')">Iniciar sesión</button></p>`;
   if(perfil && (f.pass||'').length>0)setTimeout(function(){aUpdatePassStrength(f.pass);},0);
+  if(perfil)setTimeout(function(){aUpdatePassMatch();},0);
 }
 
 function setAuthTab(tab){
@@ -2205,10 +2226,12 @@ function doRegister(){
   const nombre=(f.nombre||'').trim();
   const email=(f.email||'').trim().toLowerCase();
   const pass=f.pass||'';
+  const pass2=f.pass2||'';
   if(!perfil){artistAuth.error='Elige si eres artista/técnico o promotor/empresa.';renderAuthModal();return;}
   if(nombre.length<2){artistAuth.error='Indica tu nombre.';renderAuthModal();return;}
   if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderAuthModal();return;}
   if(pass.length<8){artistAuth.error='La contraseña debe tener al menos 8 caracteres.';renderAuthModal();return;}
+  if(pass!==pass2){artistAuth.error='Las contraseñas no coinciden.';renderAuthModal();return;}
   const users=aGetUsers();
   if(users[email]){artistAuth.error='Ya existe una cuenta con ese email. Inicia sesión.';renderAuthModal();return;}
   users[email]={nombre:nombre,password:pass,accountType:perfil,verified:false,createdAt:new Date().toISOString(),profile:null,profileStatus:'pendiente'};
