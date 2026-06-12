@@ -2306,7 +2306,14 @@ async function doRegister(){
   if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderAuthModal();return;}
   if(pass.length<8){artistAuth.error='La contraseña debe tener al menos 8 caracteres.';renderAuthModal();return;}
   if(pass!==pass2){artistAuth.error='Las contraseñas no coinciden.';renderAuthModal();return;}
+  /* Anti doble submit (botón + Enter): un registro = un solo /register y un
+     solo email de verificación. */
+  if(artistAuth._registering)return;
+  artistAuth._registering=true;
+  const _regBtn=document.getElementById('art-reg-submit');
+  if(_regBtn){_regBtn.disabled=true;_regBtn.textContent='Creando cuenta…';}
   const res=await apiAuth('/register',{email:email,password:pass,accountType:perfil,nombre:nombre});
+  artistAuth._registering=false;
   if(res.network){artistAuth.error='No hemos podido conectar. Inténtalo en unos segundos.';renderAuthModal();return;}
   if(res.status===409){artistAuth.error='Ya existe una cuenta con ese email. Inicia sesión.';artistAuth.view='login';renderAuthModal();return;}
   if(!res.ok||!res.data||!res.data.ok){artistAuth.error=(res.data&&res.data.error)||'No se ha podido crear la cuenta.';renderAuthModal();return;}
@@ -2349,6 +2356,8 @@ async function aResendVerifyEmail(email,nombre){
 /* Reenvío desde el modal de login cuando el login dio EMAIL_NOT_VERIFIED. */
 async function aResendVerifyFromLogin(){
   const email=artistAuth.needsVerify;if(!email)return;
+  if(artistAuth._resending)return; /* anti doble click */
+  artistAuth._resending=true;
   artistAuth.info='Reenviando email de verificación…';artistAuth.error='';renderAuthModal();
   try{
     await aResendVerifyEmail(email,'');
@@ -2356,6 +2365,7 @@ async function aResendVerifyFromLogin(){
   }catch(e){
     artistAuth.info='';artistAuth.error='No hemos podido reenviar el email. Inténtalo en unos segundos.';
   }
+  artistAuth._resending=false;
   renderAuthModal();
 }
 
@@ -2374,6 +2384,7 @@ function renderPendingVerification(email){
 
 /* Sale de la pantalla de verificación pendiente y vuelve al registro. */
 function aCancelPending(){
+  aStopPendingPoll();
   artistAuth.pendingVerify=null;
   perfil=null;
   updateChromeUI();
@@ -2381,8 +2392,101 @@ function aCancelPending(){
   openAuthModal('register');
 }
 
+/* ─── Polling de verificación (pantalla "verificación pendiente") ───────────
+   Mientras la pantalla esté visible, cada 5s preguntamos al servidor si la
+   cuenta ya está verificada (desde cualquier dispositivo). Al detectarlo, la
+   pantalla cambia sola a "¡verificada! inicia sesión". */
+let pendingVerifyPollTimer=null;
+function aStartPendingPoll(email){
+  aStopPendingPoll();
+  if(!email)return;
+  pendingVerifyPollTimer=setInterval(function(){
+    apiAuth('/check-verified',{email:email}).then(function(res){
+      if(res && res.data && res.data.verified===true){
+        aStopPendingPoll();
+        if(artistAuth.pendingVerify){artistAuth.pendingVerify.verified=true;renderSim();}
+      }
+    });
+  },5000);
+}
+function aStopPendingPoll(){
+  if(pendingVerifyPollTimer){clearInterval(pendingVerifyPollTimer);pendingVerifyPollTimer=null;}
+}
+
+/* Pantalla grande de "cuenta ya verificada" con botón "Iniciar sesión". */
+function aRenderPendingVerified(email){
+  const c=document.getElementById('sim-c');
+  if(!c)return;
+  c.innerHTML=`<div class="auth-hero">
+<p class="auth-eyebrow">Cuenta activada</p>
+<h2 class="auth-title">¡Tu cuenta ya está <em>verificada</em>!</h2>
+<p class="auth-lead">Ya puedes iniciar sesión y empezar a usar One2One Pro.</p>
+</div>
+<div class="auth-msg success">✓ Email verificado correctamente.</div>
+<button class="btn-verde-full" style="margin-top:8px" onclick="aGoLoginFromPending()">Iniciar sesión</button>`;
+}
+/* Botón "Iniciar sesión" de la pantalla verificada: abre el login con el email
+   ya rellenado. */
+function aGoLoginFromPending(){
+  const email=(artistAuth.pendingVerify&&artistAuth.pendingVerify.email)||'';
+  aStopPendingPoll();
+  artistAuth.pendingVerify=null;
+  perfil=null;
+  artistAuth.view='login';
+  artistAuth.form={email:email};
+  artistAuth.error='';artistAuth.info='';
+  updateChromeUI();
+  renderSim();
+  openAuthModal('login',true);
+}
+
+/* Pantalla de ERROR de verificación (token inválido/caducado o red). Mensaje
+   claro + opción de reenviar: pide el email (o usa el que conozcamos) y llama a
+   /resend-verify + Make. Nadie se queda en un callejón sin salida. */
+function aShowVerifyErrorScreen(msg,presetEmail){
+  aStopPendingPoll();
+  artistAuth.pendingVerify=null;
+  perfil=null;
+  artistAuth._reverifyEmail=presetEmail||'';
+  const hero=document.querySelector('.hero');if(hero)hero.classList.remove('anon');
+  const simEl=document.getElementById('sim');if(simEl)simEl.style.display='';
+  renderNavRight();
+  const c=document.getElementById('sim-c');
+  if(!c)return;
+  c.innerHTML=`<div class="auth-hero">
+<p class="auth-eyebrow">Verificación</p>
+<h2 class="auth-title">No hemos podido <em>verificar</em></h2>
+<p class="auth-lead">${aEscape(msg)}</p>
+</div>
+<div class="auth-msg info">El enlace puede haber caducado o ya haberse usado. Pídenos uno nuevo y te llegará al instante.</div>
+<div class="form-grid"><div class="form-field full"><label>Tu email</label><input type="email" id="reverify-email" placeholder="tu@email.com" value="${aEscape(presetEmail||'')}" oninput="artistAuth._reverifyEmail=this.value.trim().toLowerCase()"></div></div>
+<div id="reverify-status" style="min-height:20px;margin-bottom:8px"></div>
+<button class="btn-verde-full" id="reverify-btn" onclick="aReverifyResend()">Reenviar email de verificación</button>
+<p class="auth-footer-modal" style="margin-top:14px"><button class="auth-link" type="button" onclick="aCancelPending()">Volver al inicio</button></p>`;
+}
+function aReverifyResend(){
+  const inp=document.getElementById('reverify-email');
+  const email=((artistAuth._reverifyEmail||(inp&&inp.value)||'')).trim().toLowerCase();
+  const st=document.getElementById('reverify-status');
+  const btn=document.getElementById('reverify-btn');
+  if(!aValidEmail(email)){if(st)st.innerHTML='<span style="font-size:12px;color:#dc2626">Introduce un email válido.</span>';return;}
+  if(btn&&btn.disabled)return; /* anti doble click */
+  if(btn){btn.disabled=true;btn.textContent='Enviando…';}
+  aResendVerifyEmail(email,'').then(function(){
+    if(st)st.innerHTML='<span style="font-size:12px;color:var(--verde);font-weight:500">✓ Email enviado a '+aEscape(email)+'. Revisa tu bandeja.</span>';
+    /* Volvemos a la pantalla de pendiente (con polling) para este email. */
+    artistAuth.pendingVerify={email:email,nombre:''};
+    setTimeout(function(){renderSim();},1400);
+  }).catch(function(){
+    if(st)st.innerHTML='<span style="font-size:12px;color:#dc2626">No hemos podido reenviar. Inténtalo en unos segundos.</span>';
+    if(btn){btn.disabled=false;btn.textContent='Reenviar email de verificación';}
+  });
+}
+
 async function aResendVerification(){
   const pv=artistAuth.pendingVerify;const email=pv&&pv.email;if(!email)return;
+  if(artistAuth._resending)return; /* anti doble click */
+  artistAuth._resending=true;
   const st=document.getElementById('resend-status');
   if(st){st.innerHTML='<span style="font-size:12px;color:var(--gris-suave)">Enviando…</span>';}
   try{
@@ -2391,6 +2495,7 @@ async function aResendVerification(){
   }catch(e){
     if(st){st.innerHTML='<span style="font-size:12px;color:#dc2626">No hemos podido reenviar el email. Inténtalo en unos segundos.</span>';}
   }
+  artistAuth._resending=false;
 }
 function doLogout(){
   const u=aGetCurrentUser();
@@ -4080,6 +4185,9 @@ function copiarEnlace(url){
 
 /* ─── Dispatcher central ─── */
 function renderSim(){
+  /* El polling de verificación solo debe vivir mientras se ve la pantalla
+     pendiente; lo paramos en cada render y lo rearrancamos abajo si procede. */
+  aStopPendingPoll();
   /* Verificación pendiente tras registrar: NO hay sesión (la barra queda como
      visitante), pero mostramos el panel con la pantalla de "confirma el email".
      Se controla solo por estado en memoria. */
@@ -4087,6 +4195,9 @@ function renderSim(){
     const hero=document.querySelector('.hero');if(hero)hero.classList.remove('anon');
     const simEl=document.getElementById('sim');if(simEl)simEl.style.display='';
     renderNavRight();
+    /* Detectada la verificación (por polling o por enlace) → pantalla grande. */
+    if(artistAuth.pendingVerify.verified)return aRenderPendingVerified(artistAuth.pendingVerify.email);
+    aStartPendingPoll(artistAuth.pendingVerify.email);
     return renderPendingVerification(artistAuth.pendingVerify.email);
   }
   const user=aGetCurrentUser();
@@ -4198,19 +4309,14 @@ function renderSim(){
       window.history.replaceState({},'',cleanUrl);
       apiAuth('/verify',{token:verifyTok}).then(function(res){
         /* FALLO (red o error del worker): NO marcamos verified, NO creamos
-           sesión, NO avanzamos. Mostramos el error de forma visible (force,
-           por si hubiera una sesión que cancelaría el modal). */
+           sesión, NO avanzamos. Mostramos pantalla de error con opción de
+           reenviar (sin callejón sin salida). */
+        const preset=(artistAuth.pendingVerify&&artistAuth.pendingVerify.email)||'';
         if(res.network){
-          artistAuth.pendingVerify=null;
-          artistAuth.view='login';
-          artistAuth.error='No hemos podido conectar para verificar. Vuelve a abrir el enlace del email.';
-          renderSim();openAuthModal('login',true);return;
+          aShowVerifyErrorScreen('No hemos podido conectar para verificar. Comprueba tu conexión e inténtalo de nuevo.',preset);return;
         }
         if(!res.ok||!res.data||!res.data.ok){
-          artistAuth.pendingVerify=null;
-          artistAuth.view='login';
-          artistAuth.error=(res.data&&res.data.error)||'El enlace de verificación no es válido o ha caducado.';
-          renderSim();openAuthModal('login',true);return;
+          aShowVerifyErrorScreen((res.data&&res.data.error)||'El enlace de verificación no es válido o ha caducado.',preset);return;
         }
         /* ÉXITO confirmado por el servidor → auto-login: token + espejo +
            perfil del servidor. Solo aquí se marca verified y se crea sesión. */

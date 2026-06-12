@@ -73,6 +73,9 @@ export default {
       if (request.method === 'POST' && url.pathname === '/resend-verify') {
         return await handleResendVerify(request, env, corsBase);
       }
+      if (request.method === 'POST' && url.pathname === '/check-verified') {
+        return await handleCheckVerified(request, env, corsBase);
+      }
       if (request.method === 'POST' && url.pathname === '/request-reset') {
         return await handleRequestReset(request, env, corsBase);
       }
@@ -525,6 +528,19 @@ async function handleResendVerify(request, env, cors) {
   ).bind(verifyToken, verifyExpires, user.id).run();
 
   return jsonResponse({ ok: true, verifyToken, email: user.email, nombre: user.nombre || '' }, 200, cors);
+}
+
+/* ─── POST /check-verified ─────────────────────────────────────────────────
+   {email} → {verified: true|false}. Endpoint ligero para que la pantalla de
+   "verificación pendiente" haga polling. Solo devuelve un booleano (sin datos
+   sensibles); para emails inexistentes responde false. */
+async function handleCheckVerified(request, env, cors) {
+  if (!env.one2one_db) return jsonResponse({ error: 'Base de datos no configurada' }, 500, cors);
+  const body = await request.json().catch(() => ({}));
+  const email = String((body && body.email) || '').trim().toLowerCase();
+  if (!email || !isValidEmail(email)) return jsonResponse({ verified: false }, 200, cors);
+  const u = await env.one2one_db.prepare('SELECT verified FROM users WHERE email = ?').bind(email).first();
+  return jsonResponse({ verified: !!(u && u.verified) }, 200, cors);
 }
 
 /* ─── POST /request-reset ──────────────────────────────────────────────────
