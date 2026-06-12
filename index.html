@@ -126,6 +126,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;ali
 .password-strength.ok{color:var(--verde)}
 .password-strength.weak{color:#b45309}
 .password-strength.mismatch{color:#e53935}
+.pass-wrap{position:relative;display:block}
+.pass-wrap input{padding-right:42px!important;width:100%}
+.pass-eye{position:absolute;top:50%;right:8px;transform:translateY(-50%);background:none;border:none;padding:6px;margin:0;cursor:pointer;color:var(--gris-suave);display:flex;align-items:center;justify-content:center;line-height:0}
+.pass-eye:hover{color:var(--azul)}
+.pass-eye:focus{outline:none}
 @media(max-width:520px){
   .auth-modal{padding:40px 12px 24px}
   .auth-modal-box{padding:26px 22px 22px}
@@ -1819,56 +1824,88 @@ function aGetUsers(){try{return JSON.parse(localStorage.getItem('o2o_users')||'{
 function aSaveUsers(u){localStorage.setItem('o2o_users',JSON.stringify(u))}
 function aGetSessionEmail(){return localStorage.getItem('o2o_session')||null}
 function aSetSession(email){localStorage.setItem('o2o_session',email)}
-function aClearSession(){localStorage.removeItem('o2o_session')}
+function aClearSession(){localStorage.removeItem('o2o_session');localStorage.removeItem('o2o_token');}
 function aGetCurrentUser(){const e=aGetSessionEmail();if(!e)return null;const u=aGetUsers();return u[e]?Object.assign({email:e},u[e]):null;}
 function aUpdateUser(email,patch){const u=aGetUsers();if(!u[email])return;u[email]=Object.assign({},u[email],patch);aSaveUsers(u);}
 function aEscape(s){return aEscapeText(s);}
 
-/* ─── Tokens de verificación de email y reset de contraseña ───
-   Pure-frontend: los tokens viven en localStorage del navegador que los
-   generó. Limitación conocida: si el usuario abre el email en otro
-   dispositivo, el token no existirá allí. Es aceptable para un MVP. */
-function aRandomToken(){
-  const arr=new Uint8Array(16);
-  crypto.getRandomValues(arr);
-  return Array.from(arr,b=>b.toString(16).padStart(2,'0')).join('');
+/* ─── Sesión por token (backend D1) ───────────────────────────────────────
+   El token de sesión (o2o_token) lo emite el worker en /login y /verify y vive
+   en localStorage. NUNCA se guarda la contraseña en el cliente. o2o_users queda
+   como caché ("espejo") de datos NO sensibles (nombre, accountType, verified,
+   profile, companyProfile, avatarUrl, profileStatus...) para que el render lea
+   sin esperar a la red; la fuente de verdad es D1. */
+function aGetToken(){return localStorage.getItem('o2o_token')||'';}
+function aSetToken(t){if(t)localStorage.setItem('o2o_token',t);}
+function aClearToken(){localStorage.removeItem('o2o_token');}
+
+/* Wrapper de todas las llamadas de auth al worker. No lanza: devuelve
+   {ok,status,data,network}. network=true → fallo de conexión (sin respuesta). */
+async function apiAuth(path,payload){
+  try{
+    const r=await fetch(WORKER_URL+path,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload||{})
+    });
+    let data={};
+    try{data=await r.json();}catch(e){data={};}
+    return {ok:r.ok,status:r.status,data:data,network:false};
+  }catch(e){
+    console.warn('apiAuth '+path+' network error:',e);
+    return {ok:false,status:0,data:{},network:true};
+  }
 }
-function aGetVerifyTokens(){try{return JSON.parse(localStorage.getItem('o2o_verify_tokens')||'{}')}catch(e){return{}}}
-function aSaveVerifyTokens(t){localStorage.setItem('o2o_verify_tokens',JSON.stringify(t))}
-function aGetResetTokens(){try{return JSON.parse(localStorage.getItem('o2o_reset_tokens')||'{}')}catch(e){return{}}}
-function aSaveResetTokens(t){localStorage.setItem('o2o_reset_tokens',JSON.stringify(t))}
-function aCreateVerifyToken(email){
-  const tokens=aGetVerifyTokens();
-  /* Limpiamos tokens previos del mismo email — solo el último vale */
-  Object.keys(tokens).forEach(k=>{if(tokens[k].email===email)delete tokens[k];});
-  const token=aRandomToken();
-  tokens[token]={email:email,createdAt:Date.now()};
-  aSaveVerifyTokens(tokens);
-  return token;
+
+/* Trae el perfil del servidor con el token de sesión y lo vuelca al espejo
+   local (o2o_users[email]). Devuelve:
+     'ok'      → perfil cargado / sesión válida
+     'expired' → token inválido o caducado (401) → el llamador hace logout
+     'network' → sin conexión (no tocar la sesión, usar la caché) */
+async function aLoadProfileFromServer(){
+  const token=aGetToken();
+  if(!token)return 'expired';
+  const res=await apiAuth('/get-profile',{token:token});
+  if(res.network)return 'network';
+  if(res.status===401)return 'expired';
+  if(!res.ok||!res.data||!res.data.email)return 'expired';
+  const d=res.data;
+  const email=d.email;
+  /* Volcamos al espejo SIN contraseña. Conservamos lo que ya hubiera. */
+  const patch={
+    nombre:d.nombre||'',
+    accountType:d.accountType||'artista',
+    verified:!!d.verified,
+    verifiedAt:d.verifiedAt||null,
+    avatarUrl:d.avatarUrl||'',
+    profileStatus:d.profileStatus||null
+  };
+  if(d.profile)patch.profile=d.profile;
+  if(d.companyProfile)patch.companyProfile=d.companyProfile;
+  const users=aGetUsers();
+  users[email]=Object.assign({},users[email]||{},patch);
+  delete users[email].password; /* nunca guardamos contraseña */
+  aSaveUsers(users);
+  aSetSession(email);
+  return 'ok';
 }
-function aCreateResetToken(email){
-  const tokens=aGetResetTokens();
-  Object.keys(tokens).forEach(k=>{if(tokens[k].email===email)delete tokens[k];});
-  const token=aRandomToken();
-  tokens[token]={email:email,createdAt:Date.now()};
-  aSaveResetTokens(tokens);
-  return token;
-}
-function aConsumeVerifyToken(token){
-  const tokens=aGetVerifyTokens();
-  const entry=tokens[token];
-  if(!entry)return null;
-  delete tokens[token];
-  aSaveVerifyTokens(tokens);
-  return entry.email;
-}
-function aConsumeResetToken(token){
-  const tokens=aGetResetTokens();
-  const entry=tokens[token];
-  if(!entry)return null;
-  delete tokens[token];
-  aSaveResetTokens(tokens);
-  return entry.email;
+
+/* Persiste el perfil en el servidor (además del envío a Make que ya hace cada
+   flujo). No bloquea la UI: si falla, lo registra y deja el espejo local. */
+async function aSaveProfileToServer(extra){
+  const token=aGetToken();
+  if(!token)return false;
+  const u=aGetCurrentUser();
+  if(!u)return false;
+  const payload=Object.assign({
+    token:token,
+    profile:(u.accountType==='empresa'?(u.companyProfile||{}):(u.profile||{})),
+    avatarUrl:u.avatarUrl||'',
+    profileStatus:u.profileStatus||null
+  },extra||{});
+  const res=await apiAuth('/save-profile',payload);
+  if(!res.ok)console.warn('save-profile falló:',res.status,res.data);
+  return res.ok;
 }
 
 /* ─── Validaciones de campos ─── */
@@ -1987,6 +2024,21 @@ function aUpdatePassMatch(){
   if(btn){btn.disabled=!(v1.length>0 && v1===v2);}
 }
 
+/* ─── Icono de ojo: mostrar/ocultar contraseña ─── */
+const O2O_EYE_SVG='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const O2O_EYE_OFF_SVG='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+/* Botón ojo para inyectar junto a un <input type=password>. */
+function eyeBtn(){return '<button type="button" class="pass-eye" tabindex="-1" aria-label="Mostrar contraseña" onclick="aTogglePass(this)">'+O2O_EYE_SVG+'</button>';}
+/* Alterna el tipo del input hermano y cambia el icono. */
+function aTogglePass(btn){
+  const input=btn.parentElement&&btn.parentElement.querySelector('input');
+  if(!input)return;
+  const reveal=input.type==='password';
+  input.type=reveal?'text':'password';
+  btn.setAttribute('aria-label',reveal?'Ocultar contraseña':'Mostrar contraseña');
+  btn.innerHTML=reveal?O2O_EYE_OFF_SVG:O2O_EYE_SVG;
+}
+
 /* ─── Modal de login / registro ─── */
 function isAuthModalOpen(){
   const m=document.getElementById('auth-modal');
@@ -2078,16 +2130,18 @@ function renderAuthModal(){
 <button type="button" class="auth-tab ${view==='register'?'active':''}" onclick="setAuthTab('register')">Crear cuenta</button>
 </div>`:'';
   if(view==='login'){
+    const verifyBlock=artistAuth.needsVerify?`<button type="button" class="btn-b" style="width:100%;margin-top:10px" onclick="aResendVerifyFromLogin()">Reenviar email de verificación</button>`:'';
     c.innerHTML=`${logoBlock}<h2 class="auth-modal-title" id="auth-modal-title">Accede a tu <em>cuenta</em></h2>
 ${tabs}
 ${err}
 ${info}
 <div class="form-grid">
 <div class="form-field full"><label>Email</label><input type="email" id="art-login-email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
-<div class="form-field full"><label>Contraseña</label><input type="password" id="art-login-pass" placeholder="Tu contraseña" autocomplete="current-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value" onkeydown="if(event.key==='Enter')doLogin()"></div>
+<div class="form-field full"><label>Contraseña</label><div class="pass-wrap"><input type="password" id="art-login-pass" placeholder="Tu contraseña" autocomplete="current-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value" onkeydown="if(event.key==='Enter')doLogin()">${eyeBtn()}</div></div>
 </div>
 <div style="text-align:right;margin-top:-10px;margin-bottom:14px"><button type="button" class="auth-link" onclick="setAuthTab('forgot')" style="font-size:12px">¿Olvidaste tu contraseña?</button></div>
 <button class="btn-verde-full" onclick="doLogin()">Iniciar sesión</button>
+${verifyBlock}
 <p class="auth-footer-modal">¿Aún no tienes cuenta? <button class="auth-link" type="button" onclick="setAuthTab('register')">Crear cuenta</button></p>`;
     return;
   }
@@ -2108,8 +2162,8 @@ ${info}
 ${err}
 <p class="auth-hint" style="text-align:left;margin-bottom:14px">Elige una contraseña nueva para tu cuenta. Debe tener al menos 8 caracteres.</p>
 <div class="form-grid">
-<div class="form-field full"><label>Nueva contraseña</label><input type="password" id="art-reset-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value)"><span id="art-pass-strength" class="password-strength"></span></div>
-<div class="form-field full"><label>Confirmar contraseña</label><input type="password" placeholder="Repite la contraseña" autocomplete="new-password" value="${aEscape(f.pass2||'')}" oninput="artistAuth.form.pass2=this.value" onkeydown="if(event.key==='Enter')doResetPassword()"></div>
+<div class="form-field full"><label>Nueva contraseña</label><div class="pass-wrap"><input type="password" id="art-reset-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value)">${eyeBtn()}</div><span id="art-pass-strength" class="password-strength"></span></div>
+<div class="form-field full"><label>Confirmar contraseña</label><div class="pass-wrap"><input type="password" placeholder="Repite la contraseña" autocomplete="new-password" value="${aEscape(f.pass2||'')}" oninput="artistAuth.form.pass2=this.value" onkeydown="if(event.key==='Enter')doResetPassword()">${eyeBtn()}</div></div>
 </div>
 <button class="btn-verde-full" onclick="doResetPassword()">Restablecer contraseña</button>`;
     if((f.pass||'').length>0)setTimeout(function(){aUpdatePassStrength(f.pass);},0);
@@ -2130,8 +2184,8 @@ ${err}
   const fields=perfil?`<div class="form-grid">
 <div class="form-field full"><label>Nombre</label><input type="text" placeholder="${isArt?'Tu nombre':'Nombre de contacto'}" autocomplete="given-name" maxlength="80" value="${aEscape(f.nombre||'')}" oninput="artistAuth.form.nombre=this.value"></div>
 <div class="form-field full"><label>Email</label><input type="email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
-<div class="form-field full"><label>Contraseña</label><input type="password" id="art-reg-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value);aUpdatePassMatch()" onkeydown="if(event.key==='Enter')doRegister()"><span id="art-pass-strength" class="password-strength"></span></div>
-<div class="form-field full"><label>Confirmar contraseña</label><input type="password" id="art-reg-pass2" placeholder="Repite la contraseña" autocomplete="new-password" value="${aEscape(f.pass2||'')}" oninput="artistAuth.form.pass2=this.value;aUpdatePassMatch()" onkeydown="if(event.key==='Enter')doRegister()"><span id="art-pass-match" class="password-strength"></span></div>
+<div class="form-field full"><label>Contraseña</label><div class="pass-wrap"><input type="password" id="art-reg-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value);aUpdatePassMatch()" onkeydown="if(event.key==='Enter')doRegister()">${eyeBtn()}</div><span id="art-pass-strength" class="password-strength"></span></div>
+<div class="form-field full"><label>Confirmar contraseña</label><div class="pass-wrap"><input type="password" id="art-reg-pass2" placeholder="Repite la contraseña" autocomplete="new-password" value="${aEscape(f.pass2||'')}" oninput="artistAuth.form.pass2=this.value;aUpdatePassMatch()" onkeydown="if(event.key==='Enter')doRegister()">${eyeBtn()}</div><span id="art-pass-match" class="password-strength"></span></div>
 </div>
 <button class="btn-verde-full" id="art-reg-submit" onclick="doRegister()" ${(f.pass&&f.pass===f.pass2)?'':'disabled'}>Crear cuenta ${isArt?'como profesional':'de empresa'}</button>`:`<p class="auth-hint">Elige arriba si eres <strong>profesional/técnico</strong> o <strong>promotor/empresa</strong> para continuar.</p>`;
   c.innerHTML=`${logoBlock}<h2 class="auth-modal-title" id="auth-modal-title">Crea tu <em>cuenta</em></h2>
@@ -2157,28 +2211,24 @@ async function doForgotPassword(){
   const f=artistAuth.form||{};
   const email=(f.email||'').trim().toLowerCase();
   if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderAuthModal();return;}
-  /* No revelamos si la cuenta existe o no — política estándar para evitar
-     enumeración de cuentas. Si no existe, simplemente no se manda nada,
-     pero al usuario le mostramos el mismo mensaje de confirmación. */
-  const users=aGetUsers();
-  if(users[email]){
-    const token=aCreateResetToken(email);
+  const res=await apiAuth('/request-reset',{email:email});
+  if(res.network){artistAuth.error='No hemos podido conectar. Inténtalo en unos segundos.';renderAuthModal();return;}
+  /* El worker responde {ok:true} siempre (anti-enumeración). Si trae resetToken,
+     la cuenta existe → enviamos el email vía Make (payload de hoy). */
+  if(res.data&&res.data.resetToken){
     try{
-      await fetch(AUTH_WEBHOOK,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({tipo:'recuperar_password',email:email,token:token})
-      });
+      await fetch(AUTH_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({tipo:'recuperar_password',email:res.data.email||email,nombre:res.data.nombre||'',token:res.data.resetToken})});
     }catch(e){console.warn('reset email send failed:',e);}
   }
   artistAuth.view='login';
   artistAuth.error='';
-  artistAuth.info='Te hemos enviado un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada.';
+  artistAuth.info='Si ese email tiene una cuenta, te hemos enviado un enlace para restablecer la contraseña. Revisa tu bandeja de entrada.';
   artistAuth.form={};
   renderAuthModal();
 }
 
-function doResetPassword(){
+async function doResetPassword(){
   aSyncFormFromDOM();
   const f=artistAuth.form||{};
   const pass=f.pass||'';
@@ -2187,40 +2237,59 @@ function doResetPassword(){
   if(!token){artistAuth.error='El enlace de recuperación no es válido o ha caducado.';renderAuthModal();return;}
   if(pass.length<8){artistAuth.error='La contraseña debe tener al menos 8 caracteres.';renderAuthModal();return;}
   if(pass!==pass2){artistAuth.error='Las contraseñas no coinciden.';renderAuthModal();return;}
-  const email=aConsumeResetToken(token);
-  if(!email){artistAuth.error='El enlace de recuperación no es válido o ha caducado.';renderAuthModal();return;}
-  const users=aGetUsers();
-  if(!users[email]){artistAuth.error='La cuenta asociada al enlace ya no existe.';renderAuthModal();return;}
-  aUpdateUser(email,{password:pass,passwordUpdatedAt:new Date().toISOString()});
+  const res=await apiAuth('/reset-password',{token:token,newPassword:pass});
+  if(res.network){artistAuth.error='No hemos podido conectar. Inténtalo en unos segundos.';renderAuthModal();return;}
+  if(!res.ok||!res.data||!res.data.ok){
+    artistAuth.error=(res.data&&res.data.error)||'No se ha podido restablecer la contraseña. El enlace puede haber caducado.';
+    renderAuthModal();return;
+  }
   artistAuth.resetToken='';
-  artistAuth.form={email:email};
+  artistAuth.form={};
   artistAuth.view='login';
   artistAuth.error='';
   artistAuth.info='Contraseña actualizada. Inicia sesión con la nueva contraseña.';
   renderAuthModal();
 }
 
-function doLogin(){
+async function doLogin(){
   aSyncFormFromDOM();
   const f=artistAuth.form||{};
   const email=(f.email||'').trim().toLowerCase();
   const pass=f.pass||'';
   if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderAuthModal();return;}
   if(!pass){artistAuth.error='Introduce tu contraseña.';renderAuthModal();return;}
+  artistAuth.error='';artistAuth.needsVerify='';
+  const res=await apiAuth('/login',{email:email,password:pass});
+  if(res.network){artistAuth.error='No hemos podido conectar. Inténtalo en unos segundos.';renderAuthModal();return;}
+  /* Caso 3: cuenta sin verificar → ofrecer reenviar verificación. */
+  if(res.status===403&&res.data&&res.data.code==='EMAIL_NOT_VERIFIED'){
+    artistAuth.error='Debes verificar tu email antes de iniciar sesión.';
+    artistAuth.needsVerify=res.data.email||email;
+    renderAuthModal();return;
+  }
+  /* Caso 2: credenciales incorrectas (u otro error). */
+  if(!res.ok||!res.data||!res.data.ok){
+    artistAuth.error=(res.data&&res.data.error)||'Email o contraseña incorrectos.';
+    renderAuthModal();return;
+  }
+  /* Caso 1: OK. Guardamos token + espejo (sin contraseña) y traemos el perfil. */
+  const d=res.data;
+  aSetToken(d.sessionToken);
   const users=aGetUsers();
-  if(!users[email]){artistAuth.error='No existe ninguna cuenta con ese email. Crea una cuenta primero.';renderAuthModal();return;}
-  if(users[email].password!==pass){artistAuth.error='Contraseña incorrecta.';renderAuthModal();return;}
-  /* Login OK: cerramos modal y vamos al panel. Al ser cuenta empresa
-     el accountType se respeta sin tocarlo aquí. */
-  aSetSession(email);artistAuth.form={};artistAuth.error='';artistAuth.view='login';artistAuth.expedienteOpen=false;
+  users[email]=Object.assign({},users[email]||{},{nombre:d.nombre||'',accountType:d.accountType||'artista',verified:true});
+  delete users[email].password;
+  aSaveUsers(users);
+  aSetSession(email);
+  await aLoadProfileFromServer();
+  const cu=aGetCurrentUser();if(cu)perfil=cu.accountType;
+  artistAuth.form={};artistAuth.error='';artistAuth.needsVerify='';artistAuth.view='login';artistAuth.expedienteOpen=false;
   closeAuthModal();
   renderPasos();updateChromeUI();renderSim();
-  /* En desktop el panel ya está visible (hero-r). En móvil hay que bajar. */
   const sim=document.getElementById('sim');
   if(sim&&window.innerWidth<900)setTimeout(()=>sim.scrollIntoView({behavior:'smooth'}),100);
 }
 
-function doRegister(){
+async function doRegister(){
   aSyncFormFromDOM();
   const f=artistAuth.form||{};
   const nombre=(f.nombre||'').trim();
@@ -2232,27 +2301,60 @@ function doRegister(){
   if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderAuthModal();return;}
   if(pass.length<8){artistAuth.error='La contraseña debe tener al menos 8 caracteres.';renderAuthModal();return;}
   if(pass!==pass2){artistAuth.error='Las contraseñas no coinciden.';renderAuthModal();return;}
+  const res=await apiAuth('/register',{email:email,password:pass,accountType:perfil,nombre:nombre});
+  if(res.network){artistAuth.error='No hemos podido conectar. Inténtalo en unos segundos.';renderAuthModal();return;}
+  if(res.status===409){artistAuth.error='Ya existe una cuenta con ese email. Inicia sesión.';artistAuth.view='login';renderAuthModal();return;}
+  if(!res.ok||!res.data||!res.data.ok){artistAuth.error=(res.data&&res.data.error)||'No se ha podido crear la cuenta.';renderAuthModal();return;}
+  /* Cuenta creada (sin verificar, aún sin sesión). Enviamos el email de
+     verificación vía Make con el token que devuelve el worker. */
+  aSendVerificationEmail(email,nombre,res.data.verifyToken).catch(function(e){console.warn('verify email send failed:',e);});
+  /* Espejo local SIN contraseña para mostrar la pantalla de "verificación
+     pendiente". La sesión real (token) llega al verificar (auto-login en /verify). */
   const users=aGetUsers();
-  if(users[email]){artistAuth.error='Ya existe una cuenta con ese email. Inicia sesión.';renderAuthModal();return;}
-  users[email]={nombre:nombre,password:pass,accountType:perfil,verified:false,createdAt:new Date().toISOString(),profile:null,profileStatus:'pendiente'};
-  aSaveUsers(users);aSetSession(email);artistAuth.form={};artistAuth.error='';artistAuth.view='login';artistAuth.expedienteOpen=false;
+  users[email]=Object.assign({},users[email]||{},{nombre:nombre,accountType:perfil,verified:false,profile:null,profileStatus:'pendiente'});
+  delete users[email].password;
+  aSaveUsers(users);
+  aSetSession(email);
+  artistAuth.form={};artistAuth.error='';artistAuth.view='login';artistAuth.expedienteOpen=false;
   closeAuthModal();
-  /* Enviar email de verificación real vía Make. No esperamos a la respuesta
-     antes de pintar el panel para no bloquear la UI; si el webhook falla la
-     pantalla de "verificación pendiente" tiene un botón para reenviar. */
-  aSendVerificationEmail(email,nombre).catch(function(e){console.warn('verify email send failed:',e);});
   renderPasos();updateChromeUI();renderSim();
   const sim=document.getElementById('sim');
   if(sim&&window.innerWidth<900)setTimeout(()=>sim.scrollIntoView({behavior:'smooth'}),100);
 }
 
-async function aSendVerificationEmail(email,nombre){
-  const token=aCreateVerifyToken(email);
+/* Manda a Make el email de verificación con el token que generó el worker
+   (en /register o /resend-verify). El frontend ya NO genera tokens. */
+async function aSendVerificationEmail(email,nombre,token){
+  if(!token)return;
   await fetch(AUTH_WEBHOOK,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({tipo:'verificacion_email',email:email,nombre:nombre||'',token:token})
   });
+}
+
+/* Pide al worker un token de verificación nuevo (/resend-verify) y, si lo
+   devuelve, lo manda a Make. El worker responde ok aunque el email no exista
+   o ya esté verificado (anti-enumeración). Lanza solo en fallo de red. */
+async function aResendVerifyEmail(email,nombre){
+  const res=await apiAuth('/resend-verify',{email:email});
+  if(res.network)throw new Error('network');
+  if(res.data&&res.data.verifyToken){
+    await aSendVerificationEmail(res.data.email||email,res.data.nombre||nombre||'',res.data.verifyToken);
+  }
+}
+
+/* Reenvío desde el modal de login cuando el login dio EMAIL_NOT_VERIFIED. */
+async function aResendVerifyFromLogin(){
+  const email=artistAuth.needsVerify;if(!email)return;
+  artistAuth.info='Reenviando email de verificación…';artistAuth.error='';renderAuthModal();
+  try{
+    await aResendVerifyEmail(email,'');
+    artistAuth.info='Te hemos reenviado el email de verificación a '+email+'. Revisa tu bandeja.';
+  }catch(e){
+    artistAuth.info='';artistAuth.error='No hemos podido reenviar el email. Inténtalo en unos segundos.';
+  }
+  renderAuthModal();
 }
 
 function renderPendingVerification(user){
@@ -2273,7 +2375,7 @@ async function aResendVerification(){
   const st=document.getElementById('resend-status');
   if(st){st.innerHTML='<span style="font-size:12px;color:var(--gris-suave)">Enviando…</span>';}
   try{
-    await aSendVerificationEmail(u.email,u.nombre);
+    await aResendVerifyEmail(u.email,u.nombre);
     if(st){st.innerHTML='<span style="font-size:12px;color:var(--verde);font-weight:500">✓ Email reenviado a '+aEscape(u.email)+'</span>';}
   }catch(e){
     if(st){st.innerHTML='<span style="font-size:12px;color:#dc2626">No hemos podido reenviar el email. Inténtalo en unos segundos.</span>';}
@@ -2282,8 +2384,11 @@ async function aResendVerification(){
 function doLogout(){
   const u=aGetCurrentUser();
   if(u)perfil=u.accountType;
+  /* Cierra la sesión también en el servidor (fire-and-forget). */
+  const token=aGetToken();
+  if(token){apiAuth('/logout',{token:token}).catch(function(){});}
   aClearSession();
-  artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',expedienteOpen:false,expedienteResult:null,editingProfile:false,editForm:{}};
+  artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',needsVerify:'',expedienteOpen:false,expedienteResult:null,editingProfile:false,editForm:{}};
   resetExpedienteState();
   renderPasos();updateChromeUI();renderSim();
 }
@@ -2484,6 +2589,9 @@ ${(val.discrepancias&&val.discrepancias.length)?'<ul style="text-align:left;marg
     if(profileToStore.dniAnverso)profileToStore.dniAnverso={name:profileToStore.dniAnverso.name,size:profileToStore.dniAnverso.size,type:profileToStore.dniAnverso.type,url:dniAnversoURL};
     if(profileToStore.dniReverso)profileToStore.dniReverso={name:profileToStore.dniReverso.name,size:profileToStore.dniReverso.size,type:profileToStore.dniReverso.type,url:dniReversoURL};
     aUpdateUser(user.email,{profile:profileToStore,profileStatus:'validado',profileSubmittedAt:new Date().toISOString(),profileValidatedAt:new Date().toISOString()});
+    /* Persistencia del perfil del artista en el servidor (D1), además del
+       envío a Make ya realizado arriba. */
+    aSaveProfileToServer({profileStatus:'validado',profileSubmittedAt:new Date().toISOString(),profileValidatedAt:new Date().toISOString()});
     artistAuth.form={};artistAuth.error='';
     renderSim();
   }catch(e){
@@ -2981,6 +3089,10 @@ async function saveProfileEdits(){
       profileUpdatedAt:new Date().toISOString()
     });
   }
+  /* Persistencia del perfil en el servidor (D1), además del envío a Make.
+     aSaveProfileToServer lee del espejo ya actualizado el perfil correcto
+     según accountType (profile o companyProfile). */
+  aSaveProfileToServer();
   /* POST a Make con tipo:'actualizar_perfil'. El escenario actual no
      tiene rama para este tipo, así que el Router lo ignora — pero deja
      el dato disponible para añadir una rama futura sin tocar el frontend. */
@@ -3865,6 +3977,8 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
       pais:st.ePais||'España',
       updatedAt:new Date().toISOString()
     }});
+    /* Persistencia del companyProfile en el servidor (D1), además de Make. */
+    aSaveProfileToServer();
     document.getElementById('sim-c').innerHTML=`<div class="exito">
 <div class="exito-icon">✓</div>
 <div class="exito-title">Gestión confirmada</div>
@@ -4013,84 +4127,98 @@ function renderSim(){
     return;
   }
 
+  const params0=new URLSearchParams(window.location.search);
+  const hasVerify=!!params0.get('verify');
+  const hasReset=!!params0.get('reset');
+  const verifiedFlag0=params0.get('verified');
+
+  /* Render inmediato con la caché local (sin esperar a la red). */
   const u=aGetCurrentUser();
   if(u)perfil=u.accountType;
   updateChromeUI();
   renderPasos();
   renderSim();
 
-  /* Handler de los enlaces de verificación de email y reset de contraseña.
-     Los emails enviados por Make llevan el formato:
-       https://one2onepro.es/?verify=TOKEN
-       https://one2onepro.es/?reset=TOKEN
-     Procesamos el token, limpiamos la URL con replaceState para que un
-     reload no vuelva a dispararlo, y mostramos la UI correspondiente. */
+  /* Refresco de sesión en segundo plano. Si hay token, validamos contra el
+     servidor trayendo el perfil; si está muerto, logout limpio. No corre si
+     venimos de un enlace verify/reset/verified (tienen su propio flujo). */
+  if(!hasVerify && !hasReset && verifiedFlag0!=='true' && verifiedFlag0!=='1'){
+    const tok=aGetToken();
+    if(tok){
+      aLoadProfileFromServer().then(function(r){
+        if(r==='expired'){ aClearSession(); perfil=null; updateChromeUI(); renderSim(); }
+        else if(r==='ok'){ const cu=aGetCurrentUser(); if(cu)perfil=cu.accountType; updateChromeUI(); renderSim(); }
+        /* r==='network' → mantenemos la caché local, sin tocar nada. */
+      });
+    } else {
+      /* Sesión local sin token: solo es válida si es una cuenta pendiente de
+         verificar (aún no tiene token). Si figura "verificada" pero sin token,
+         es una sesión vieja/legacy → la cerramos. */
+      const cu=aGetCurrentUser();
+      if(cu && cu.verified){ aClearSession(); perfil=null; updateChromeUI(); renderSim(); }
+    }
+  }
+
+  /* Handlers de los enlaces de email (verificación y reset). Limpiamos la URL
+     con replaceState para que un reload no vuelva a dispararlos. */
   try{
     const params=new URLSearchParams(window.location.search);
     const verifyTok=params.get('verify');
     const resetTok=params.get('reset');
     const verifiedFlag=params.get('verified');
-    /* Enlace de confirmación de Make: https://one2onepro.es/?verified=true
-       El email ya quedó verificado en el backend; aquí solo mostramos la
-       pantalla de confirmación con el botón para iniciar sesión. */
+    /* Enlace estático de Make: ?verified=true → pantalla de confirmación. */
     if(verifiedFlag==='true'||verifiedFlag==='1'){
       const cleanUrl=window.location.pathname+window.location.hash;
       window.history.replaceState({},'',cleanUrl);
       aShowVerifiedScreen();
       return;
     }
+    /* ?verify=TOKEN → verificación en el servidor + AUTO-LOGIN con el
+       sessionToken que devuelve /verify. */
     if(verifyTok){
-      const email=aConsumeVerifyToken(verifyTok);
       const cleanUrl=window.location.pathname+window.location.hash;
       window.history.replaceState({},'',cleanUrl);
-      if(email){
-        const users=aGetUsers();
-        if(users[email]){
-          aUpdateUser(email,{verified:true,verifiedAt:new Date().toISOString()});
-          /* Verificación correcta: tras actualizar el perfil, mostramos un
-             mensaje de éxito y abrimos el formulario de login automáticamente
-             después de 1s, sin que el usuario tenga que hacer nada más.
-             Limpiamos cualquier sesión previa para que openAuthModal pueda
-             abrir el modal (los usuarios logueados no reciben modal). */
-          aClearSession();
+      apiAuth('/verify',{token:verifyTok}).then(function(res){
+        if(res.network){
           artistAuth.view='login';
-          artistAuth.info='¡Cuenta verificada! Inicia sesión para continuar.';
-          artistAuth.form={email:email};
-          renderSim();
-          showFlash('¡Cuenta verificada! Inicia sesión para continuar.','success');
-          setTimeout(function(){openAuthModal('login');},1000);
-        }else{
-          artistAuth.view='login';
-          artistAuth.error='La cuenta asociada al enlace ya no existe.';
-          openAuthModal('login');
+          artistAuth.error='No hemos podido conectar para verificar. Vuelve a abrir el enlace del email.';
+          openAuthModal('login');return;
         }
-      }else{
-        /* Token no encontrado: o caducado, o el navegador no es el mismo
-           donde se registró. Mensaje claro y no intrusivo. */
-        artistAuth.view='login';
-        artistAuth.error='El enlace de verificación no es válido o ha caducado. Si te registraste en otro dispositivo, inicia sesión y pulsa "Reenviar email".';
-        openAuthModal('login');
-      }
-    }else if(resetTok){
+        if(!res.ok||!res.data||!res.data.ok){
+          artistAuth.view='login';
+          artistAuth.error=(res.data&&res.data.error)||'El enlace de verificación no es válido o ha caducado.';
+          openAuthModal('login');return;
+        }
+        /* OK → auto-login: token + espejo + perfil del servidor. */
+        const d=res.data;
+        aSetToken(d.sessionToken);
+        const users=aGetUsers();
+        users[d.email]=Object.assign({},users[d.email]||{},{nombre:d.nombre||'',accountType:d.accountType||'artista',verified:true});
+        delete users[d.email].password;
+        aSaveUsers(users);
+        aSetSession(d.email);
+        aLoadProfileFromServer().then(function(){
+          const cu=aGetCurrentUser();if(cu)perfil=cu.accountType;
+          updateChromeUI();
+          renderSim();
+          showFlash('¡Cuenta verificada! Ya tienes la sesión iniciada.','success');
+        });
+      });
+      return;
+    }
+    /* ?reset=TOKEN → abrimos "nueva contraseña". El token se valida en el
+       servidor al enviar la contraseña nueva (/reset-password). */
+    if(resetTok){
       const cleanUrl=window.location.pathname+window.location.hash;
       window.history.replaceState({},'',cleanUrl);
-      const tokens=aGetResetTokens();
-      if(tokens[resetTok]){
-        /* Cerramos sesión si la había para no resetear "a ciegas" la
-           contraseña del usuario logueado por error. */
-        aClearSession();
-        perfil=null;
-        updateChromeUI();
-        artistAuth.resetToken=resetTok;
-        artistAuth.view='reset';
-        artistAuth.form={};
-        artistAuth.error='';
-        openAuthModal('reset');
-      }else{
-        artistAuth.view='login';
-        artistAuth.error='El enlace de recuperación no es válido o ha caducado.';
-        openAuthModal('login');
-      }
+      aClearSession();
+      perfil=null;
+      updateChromeUI();
+      artistAuth.resetToken=resetTok;
+      artistAuth.view='reset';
+      artistAuth.form={};
+      artistAuth.error='';
+      openAuthModal('reset');
     }
   }catch(e){console.warn('URL token handler error:',e);}
 
@@ -4585,25 +4713,42 @@ document.addEventListener('keydown',function(e){
 
   /* Crea (si hace falta) una cuenta de prueba de empresa, verificada, y hace
      login directo SIN abrir el modal. Devuelve true si la creó/logueó. */
-  function devEnsureSession(){
-    if(typeof aGetCurrentUser==='function' && aGetCurrentUser())return false; /* ya hay sesión */
+  /* DEV: inicia sesión de prueba contra el BACKEND REAL (no usuarios falsos
+     locales). Intenta /login; si la cuenta no existe la registra y la verifica
+     con el token que devuelve el worker (→ obtiene sessionToken); si existe
+     pero sin verificar, pide token con /resend-verify y verifica. */
+  async function devEnsureSession(){
+    if(typeof aGetCurrentUser==='function' && aGetCurrentUser() && aGetToken())return false; /* ya hay sesión real */
     var email='test@one2onepro.es';
-    var users=aGetUsers();
-    if(!users[email]){
-      users[email]={nombre:'Empresa de Prueba S.L.',password:'Prueba1234',accountType:'empresa',verified:true,verifiedAt:new Date().toISOString(),createdAt:new Date().toISOString(),profile:null,profileStatus:'pendiente'};
-    }else{
-      users[email].verified=true; /* por si existía sin verificar */
+    var password='Prueba1234';
+    var res=await apiAuth('/login',{email:email,password:password});
+    if(res.status===403 && res.data && res.data.code==='EMAIL_NOT_VERIFIED'){
+      var rv=await apiAuth('/resend-verify',{email:email});
+      if(rv.data && rv.data.verifyToken)res=await apiAuth('/verify',{token:rv.data.verifyToken});
+    }else if(!res.ok){
+      var reg=await apiAuth('/register',{email:email,password:password,accountType:'empresa',nombre:'Empresa de Prueba S.L.'});
+      if(reg.data && reg.data.verifyToken)res=await apiAuth('/verify',{token:reg.data.verifyToken});
     }
+    if(!res.ok || !res.data || !res.data.ok || !res.data.sessionToken){
+      if(typeof showFlash==='function')showFlash('DEV: no se pudo iniciar sesión de prueba','error');
+      return false;
+    }
+    var d=res.data;
+    aSetToken(d.sessionToken);
+    var users=aGetUsers();
+    users[email]=Object.assign({},users[email]||{},{nombre:d.nombre||'Empresa de Prueba S.L.',accountType:d.accountType||'empresa',verified:true});
+    delete users[email].password;
     aSaveUsers(users);
     aSetSession(email);
+    await aLoadProfileFromServer();
     if(typeof closeAuthModal==='function')closeAuthModal();
     if(typeof renderSim==='function')renderSim();
     return true;
   }
-  /* Un solo click: sin sesión → crear+verificar+login (sin modal) y rellenar;
+  /* Un solo click: sin sesión → login/registro real (sin modal) y rellenar;
      con sesión → ir directo a rellenar el formulario activo. */
-  function devRun(){
-    var created=devEnsureSession();
+  async function devRun(){
+    var created=await devEnsureSession();
     if(created&&typeof showFlash==='function')showFlash('DEV: sesión de prueba (empresa) iniciada','success');
     devFill();
   }
