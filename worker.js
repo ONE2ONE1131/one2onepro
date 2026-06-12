@@ -60,6 +60,34 @@ export default {
       if (request.method === 'POST' && url.pathname === '/expedientes') {
         return await handleExpedientes(request, env, corsBase);
       }
+      /* ─── Autenticación real (D1) ─────────────────────────────────────── */
+      if (request.method === 'POST' && url.pathname === '/register') {
+        return await handleRegister(request, env, corsBase);
+      }
+      if (request.method === 'POST' && url.pathname === '/login') {
+        return await handleLogin(request, env, corsBase);
+      }
+      if (request.method === 'POST' && url.pathname === '/verify') {
+        return await handleVerify(request, env, corsBase);
+      }
+      if (request.method === 'POST' && url.pathname === '/resend-verify') {
+        return await handleResendVerify(request, env, corsBase);
+      }
+      if (request.method === 'POST' && url.pathname === '/request-reset') {
+        return await handleRequestReset(request, env, corsBase);
+      }
+      if (request.method === 'POST' && url.pathname === '/reset-password') {
+        return await handleResetPassword(request, env, corsBase);
+      }
+      if (request.method === 'POST' && url.pathname === '/save-profile') {
+        return await handleSaveProfile(request, env, corsBase);
+      }
+      if (request.method === 'POST' && url.pathname === '/get-profile') {
+        return await handleGetProfile(request, env, corsBase);
+      }
+      if (request.method === 'POST' && url.pathname === '/logout') {
+        return await handleLogout(request, env, corsBase);
+      }
       if (request.method === 'GET' && url.pathname === '/') {
         return jsonResponse({ ok: true, service: 'one2one-worker' }, 200, corsBase);
       }
@@ -253,6 +281,389 @@ async function handleExpedientes(request, env, cors) {
   return jsonResponse({ expedientes: data.records || [] }, 200, cors);
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AUTENTICACIÓN REAL (Cloudflare D1 · binding env.one2one_db)
+
+   Endpoints: /register · /login · /verify · /request-reset · /reset-password
+
+   Seguridad:
+   - Contraseñas hasheadas con PBKDF2-SHA256 (100.000 iteraciones, sal aleatoria
+     de 16 bytes). Se guarda "saltHex:hashHex". NUNCA contraseña en claro.
+   - SIEMPRE consultas preparadas con .bind() (sin concatenar SQL → sin inyección).
+   - El Worker NO envía emails: devuelve los tokens para que los envíe Make.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const PBKDF2_ITERATIONS = 100000;
+const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;     // 24 horas
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;           // 1 hora
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;     // 30 días
+const MAX_PROFILE_BYTES = 32 * 1024;                 // límite del JSON de perfil
+
+function bufToHex(buf) {
+  const bytes = new Uint8Array(buf);
+  let hex = '';
+  for (let i = 0; i < bytes.length; i++) hex += bytes[i].toString(16).padStart(2, '0');
+  return hex;
+}
+
+function hexToBytes(hex) {
+  const clean = String(hex || '');
+  const out = new Uint8Array(clean.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(clean.substr(i * 2, 2), 16);
+  return out;
+}
+
+/* Token aleatorio de 32 bytes en hex (64 chars) — para verify/reset/sesión. */
+function randomToken() {
+  return bufToHex(crypto.getRandomValues(new Uint8Array(32)));
+}
+
+/* SHA-256 en hex de un string (para guardar el token de sesión hasheado). */
+async function sha256Hex(input) {
+  const data = new TextEncoder().encode(String(input || ''));
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return bufToHex(digest);
+}
+
+/* Crea una sesión para userId: genera token, guarda su hash, limpia las
+   sesiones caducadas de ese usuario y devuelve { sessionToken, expiresAt }. */
+async function issueSession(env, userId) {
+  const sessionToken = randomToken();
+  const tokenHash = await sha256Hex(sessionToken);
+  const now = Date.now();
+  const expiresAt = now + SESSION_TTL_MS;
+  // Limpieza oportunista de sesiones caducadas de este usuario.
+  await env.one2one_db.prepare('DELETE FROM sessions WHERE user_id = ? AND expires_at < ?').bind(userId, now).run();
+  await env.one2one_db.prepare(
+    'INSERT INTO sessions (user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?)'
+  ).bind(userId, tokenHash, new Date(now).toISOString(), expiresAt).run();
+  return { sessionToken, expiresAt };
+}
+
+/* Valida el token de sesión de una petición. Lee `token` del body (ya parseado)
+   o de la cabecera Authorization: Bearer. Devuelve { userId } si la sesión es
+   válida y no ha caducado; en otro caso null (el endpoint responde 401).
+   Borra la sesión si está caducada. */
+async function requireSession(request, env, body) {
+  let token = body && typeof body.token === 'string' ? body.token : '';
+  if (!token) {
+    const auth = request.headers.get('Authorization') || '';
+    const m = /^Bearer\s+(.+)$/i.exec(auth);
+    if (m) token = m[1].trim();
+  }
+  if (!token) return null;
+  const tokenHash = await sha256Hex(token);
+  const row = await env.one2one_db.prepare(
+    'SELECT id, user_id, expires_at FROM sessions WHERE token_hash = ?'
+  ).bind(tokenHash).first();
+  if (!row) return null;
+  if (!row.expires_at || row.expires_at < Date.now()) {
+    await env.one2one_db.prepare('DELETE FROM sessions WHERE id = ?').bind(row.id).run();
+    return null;
+  }
+  return { userId: row.user_id };
+}
+
+/* Deriva el hash PBKDF2. Si se pasa saltHex se reutiliza esa sal (para verificar);
+   si no, genera una sal aleatoria nueva. Devuelve "saltHex:hashHex". */
+async function hashPassword(password, saltHex) {
+  const enc = new TextEncoder();
+  const salt = saltHex ? hexToBytes(saltHex) : crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  return (saltHex || bufToHex(salt)) + ':' + bufToHex(bits);
+}
+
+/* Comparación en tiempo constante (evita timing attacks sobre el hash). */
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/* Re-hashea `password` con la sal almacenada y compara contra el hash guardado. */
+async function verifyPassword(password, stored) {
+  if (!stored || typeof stored !== 'string' || stored.indexOf(':') < 0) return false;
+  const idx = stored.indexOf(':');
+  const saltHex = stored.slice(0, idx);
+  const hashHex = stored.slice(idx + 1);
+  const recomputed = await hashPassword(password, saltHex);
+  return timingSafeEqual(recomputed.slice(recomputed.indexOf(':') + 1), hashHex);
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '');
+}
+
+/* ─── POST /register ───────────────────────────────────────────────────────
+   {email, password, accountType, nombre} → {ok, verifyToken, email, nombre} */
+async function handleRegister(request, env, cors) {
+  if (!env.one2one_db) return jsonResponse({ error: 'Base de datos no configurada' }, 500, cors);
+  const body = await request.json().catch(() => ({}));
+  const email = String((body && body.email) || '').trim().toLowerCase();
+  const password = typeof (body && body.password) === 'string' ? body.password : '';
+  const accountType = String((body && body.accountType) || '').trim();
+  const nombre = String((body && body.nombre) || '').trim();
+
+  if (!email || !isValidEmail(email)) return jsonResponse({ error: 'Email inválido' }, 400, cors);
+  if (!password || password.length < 8) return jsonResponse({ error: 'La contraseña debe tener al menos 8 caracteres' }, 400, cors);
+  if (accountType !== 'artista' && accountType !== 'empresa') return jsonResponse({ error: 'Tipo de cuenta inválido' }, 400, cors);
+
+  const existing = await env.one2one_db.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+  if (existing) return jsonResponse({ error: 'Ya existe una cuenta con ese email. Inicia sesión.' }, 409, cors);
+
+  const passwordHash = await hashPassword(password);
+  const verifyToken = randomToken();
+  const verifyExpires = Date.now() + VERIFY_TOKEN_TTL_MS;
+  const createdAt = new Date().toISOString();
+
+  await env.one2one_db.prepare(
+    'INSERT INTO users (email, password_hash, account_type, nombre, verified, verify_token, verify_token_expires, created_at) VALUES (?, ?, ?, ?, 0, ?, ?, ?)'
+  ).bind(email, passwordHash, accountType, nombre || null, verifyToken, verifyExpires, createdAt).run();
+
+  return jsonResponse({ ok: true, verifyToken, email, nombre }, 200, cors);
+}
+
+/* ─── POST /login ──────────────────────────────────────────────────────────
+   {email, password} → {ok, email, nombre, accountType, verified} */
+async function handleLogin(request, env, cors) {
+  if (!env.one2one_db) return jsonResponse({ error: 'Base de datos no configurada' }, 500, cors);
+  const body = await request.json().catch(() => ({}));
+  const email = String((body && body.email) || '').trim().toLowerCase();
+  const password = typeof (body && body.password) === 'string' ? body.password : '';
+
+  const fail = () => jsonResponse({ error: 'Email o contraseña incorrectos' }, 401, cors);
+  if (!email || !password) return fail();
+
+  const user = await env.one2one_db.prepare(
+    'SELECT id, email, password_hash, account_type, nombre, verified FROM users WHERE email = ?'
+  ).bind(email).first();
+
+  /* Usuario inexistente: hasheamos igualmente para no filtrar por tiempo de
+     respuesta qué emails están registrados, y devolvemos el mismo error. */
+  if (!user) { await hashPassword(password); return fail(); }
+
+  const ok = await verifyPassword(password, user.password_hash);
+  if (!ok) return fail();
+
+  if (!user.verified) {
+    return jsonResponse(
+      { error: 'Debes verificar tu email antes de iniciar sesión.', code: 'EMAIL_NOT_VERIFIED', email: user.email },
+      403, cors
+    );
+  }
+
+  const session = await issueSession(env, user.id);
+  return jsonResponse(
+    {
+      ok: true, email: user.email, nombre: user.nombre || '', accountType: user.account_type, verified: true,
+      sessionToken: session.sessionToken, expiresAt: session.expiresAt
+    },
+    200, cors
+  );
+}
+
+/* ─── POST /verify ─────────────────────────────────────────────────────────
+   {token} → {ok, email} */
+async function handleVerify(request, env, cors) {
+  if (!env.one2one_db) return jsonResponse({ error: 'Base de datos no configurada' }, 500, cors);
+  const body = await request.json().catch(() => ({}));
+  const token = String((body && body.token) || '').trim();
+  if (!token) return jsonResponse({ error: 'Token requerido' }, 400, cors);
+
+  const user = await env.one2one_db.prepare(
+    'SELECT id, email, nombre, account_type, verify_token_expires FROM users WHERE verify_token = ?'
+  ).bind(token).first();
+  if (!user) return jsonResponse({ error: 'El enlace de verificación no es válido.' }, 400, cors);
+  if (!user.verify_token_expires || user.verify_token_expires < Date.now()) {
+    return jsonResponse({ error: 'El enlace de verificación ha caducado.' }, 400, cors);
+  }
+
+  const verifiedAt = new Date().toISOString();
+  await env.one2one_db.prepare(
+    'UPDATE users SET verified = 1, verified_at = ?, verify_token = NULL, verify_token_expires = NULL WHERE id = ?'
+  ).bind(verifiedAt, user.id).run();
+
+  /* Tras verificar, dejamos al usuario con sesión iniciada directamente. */
+  const session = await issueSession(env, user.id);
+  return jsonResponse(
+    {
+      ok: true, email: user.email, nombre: user.nombre || '', accountType: user.account_type, verified: true,
+      sessionToken: session.sessionToken, expiresAt: session.expiresAt
+    },
+    200, cors
+  );
+}
+
+/* ─── POST /resend-verify ──────────────────────────────────────────────────
+   {email} → reenvía la verificación. Si el email existe y NO está verificado,
+   regenera el verify_token (caducidad 24h) y lo devuelve para que Make envíe
+   el email. Si no existe o ya está verificado, responde {ok:true} sin token
+   (anti-enumeración, misma filosofía que /request-reset). */
+async function handleResendVerify(request, env, cors) {
+  if (!env.one2one_db) return jsonResponse({ error: 'Base de datos no configurada' }, 500, cors);
+  const body = await request.json().catch(() => ({}));
+  const email = String((body && body.email) || '').trim().toLowerCase();
+  if (!email || !isValidEmail(email)) return jsonResponse({ ok: true }, 200, cors);
+
+  const user = await env.one2one_db.prepare(
+    'SELECT id, email, nombre, verified FROM users WHERE email = ?'
+  ).bind(email).first();
+  if (!user || user.verified) return jsonResponse({ ok: true }, 200, cors);
+
+  const verifyToken = randomToken();
+  const verifyExpires = Date.now() + VERIFY_TOKEN_TTL_MS;
+  await env.one2one_db.prepare(
+    'UPDATE users SET verify_token = ?, verify_token_expires = ? WHERE id = ?'
+  ).bind(verifyToken, verifyExpires, user.id).run();
+
+  return jsonResponse({ ok: true, verifyToken, email: user.email, nombre: user.nombre || '' }, 200, cors);
+}
+
+/* ─── POST /request-reset ──────────────────────────────────────────────────
+   {email} → siempre {ok:true} (+ {resetToken, email, nombre} si existe) */
+async function handleRequestReset(request, env, cors) {
+  if (!env.one2one_db) return jsonResponse({ error: 'Base de datos no configurada' }, 500, cors);
+  const body = await request.json().catch(() => ({}));
+  const email = String((body && body.email) || '').trim().toLowerCase();
+
+  /* Respuesta uniforme: no revelamos si el email existe (anti-enumeración). */
+  if (!email || !isValidEmail(email)) return jsonResponse({ ok: true }, 200, cors);
+
+  const user = await env.one2one_db.prepare('SELECT id, email, nombre FROM users WHERE email = ?').bind(email).first();
+  if (!user) return jsonResponse({ ok: true }, 200, cors);
+
+  const resetToken = randomToken();
+  const resetExpires = Date.now() + RESET_TOKEN_TTL_MS;
+  await env.one2one_db.prepare(
+    'UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?'
+  ).bind(resetToken, resetExpires, user.id).run();
+
+  return jsonResponse({ ok: true, resetToken, email: user.email, nombre: user.nombre || '' }, 200, cors);
+}
+
+/* ─── POST /reset-password ─────────────────────────────────────────────────
+   {token, newPassword} → {ok} */
+async function handleResetPassword(request, env, cors) {
+  if (!env.one2one_db) return jsonResponse({ error: 'Base de datos no configurada' }, 500, cors);
+  const body = await request.json().catch(() => ({}));
+  const token = String((body && body.token) || '').trim();
+  const newPassword = typeof (body && body.newPassword) === 'string' ? body.newPassword : '';
+
+  if (!token) return jsonResponse({ error: 'Token requerido' }, 400, cors);
+  if (!newPassword || newPassword.length < 8) return jsonResponse({ error: 'La contraseña debe tener al menos 8 caracteres' }, 400, cors);
+
+  const user = await env.one2one_db.prepare(
+    'SELECT id, reset_token_expires FROM users WHERE reset_token = ?'
+  ).bind(token).first();
+  if (!user) return jsonResponse({ error: 'El enlace de recuperación no es válido.' }, 400, cors);
+  if (!user.reset_token_expires || user.reset_token_expires < Date.now()) {
+    return jsonResponse({ error: 'El enlace de recuperación ha caducado.' }, 400, cors);
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+  await env.one2one_db.prepare(
+    'UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?'
+  ).bind(passwordHash, user.id).run();
+
+  return jsonResponse({ ok: true }, 200, cors);
+}
+
+/* ─── POST /save-profile ───────────────────────────────────────────────────
+   {token, profile, avatarUrl, profileStatus, profileSubmittedAt, profileValidatedAt}
+   La identidad la fija el token (no el body). Guarda en profile_json o
+   company_profile_json según el account_type DEL USUARIO en BD. → {ok} */
+async function handleSaveProfile(request, env, cors) {
+  if (!env.one2one_db) return jsonResponse({ error: 'Base de datos no configurada' }, 500, cors);
+  const body = await request.json().catch(() => ({}));
+  const session = await requireSession(request, env, body);
+  if (!session) return jsonResponse({ error: 'No autorizado' }, 401, cors);
+
+  /* account_type real del usuario (no se confía en el del body). */
+  const user = await env.one2one_db.prepare('SELECT id, account_type FROM users WHERE id = ?').bind(session.userId).first();
+  if (!user) return jsonResponse({ error: 'Usuario no encontrado' }, 404, cors);
+
+  const profileObj = (body && body.profile && typeof body.profile === 'object') ? body.profile : null;
+  if (!profileObj) return jsonResponse({ error: 'Perfil ausente o inválido' }, 400, cors);
+  const profileJson = JSON.stringify(profileObj);
+  if (profileJson.length > MAX_PROFILE_BYTES) {
+    return jsonResponse({ error: 'El perfil supera el tamaño máximo permitido' }, 413, cors);
+  }
+
+  const avatarUrl = typeof (body && body.avatarUrl) === 'string' ? body.avatarUrl : null;
+  const profileStatus = typeof (body && body.profileStatus) === 'string' ? body.profileStatus : null;
+  const submittedAt = typeof (body && body.profileSubmittedAt) === 'string' ? body.profileSubmittedAt : null;
+  const validatedAt = typeof (body && body.profileValidatedAt) === 'string' ? body.profileValidatedAt : null;
+  const updatedAt = new Date().toISOString();
+
+  const column = user.account_type === 'empresa' ? 'company_profile_json' : 'profile_json';
+  await env.one2one_db.prepare(
+    'UPDATE users SET ' + column + ' = ?, avatar_url = COALESCE(?, avatar_url), profile_status = COALESCE(?, profile_status), ' +
+    'profile_submitted_at = COALESCE(?, profile_submitted_at), profile_validated_at = COALESCE(?, profile_validated_at), ' +
+    'profile_updated_at = ? WHERE id = ?'
+  ).bind(profileJson, avatarUrl, profileStatus, submittedAt, validatedAt, updatedAt, user.id).run();
+
+  return jsonResponse({ ok: true }, 200, cors);
+}
+
+/* ─── POST /get-profile ────────────────────────────────────────────────────
+   {token} → datos completos del usuario con su perfil parseado. */
+async function handleGetProfile(request, env, cors) {
+  if (!env.one2one_db) return jsonResponse({ error: 'Base de datos no configurada' }, 500, cors);
+  const body = await request.json().catch(() => ({}));
+  const session = await requireSession(request, env, body);
+  if (!session) return jsonResponse({ error: 'No autorizado' }, 401, cors);
+
+  const u = await env.one2one_db.prepare(
+    'SELECT email, nombre, account_type, verified, verified_at, profile_json, company_profile_json, ' +
+    'avatar_url, profile_status, profile_submitted_at, profile_validated_at, profile_updated_at ' +
+    'FROM users WHERE id = ?'
+  ).bind(session.userId).first();
+  if (!u) return jsonResponse({ error: 'Usuario no encontrado' }, 404, cors);
+
+  const safeParse = (s) => { if (!s) return null; try { return JSON.parse(s); } catch (e) { return null; } };
+
+  return jsonResponse({
+    ok: true,
+    email: u.email,
+    nombre: u.nombre || '',
+    accountType: u.account_type,
+    verified: u.verified === 1,
+    verifiedAt: u.verified_at || null,
+    profile: safeParse(u.profile_json),
+    companyProfile: safeParse(u.company_profile_json),
+    avatarUrl: u.avatar_url || '',
+    profileStatus: u.profile_status || null,
+    profileSubmittedAt: u.profile_submitted_at || null,
+    profileValidatedAt: u.profile_validated_at || null,
+    profileUpdatedAt: u.profile_updated_at || null
+  }, 200, cors);
+}
+
+/* ─── POST /logout ─────────────────────────────────────────────────────────
+   {token} → borra la sesión. Idempotente: siempre {ok:true}. */
+async function handleLogout(request, env, cors) {
+  if (!env.one2one_db) return jsonResponse({ error: 'Base de datos no configurada' }, 500, cors);
+  const body = await request.json().catch(() => ({}));
+  let token = body && typeof body.token === 'string' ? body.token : '';
+  if (!token) {
+    const auth = request.headers.get('Authorization') || '';
+    const m = /^Bearer\s+(.+)$/i.exec(auth);
+    if (m) token = m[1].trim();
+  }
+  if (token) {
+    const tokenHash = await sha256Hex(token);
+    await env.one2one_db.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(tokenHash).run();
+  }
+  return jsonResponse({ ok: true }, 200, cors);
+}
 
 /* ─── Small utils ──────────────────────────────────────────────────────── */
 

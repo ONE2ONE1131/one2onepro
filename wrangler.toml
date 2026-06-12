@@ -1,0 +1,14 @@
+# Cloudflare Worker · One2One Pro
+# Worker desplegado en: one2one-worker.oneonepro26.workers.dev
+# (el nombre debe coincidir con el del worker ya existente para no crear uno nuevo)
+
+name = "one2one-worker"
+main = "worker.js"
+compatibility_date = "2026-06-12"
+
+# Base de datos D1 (autenticación real: cuentas, contraseñas, verificación)
+# Acceso desde el Worker mediante env.one2one_db
+[[d1_databases]]
+binding = "one2one_db"
+database_name = "one2one-db"
+database_id = "59d545cc-17f3-45ef-904f-d25a1a83c964"
