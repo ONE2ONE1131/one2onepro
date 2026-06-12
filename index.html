@@ -1817,7 +1817,7 @@ const PROVINCIAS_ES=['Álava','Albacete','Alicante','Almería','Asturias','Ávil
 const PAISES=['España','Francia','Portugal','Italia','Alemania','Reino Unido','Otros'];
 const TIPOS_VIA=['Calle','Avenida','Plaza','Paseo','Carretera','Ronda','Travesía','Camino','Pasaje','Glorieta','Vía','Bulevar','Polígono','Urbanización'];
 
-let artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',expedienteOpen:false,expedienteResult:null,editingProfile:false,editForm:{}};
+let artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',needsVerify:'',pendingVerify:null,expedienteOpen:false,expedienteResult:null,editingProfile:false,editForm:{}};
 
 /* ─── Almacén local ─── */
 function aGetUsers(){try{return JSON.parse(localStorage.getItem('o2o_users')||'{}')}catch(e){return{}}}
@@ -1825,7 +1825,12 @@ function aSaveUsers(u){localStorage.setItem('o2o_users',JSON.stringify(u))}
 function aGetSessionEmail(){return localStorage.getItem('o2o_session')||null}
 function aSetSession(email){localStorage.setItem('o2o_session',email)}
 function aClearSession(){localStorage.removeItem('o2o_session');localStorage.removeItem('o2o_token');}
-function aGetCurrentUser(){const e=aGetSessionEmail();if(!e)return null;const u=aGetUsers();return u[e]?Object.assign({email:e},u[e]):null;}
+/* Logueado = sesión (email) + o2o_token. SIN token NO hay usuario: la verdad
+   de la sesión la respalda el servidor (el token lo emiten /login y /verify).
+   Una cuenta recién registrada (sin verificar) NO tiene token → no está
+   logueada; su pantalla de "verificación pendiente" se controla por
+   artistAuth.pendingVerify, no por sesión. */
+function aGetCurrentUser(){const e=aGetSessionEmail();if(!e||!aGetToken())return null;const u=aGetUsers();return u[e]?Object.assign({email:e},u[e]):null;}
 function aUpdateUser(email,patch){const u=aGetUsers();if(!u[email])return;u[email]=Object.assign({},u[email],patch);aSaveUsers(u);}
 function aEscape(s){return aEscapeText(s);}
 
@@ -2044,9 +2049,9 @@ function isAuthModalOpen(){
   const m=document.getElementById('auth-modal');
   return !!(m && m.classList.contains('show'));
 }
-function openAuthModal(tab){
+function openAuthModal(tab,force){
   const user=aGetCurrentUser();
-  if(user)return; /* logueado no necesita modal */
+  if(user&&!force)return; /* logueado no necesita modal, salvo force (errores de verify/reset) */
   const allowed=['login','register','forgot','reset'];
   artistAuth.view=allowed.indexOf(tab)>=0?tab:'login';
   /* Solo limpiamos `error` aquí cuando es navegación natural; los flujos
@@ -2305,16 +2310,13 @@ async function doRegister(){
   if(res.network){artistAuth.error='No hemos podido conectar. Inténtalo en unos segundos.';renderAuthModal();return;}
   if(res.status===409){artistAuth.error='Ya existe una cuenta con ese email. Inicia sesión.';artistAuth.view='login';renderAuthModal();return;}
   if(!res.ok||!res.data||!res.data.ok){artistAuth.error=(res.data&&res.data.error)||'No se ha podido crear la cuenta.';renderAuthModal();return;}
-  /* Cuenta creada (sin verificar, aún sin sesión). Enviamos el email de
-     verificación vía Make con el token que devuelve el worker. */
+  /* Cuenta creada (sin verificar y SIN sesión: el worker no emite token en
+     /register). Enviamos el email de verificación vía Make con el token. */
   aSendVerificationEmail(email,nombre,res.data.verifyToken).catch(function(e){console.warn('verify email send failed:',e);});
-  /* Espejo local SIN contraseña para mostrar la pantalla de "verificación
-     pendiente". La sesión real (token) llega al verificar (auto-login en /verify). */
-  const users=aGetUsers();
-  users[email]=Object.assign({},users[email]||{},{nombre:nombre,accountType:perfil,verified:false,profile:null,profileStatus:'pendiente'});
-  delete users[email].password;
-  aSaveUsers(users);
-  aSetSession(email);
+  /* NO creamos sesión ni espejo: la barra superior queda como visitante.
+     La pantalla de "verificación pendiente" se controla solo en memoria
+     (artistAuth.pendingVerify). La sesión real llega al verificar en /verify. */
+  artistAuth.pendingVerify={email:email,nombre:nombre};
   artistAuth.form={};artistAuth.error='';artistAuth.view='login';artistAuth.expedienteOpen=false;
   closeAuthModal();
   renderPasos();updateChromeUI();renderSim();
@@ -2357,26 +2359,35 @@ async function aResendVerifyFromLogin(){
   renderAuthModal();
 }
 
-function renderPendingVerification(user){
+function renderPendingVerification(email){
   const c=document.getElementById('sim-c');
   c.innerHTML=`<div class="auth-hero">
 <p class="auth-eyebrow">Verificación pendiente</p>
 <h2 class="auth-title">Te hemos enviado un email de <em>verificación</em></h2>
-<p class="auth-lead">Revisa tu bandeja de entrada en <strong>${aEscape(user.email)}</strong>. Pincha el enlace del correo para activar tu cuenta.</p>
+<p class="auth-lead">Revisa tu bandeja de entrada en <strong>${aEscape(email)}</strong>. Pincha el enlace del correo para activar tu cuenta.</p>
 </div>
 <div class="auth-msg info">Si no encuentras el correo, revisa tu carpeta de spam o promociones. El enlace caduca a las 24 horas.</div>
 <div id="resend-status" style="min-height:20px;margin-top:8px"></div>
 <button class="btn-verde-full" style="margin-top:14px" onclick="aResendVerification()">Reenviar email de verificación</button>
-<p class="auth-footer-modal" style="margin-top:14px">¿Email incorrecto? <button class="auth-link" type="button" onclick="doLogout()">Cambiar de cuenta</button></p>`;
+<p class="auth-footer-modal" style="margin-top:14px">¿Email incorrecto? <button class="auth-link" type="button" onclick="aCancelPending()">Cambiar de cuenta</button></p>`;
+}
+
+/* Sale de la pantalla de verificación pendiente y vuelve al registro. */
+function aCancelPending(){
+  artistAuth.pendingVerify=null;
+  perfil=null;
+  updateChromeUI();
+  renderSim();
+  openAuthModal('register');
 }
 
 async function aResendVerification(){
-  const u=aGetCurrentUser();if(!u)return;
+  const pv=artistAuth.pendingVerify;const email=pv&&pv.email;if(!email)return;
   const st=document.getElementById('resend-status');
   if(st){st.innerHTML='<span style="font-size:12px;color:var(--gris-suave)">Enviando…</span>';}
   try{
-    await aResendVerifyEmail(u.email,u.nombre);
-    if(st){st.innerHTML='<span style="font-size:12px;color:var(--verde);font-weight:500">✓ Email reenviado a '+aEscape(u.email)+'</span>';}
+    await aResendVerifyEmail(email,pv.nombre||'');
+    if(st){st.innerHTML='<span style="font-size:12px;color:var(--verde);font-weight:500">✓ Email reenviado a '+aEscape(email)+'</span>';}
   }catch(e){
     if(st){st.innerHTML='<span style="font-size:12px;color:#dc2626">No hemos podido reenviar el email. Inténtalo en unos segundos.</span>';}
   }
@@ -2388,7 +2399,7 @@ function doLogout(){
   const token=aGetToken();
   if(token){apiAuth('/logout',{token:token}).catch(function(){});}
   aClearSession();
-  artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',needsVerify:'',expedienteOpen:false,expedienteResult:null,editingProfile:false,editForm:{}};
+  artistAuth={view:'login',form:{},error:'',info:'',resetToken:'',needsVerify:'',pendingVerify:null,expedienteOpen:false,expedienteResult:null,editingProfile:false,editForm:{}};
   resetExpedienteState();
   renderPasos();updateChromeUI();renderSim();
 }
@@ -4069,6 +4080,15 @@ function copiarEnlace(url){
 
 /* ─── Dispatcher central ─── */
 function renderSim(){
+  /* Verificación pendiente tras registrar: NO hay sesión (la barra queda como
+     visitante), pero mostramos el panel con la pantalla de "confirma el email".
+     Se controla solo por estado en memoria. */
+  if(artistAuth.pendingVerify && !aGetCurrentUser()){
+    const hero=document.querySelector('.hero');if(hero)hero.classList.remove('anon');
+    const simEl=document.getElementById('sim');if(simEl)simEl.style.display='';
+    renderNavRight();
+    return renderPendingVerification(artistAuth.pendingVerify.email);
+  }
   const user=aGetCurrentUser();
   if(!user){
     /* Sin sesión la home es una landing limpia. El login/registro vive en
@@ -4078,7 +4098,7 @@ function renderSim(){
   }
   perfil=user.accountType;
   updateChromeUI();
-  if(!user.verified)return renderPendingVerification(user);
+  if(!user.verified)return renderPendingVerification(user.email);
   /* Editor de perfil — disponible tanto para artista (con perfil ya creado)
      como para empresa. Toma precedencia sobre el dashboard y el flujo de
      expedientes. */
@@ -4150,12 +4170,10 @@ function renderSim(){
         else if(r==='ok'){ const cu=aGetCurrentUser(); if(cu)perfil=cu.accountType; updateChromeUI(); renderSim(); }
         /* r==='network' → mantenemos la caché local, sin tocar nada. */
       });
-    } else {
-      /* Sesión local sin token: solo es válida si es una cuenta pendiente de
-         verificar (aún no tiene token). Si figura "verificada" pero sin token,
-         es una sesión vieja/legacy → la cerramos. */
-      const cu=aGetCurrentUser();
-      if(cu && cu.verified){ aClearSession(); perfil=null; updateChromeUI(); renderSim(); }
+    } else if(aGetSessionEmail()){
+      /* Hay email de sesión pero sin token: sesión vieja/legacy ya no válida
+         (aGetCurrentUser exige token). La limpiamos para no dejar restos. */
+      aClearSession(); perfil=null; updateChromeUI(); renderSim();
     }
   }
 
@@ -4179,18 +4197,25 @@ function renderSim(){
       const cleanUrl=window.location.pathname+window.location.hash;
       window.history.replaceState({},'',cleanUrl);
       apiAuth('/verify',{token:verifyTok}).then(function(res){
+        /* FALLO (red o error del worker): NO marcamos verified, NO creamos
+           sesión, NO avanzamos. Mostramos el error de forma visible (force,
+           por si hubiera una sesión que cancelaría el modal). */
         if(res.network){
+          artistAuth.pendingVerify=null;
           artistAuth.view='login';
           artistAuth.error='No hemos podido conectar para verificar. Vuelve a abrir el enlace del email.';
-          openAuthModal('login');return;
+          renderSim();openAuthModal('login',true);return;
         }
         if(!res.ok||!res.data||!res.data.ok){
+          artistAuth.pendingVerify=null;
           artistAuth.view='login';
           artistAuth.error=(res.data&&res.data.error)||'El enlace de verificación no es válido o ha caducado.';
-          openAuthModal('login');return;
+          renderSim();openAuthModal('login',true);return;
         }
-        /* OK → auto-login: token + espejo + perfil del servidor. */
+        /* ÉXITO confirmado por el servidor → auto-login: token + espejo +
+           perfil del servidor. Solo aquí se marca verified y se crea sesión. */
         const d=res.data;
+        artistAuth.pendingVerify=null;
         aSetToken(d.sessionToken);
         const users=aGetUsers();
         users[d.email]=Object.assign({},users[d.email]||{},{nombre:d.nombre||'',accountType:d.accountType||'artista',verified:true});
