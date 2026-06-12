@@ -197,7 +197,7 @@ footer a:hover{color:var(--azul)}
     '<div class="sec-t">Resumen del encargo</div>'+
     '<div class="meta">'+
       '<div class="meta-row"><span class="meta-l">Expediente</span><span class="meta-r">'+esc(token)+'</span></div>'+
-      '<div class="meta-row"><span class="meta-l">Artista</span><span class="meta-r">'+(esc(artista)||'—')+'</span></div>'+
+      '<div class="meta-row"><span class="meta-l">Profesional</span><span class="meta-r">'+(esc(artista)||'—')+'</span></div>'+
       '<div class="meta-row"><span class="meta-l">Actividad</span><span class="meta-r">'+(esc(actividad)||'—')+'</span></div>'+
       (lugar?'<div class="meta-row"><span class="meta-l">Lugar</span><span class="meta-r">'+esc(lugar)+'</span></div>':'')+
       '<div class="meta-row"><span class="meta-l">Fecha</span><span class="meta-r">'+(esc(per)||'—')+'</span></div>'+
@@ -226,7 +226,7 @@ footer a:hover{color:var(--azul)}
     '<label class="check"><input type="checkbox" id="c1"><span class="check-text">He leído y acepto las <strong>condiciones del servicio de '+RAZON+'</strong>.</span></label>'+
     '<label class="check"><input type="checkbox" id="c2"><span class="check-text">Me comprometo a efectuar el pago en un plazo máximo de <strong>'+PLAZO+' días naturales</strong> desde la recepción de este documento.</span></label>'+
     '<button class="btn" id="btnConfirm" disabled>Confirmo la gestión</button>'+
-    '<p class="legal">Tu aceptación se registra con tu nombre, email, IP, fecha y hora. Al confirmar, One2One Pro tramita el alta del artista y te envía la pro-forma.</p>';
+    '<p class="legal">Tu aceptación se registra con tu nombre, email, IP, fecha y hora. Al confirmar, One2One Pro tramita el alta del profesional y te envía la pro-forma.</p>';
 
   var inEls = {
     nombre: document.getElementById('f-nombre'),
@@ -302,7 +302,7 @@ footer a:hover{color:var(--azul)}
         '<div class="state"><div class="ico ok">✓</div>'+
         '<h2>¡Gestión confirmada!</h2>'+
         '<p>Hemos registrado tu confirmación del expediente <strong>'+esc(token)+'</strong>. En breve recibirás en <strong>'+esc(v.email)+'</strong> la pro-forma con el importe exacto y los datos para la transferencia a '+RAZON+' (IBAN '+IBAN+').</p>'+
-        '<p style="margin-top:14px">One2One Pro tramita ahora el alta del artista en la Seguridad Social. Gracias por confiar en nosotros.</p></div>';
+        '<p style="margin-top:14px">One2One Pro tramita ahora el alta del profesional en la Seguridad Social. Gracias por confiar en nosotros.</p></div>';
       window.scrollTo(0,0);
     }).catch(function(e){
       console.error('[promotor] confirm error', e);
