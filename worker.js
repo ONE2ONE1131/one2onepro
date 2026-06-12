@@ -482,19 +482,26 @@ async function handleVerify(request, env, cors) {
   if (!token) return jsonResponse({ error: 'Token requerido' }, 400, cors);
 
   const user = await env.one2one_db.prepare(
-    'SELECT id, email, nombre, account_type, verify_token_expires FROM users WHERE verify_token = ?'
+    'SELECT id, email, nombre, account_type, verified, verify_token_expires FROM users WHERE verify_token = ?'
   ).bind(token).first();
+  /* IDEMPOTENTE: el token NO se borra al verificar; vive hasta su caducidad.
+     Así un segundo uso (doble disparo del navegador / doble clic) lo sigue
+     encontrando y responde éxito en vez de "no válido". */
   if (!user) return jsonResponse({ error: 'El enlace de verificación no es válido.' }, 400, cors);
   if (!user.verify_token_expires || user.verify_token_expires < Date.now()) {
     return jsonResponse({ error: 'El enlace de verificación ha caducado.' }, 400, cors);
   }
 
-  const verifiedAt = new Date().toISOString();
-  await env.one2one_db.prepare(
-    'UPDATE users SET verified = 1, verified_at = ?, verify_token = NULL, verify_token_expires = NULL WHERE id = ?'
-  ).bind(verifiedAt, user.id).run();
+  /* Si aún no estaba verificada, la marcamos (conservando el token hasta su
+     caducidad). Si ya estaba verificada, respondemos éxito igualmente. */
+  if (!user.verified) {
+    const verifiedAt = new Date().toISOString();
+    await env.one2one_db.prepare(
+      'UPDATE users SET verified = 1, verified_at = ? WHERE id = ?'
+    ).bind(verifiedAt, user.id).run();
+  }
 
-  /* Tras verificar, dejamos al usuario con sesión iniciada directamente. */
+  /* Auto-login en ambos casos: emitimos sesión. */
   const session = await issueSession(env, user.id);
   return jsonResponse(
     {
