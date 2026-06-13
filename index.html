@@ -983,14 +983,16 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 /* ═══════════ REESTRUCTURACIÓN VISUAL (web corta + imágenes) ═══════════ */
 .hero{display:block;position:relative;padding-top:60px;background:var(--fondo)}
 .hero.anon{background:transparent}
-.hero-marketing{position:relative;min-height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:90px 6%;background:linear-gradient(rgba(15,45,94,.85),rgba(15,45,94,.85)),url('https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1600') center/cover no-repeat;color:#fff}
+.hero-marketing{position:relative;min-height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 6%;color:#fff;background:linear-gradient(165deg,#0f2d5e 0%,#163a70 100%);overflow:hidden}
+.hero-marketing::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 16%,rgba(0,168,107,.18) 0%,transparent 55%),radial-gradient(circle at 88% 86%,rgba(0,168,107,.10) 0%,transparent 45%)}
 .hero:not(.anon) .hero-marketing{display:none}
 .hero:not(.anon){background:var(--fondo)}
 .hero:not(.anon) .hero-r{max-width:780px;margin:0 auto;width:100%;background:transparent;min-height:calc(100vh - 60px)}
-.hm-inner{max-width:780px}
-.hm-eyebrow{font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--verde);margin-bottom:22px}
-.hm-h1{font-family:'Playfair Display',serif;font-size:clamp(30px,5vw,58px);font-weight:700;line-height:1.12;letter-spacing:-1.5px;color:#fff;margin-bottom:22px}
-.hm-sub{font-size:clamp(16px,2vw,20px);font-weight:300;color:rgba(255,255,255,.85);line-height:1.6;max-width:600px;margin:0 auto 40px}
+.hm-inner{max-width:760px;position:relative;z-index:1}
+.hm-eyebrow{font-size:11px;font-weight:600;letter-spacing:3.5px;text-transform:uppercase;color:var(--verde);margin-bottom:26px}
+.hm-h1{font-family:'Playfair Display',serif;font-size:clamp(36px,6vw,66px);font-weight:700;line-height:1.05;letter-spacing:-1.5px;color:#fff;margin-bottom:24px}
+.hm-sub{font-size:clamp(16px,1.8vw,20px);font-weight:300;color:rgba(255,255,255,.82);line-height:1.65;max-width:620px;margin:0 auto 18px}
+.hm-profiles{font-size:13px;font-weight:500;letter-spacing:.4px;color:rgba(255,255,255,.55);line-height:1.9;max-width:560px;margin:0 auto 40px}
 .hm-btns{display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap}
 .btn-verde-lg{background:var(--verde);color:#fff;border:none;border-radius:8px;padding:18px 34px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 24px rgba(0,168,107,.32)}
 .btn-verde-lg:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,168,107,.45)}
@@ -1094,11 +1096,11 @@ src="https://www.facebook.com/tr?id=862116863606514&ev=PageView&noscript=1"
   <div class="hero-marketing">
     <div class="hm-inner">
       <p class="hm-eyebrow">Régimen Especial de Artistas · España</p>
-      <h1 class="hm-h1">¿Tienes un bolo, un rodaje o una sesión y no sabes cómo cobrarlo legalmente?</h1>
-      <p class="hm-sub">Nosotros lo gestionamos todo. Alta, contrato, factura y cobro.</p>
+      <h1 class="hm-h1">Tu manager en cada proyecto.</h1>
+      <p class="hm-sub">Damos la cara por ti: contratación, condiciones, cobro y alta legal en la Seguridad Social. Tú creas, de todo lo demás nos encargamos.</p>
+      <p class="hm-profiles">Músicos · DJs · Filmmakers · Ingenieros de sonido · Fotógrafos · Productores</p>
       <div class="hm-btns">
-        <button class="btn-verde-lg" onclick="document.getElementById('simulador').scrollIntoView({behavior:'smooth'})">Calcula lo que cobras →</button>
-        <button class="btn-hero-sec" onclick="crearExpediente()">Crear mi expediente</button>
+        <button class="btn-verde-lg" onclick="document.getElementById('simulador').scrollIntoView({behavior:'smooth'})">Calcula lo que cobras</button>
       </div>
     </div>
   </div>
