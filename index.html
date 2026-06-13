@@ -1356,6 +1356,50 @@ const CONCEPTOS_ACTUACION=[
   'Actuación artística (teatro, danza, circo...)',
   'Otro (especificar)'
 ];
+/* Catálogo de profesiones agrupado (fuente única para el desplegable del
+   perfil del profesional y del formulario de la empresa). */
+const PROFESIONES=[
+  {g:'Interpretación y escena',items:['Intérprete','Cantante','Músico','DJ','Bailarín/a','Coreógrafo/a','Actor / Actriz','Presentador/a','Speaker / Locutor','Maestro/a de ceremonias (MC)']},
+  {g:'Producción musical',items:['Productor musical','Compositor']},
+  {g:'Técnica de directo y audiovisual',items:['Técnico de sonido','Técnico de monitores','Técnico de luces','Técnico de vídeo','Técnico de pantallas LED','Técnico de streaming','Técnico de FX / Pirotecnia','Técnico audiovisual','Técnico de cámara']},
+  {g:'Producción y logística',items:['Road Manager','Tour Manager','Stage Manager','Regidor','Backliner','Rigger','Montador de escenarios','Personal de carga y descarga','Conductor para artista o producción','Runner','Hospitality','Azafato/a']},
+  {g:'Audiovisual y contenido',items:['Fotógrafo/a','Videógrafo/a','Editor de vídeo','Content Creator','Social Media Manager','Community Manager']},
+  {g:'Management y representación',items:['Management','Booker','Agente artístico','Promotor/a','Relaciones Públicas (RRPP)']},
+  {g:'Imagen y diseño',items:['Estilista','Maquillador/a','Peluquero/a','Diseñador/a gráfico','Diseñador/a de escenografía','Personal de merchandising']}
+];
+/* Estado del campo profesión según dónde se usa: 'reg' (perfil nuevo),
+   'edit' (editor de perfil), 'emp' (formulario de la empresa). */
+function profGetState(kind){
+  if(kind==='edit')return artistAuth.editForm;
+  if(kind==='emp')return st;
+  return artistAuth.form;
+}
+function profOptionsHTML(selected){
+  return PROFESIONES.map(function(grp){
+    return '<optgroup label="'+aEscape(grp.g)+'">'+grp.items.map(function(it){
+      return '<option value="'+aEscape(it)+'"'+(it===selected?' selected':'')+'>'+aEscape(it)+'</option>';
+    }).join('')+'</optgroup>';
+  }).join('');
+}
+/* Renderiza el desplegable de profesión + casilla "a mano" + texto libre.
+   El valor resuelto se guarda SIEMPRE en state.profesion (transparente para
+   Make/Airtable). Si el valor guardado no está en la lista (p. ej. cuentas
+   antiguas), se muestra automáticamente en modo "a mano". */
+function profFieldHTML(kind){
+  var s=profGetState(kind);
+  var val=s.profesion||'';
+  var inList=PROFESIONES.some(function(g){return g.items.indexOf(val)>=0;});
+  var otro=!!s.profOtro || (!!val && !inList);
+  var reval=(kind==='emp')?"rBtn('exp-bs3',artistaDatosValidos)":"";
+  return '<div class="form-field full"><label>Profesión *</label>'
+    +'<select onchange="aProfSelect(\''+kind+'\',this.value)"><option value="">Selecciona tu profesión...</option>'+profOptionsHTML(otro?'':val)+'</select></div>'
+    +'<div class="form-field full"><label class="perfil-check"><input type="checkbox" '+(otro?'checked':'')+' onchange="aProfToggleOtro(\''+kind+'\',this.checked)"><span>¿No encuentras tu profesión? Escríbela a mano</span></label>'
+    +(otro?'<input type="text" placeholder="Escribe tu profesión" maxlength="80" value="'+aEscape(val)+'" oninput="aProfOtroInput(\''+kind+'\',this.value)" style="margin-top:8px">':'')
+    +'</div>';
+}
+function aProfSelect(kind,v){var s=profGetState(kind);s.profesion=v;if(kind==='emp')rBtn('exp-bs3',artistaDatosValidos);}
+function aProfToggleOtro(kind,checked){var s=profGetState(kind);s.profOtro=!!checked;s.profesion='';renderSim();}
+function aProfOtroInput(kind,v){var s=profGetState(kind);s.profesion=v;if(kind==='emp')rBtn('exp-bs3',artistaDatosValidos);}
 const UBICS=[
   {id:'int',label:'En un espacio interior',sub:'Local, sala, estudio, oficina',factor:1.0},
   {id:'ext',label:'Al aire libre',sub:'Festival, evento exterior, mercado',factor:1.15},
@@ -1454,6 +1498,9 @@ let st={
   /* Detalles de la actuación */
   lugarCelebracion:'',descripcionEvento:'',
   conceptoActuacion:'',conceptoOtro:'',conceptoValido:true,
+  /* Profesión del profesional (formulario de empresa): profesion = valor
+     resuelto; profOtro = modo "a mano". */
+  profesion:'',profOtro:false,
   /* Cuenta artista — datos del PROMOTOR.
      tieneDatosPromotor: 'si' (Flujo A, rellena datos fiscales) |
                          'no' (Flujo B, solo email del promotor) | '' */
@@ -1476,6 +1523,7 @@ function resetExpedienteState(){
   st.fechaInicio='';st.fechaFin='';
   st.lugarCelebracion='';st.descripcionEvento='';
   st.conceptoActuacion='';st.conceptoOtro='';st.conceptoValido=true;
+  st.profesion='';st.profOtro=false;
   st.tieneDatosPromotor='';st.pNombre='';st.pCif='';st.pEmail='';st.pDireccion='';st.pTel='';
   st.compromisoPago=false;
   st.aNombre='';st.aApellidos='';st.aDni='';st.aFechaNac='';st.aNacionalidad='';
@@ -2628,7 +2676,7 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 <div class="form-grid">
 <div class="form-field full"><label>IBAN *</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" maxlength="29" value="${aEscape(p.iban||'')}" oninput="artistAuth.form.iban=aFormatIban(this.value);this.value=artistAuth.form.iban" onblur="aShowFieldError(this,aValidIbanES(this.value)?null:'IBAN español inválido (ES + 22 dígitos)')"><div class="field-error"></div></div>
 <div class="form-field"><label>Nº Afiliación SS / NAF (opcional)</label><input type="text" placeholder="12 dígitos" maxlength="12" value="${aEscape(p.naf||'')}" oninput="artistAuth.form.naf=this.value.replace(/\D/g,'').substring(0,12);this.value=artistAuth.form.naf"></div>
-<div class="form-field"><label>Profesión *</label><input type="text" placeholder="DJ, filmmaker, ingeniero de sonido, músico, fotógrafo..." maxlength="80" value="${aEscape(p.profesion||'')}" oninput="artistAuth.form.profesion=this.value"></div>
+${profFieldHTML('reg')}
 <div class="form-field full">
 <label class="perfil-check"><input type="checkbox" id="art-primera-afiliacion" ${p.primeraAfiliacion?'checked':''} onchange="aTogglePrimeraAfiliacion(this)"><span>Es mi primera vez cotizando en la Seguridad Social en España</span></label>
 <div class="perfil-afiliacion-aviso ${p.primeraAfiliacion?'show':''}" id="art-afiliacion-aviso"><span class="pa-ico">⚠️</span><span>La Seguridad Social aplica una cuota de afiliación de 30€ en tu primer alta. Este importe no lo cobra One2One Pro — es un coste directo de la SS que se descontará de tu primera liquidación.</span></div>
@@ -3099,7 +3147,7 @@ ${dniThumb('dniReverso','DNI / NIE reverso')}
 <div class="form-grid">
 <div class="form-field full"><label>IBAN *</label><input type="text" maxlength="29" value="${aEscape(ef.iban||'')}" oninput="artistAuth.editForm.iban=aFormatIban(this.value);this.value=artistAuth.editForm.iban" onblur="aShowFieldError(this,aValidIbanES(this.value)?null:'IBAN español inválido')"><div class="field-error"></div></div>
 <div class="form-field"><label>Nº Afiliación SS / NAF</label><input type="text" maxlength="12" value="${aEscape(ef.naf||'')}" oninput="artistAuth.editForm.naf=this.value.replace(/\\D/g,'').substring(0,12);this.value=artistAuth.editForm.naf"></div>
-<div class="form-field"><label>Profesión *</label><input type="text" maxlength="80" value="${aEscape(ef.profesion||'')}" oninput="artistAuth.editForm.profesion=this.value"></div>
+${profFieldHTML('edit')}
 <div class="form-field full">
 <label class="perfil-check"><input type="checkbox" id="edit-primera-afiliacion" ${ef.primeraAfiliacion?'checked':''} onchange="aTogglePrimeraAfiliacionEdit(this)"><span>Es mi primera vez cotizando en la Seguridad Social en España</span></label>
 <div class="perfil-afiliacion-aviso ${ef.primeraAfiliacion?'show':''}" id="edit-afiliacion-aviso"><span class="pa-ico">⚠️</span><span>La Seguridad Social aplica una cuota de afiliación de 30€ en tu primer alta. Este importe no lo cobra One2One Pro — es un coste directo de la SS que se descontará de tu primera liquidación.</span></div>
@@ -3394,23 +3442,29 @@ ${prog(STEPS)}<p class="sim-meta">Paso 2 de ${STEPS}</p>
 ${oGrid(UBICS,'ubic')}
 <button class="btn-n" onclick="next()" ${!st.ubic?'disabled':''}>Continuar</button>`;
   } else if(st.step===2){
-    /* Caché + días + fechas, con desglose live */
+    /* Caché + días + fechas + recinto, con desglose live */
     setTimeout(updateBreakdown,0);
     c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
-${prog(STEPS)}<p class="sim-meta">Paso 3 de ${STEPS} — Caché, días y fechas</p>
+${prog(STEPS)}<p class="sim-meta">Paso 3 de ${STEPS} — Caché, días, fechas y recinto</p>
 <p class="sim-q">${labels.paso3Q}</p>
 <p class="sim-hint">${labels.paso3Hint}</p>
 <div class="inp-row">
-<div class="inp-f hp"><label>Caché acordado (€)</label><div class="wr"><span class="pre">€</span><input class="grande" type="number" placeholder="0" value="${aEscape(st.imp)}" min="1" oninput="st.imp=this.value;updateBreakdown();rBtn('exp-bs2',()=>st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&!expFechasValidas())"></div></div>
-<div class="inp-f"><label>Días de trabajo</label><input class="grande" type="number" placeholder="0" value="${aEscape(st.dias)}" min="1" max="365" oninput="st.dias=this.value;updateBreakdown();rBtn('exp-bs2',()=>st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&!expFechasValidas())"></div>
+<div class="inp-f hp"><label>Caché acordado (€)</label><div class="wr"><span class="pre">€</span><input class="grande" type="number" placeholder="0" value="${aEscape(st.imp)}" min="1" oninput="st.imp=this.value;updateBreakdown();rBtn('exp-bs2',expPaso2Valido)"></div></div>
+<div class="inp-f"><label>Días de trabajo</label><input class="grande" type="number" placeholder="0" value="${aEscape(st.dias)}" min="1" max="365" oninput="st.dias=this.value;updateBreakdown();rBtn('exp-bs2',expPaso2Valido)"></div>
 </div>
 <div class="form-grid" style="margin-top:14px">
-<div class="form-field"><label>Fecha inicio *</label><input type="date" value="${aEscape(st.fechaInicio)}" oninput="st.fechaInicio=this.value;rBtn('exp-bs2',()=>st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&!expFechasValidas())" onblur="aShowFieldError(this,aFechaExpedienteError(this.value))"><div class="field-error"></div></div>
-<div class="form-field"><label>Fecha fin *</label><input type="date" value="${aEscape(st.fechaFin)}" oninput="st.fechaFin=this.value;rBtn('exp-bs2',()=>st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&!expFechasValidas())" onblur="aShowFieldError(this,aFechaFinError(st.fechaInicio,this.value))"><div class="field-error"></div></div>
+<div class="form-field"><label>Fecha inicio *</label><input type="date" value="${aEscape(st.fechaInicio)}" oninput="st.fechaInicio=this.value;rBtn('exp-bs2',expPaso2Valido)" onblur="aShowFieldError(this,aFechaExpedienteError(this.value))"><div class="field-error"></div></div>
+<div class="form-field"><label>Fecha fin *</label><input type="date" value="${aEscape(st.fechaFin)}" oninput="st.fechaFin=this.value;rBtn('exp-bs2',expPaso2Valido)" onblur="aShowFieldError(this,aFechaFinError(st.fechaInicio,this.value))"><div class="field-error"></div></div>
+<div class="form-field full"><label>Recinto / sala *</label><input type="text" placeholder="Sala, recinto o dirección del evento" maxlength="160" value="${aEscape(st.lugarCelebracion)}" oninput="st.lugarCelebracion=this.value;rBtn('exp-bs2',expPaso2Valido)" onchange="st.lugarCelebracion=this.value;rBtn('exp-bs2',expPaso2Valido)"></div>
 </div>
 <div id="live-breakdown" style="margin-top:16px"></div>
-<button class="btn-n" id="exp-bs2" onclick="continueFromCache()" ${!(st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&!expFechasValidas())?'disabled':''}>${labels.paso3Btn}</button>`;
+<button class="btn-n" id="exp-bs2" onclick="continueFromCache()" ${!expPaso2Valido()?'disabled':''}>${labels.paso3Btn}</button>`;
   }
+}
+
+/* Validez del paso común 2: caché, días, fechas válidas y recinto obligatorio. */
+function expPaso2Valido(){
+  return !!(st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&st.lugarCelebracion&&st.lugarCelebracion.trim().length>=2&&!expFechasValidas());
 }
 
 function continueFromCache(){
@@ -3419,6 +3473,7 @@ function continueFromCache(){
   if(err){artistAuth.error=err;alert(err);return;}
   if(!st.imp||parseFloat(st.imp)<=0){alert('Indica un caché válido.');return;}
   if(!st.dias||parseInt(st.dias)<=0){alert('Indica los días de trabajo.');return;}
+  if(!st.lugarCelebracion||st.lugarCelebracion.trim().length<2){alert('Indica el recinto / sala.');return;}
   next();
 }
 
@@ -3550,6 +3605,10 @@ async function enviarExpedienteProfesional(){
   const flujo=st.tieneDatosPromotor==='si'?'A':'B';
   const code='O2O-'+Math.floor(Math.random()*90000+10000);
   const r=calcular();
+  /* Profesión del profesional (de su perfil) + concepto compuesto de la
+     pro-forma: "Profesión · Recinto (Nº expediente)". */
+  const profesionProf=(user.profile&&user.profile.profesion)||'';
+  const conceptoProforma=[profesionProf,st.lugarCelebracion].filter(Boolean).join(' · ')+' ('+code+')';
 
   const btn=document.getElementById('exp-bs3');
   if(btn){btn.disabled=true;btn.textContent='Enviando…';}
@@ -3591,6 +3650,8 @@ async function enviarExpedienteProfesional(){
     fecha_inicio:st.fechaInicio,
     fecha_fin:st.fechaFin,
     lugar_celebracion:st.lugarCelebracion||'',
+    profesion:profesionProf,
+    concepto_proforma:conceptoProforma,
     cache_acordado:parseFloat(st.imp),
     seguridad_social:r.ss,
     comision_one2one:r.com,
@@ -3658,8 +3719,6 @@ function renderExpedienteEmpresa(user){
   if(st.step===3){
     const r=calcular();
     const aProvOpts=PROVINCIAS_ES.map(pr=>`<option value="${pr}" ${st.aProvincia===pr?'selected':''}>${pr}</option>`).join('');
-    const conceptoOpts=CONCEPTOS_ACTUACION.map(co=>`<option value="${aEscape(co)}" ${st.conceptoActuacion===co?'selected':''}>${co}</option>`).join('');
-    const esConceptoOtro=st.conceptoActuacion==='Otro (especificar)';
     c.innerHTML=`<button class="btn-b" onclick="back()">← Volver</button>
 ${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del profesional</p>
 <p class="sim-q">Datos del profesional que contratas</p>
@@ -3668,9 +3727,7 @@ ${prog(STEPS)}<p class="sim-meta">Paso 4 de ${STEPS} — Datos del profesional</
 <div class="form-section">
 <div class="form-section-title">Detalles de la actuación</div>
 <div class="form-grid">
-<div class="form-field full"><label>Concepto de la actuación *</label><select onchange="onConceptoChange(this.value)"><option value="">Selecciona el concepto...</option>${conceptoOpts}</select></div>
-${esConceptoOtro?`<div class="form-field full"><label>Especifica el concepto *</label><input type="text" id="concepto-otro-input" placeholder="Describe la actividad (industria musical o cultural)" maxlength="100" value="${aEscape(st.conceptoOtro)}" oninput="st.conceptoOtro=this.value;rBtn('exp-bs3',artistaDatosValidos)" onblur="validarConcepto(this.value)"><div class="concepto-valida" id="concepto-valida"></div></div>`:''}
-<div class="form-field full"><label>Lugar de la actuación *</label><input type="text" placeholder="Sala, recinto o dirección del evento" maxlength="160" value="${aEscape(st.lugarCelebracion)}" oninput="st.lugarCelebracion=this.value;rBtn('exp-bs3',artistaDatosValidos)" onchange="st.lugarCelebracion=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
+${profFieldHTML('emp')}
 <div class="form-field full"><label>Descripción del evento (opcional)</label><input type="text" placeholder="Concierto, boda, festival, sesión..." maxlength="200" value="${aEscape(st.descripcionEvento)}" oninput="st.descripcionEvento=this.value" onchange="st.descripcionEvento=this.value"></div>
 </div>
 </div>
@@ -3949,7 +4006,7 @@ function conceptoActuacionValido(){
 }
 
 function artistaDatosValidos(){
-  if(!conceptoActuacionValido())return false;
+  if(!st.profesion||st.profesion.trim().length<2)return false;
   if(!st.aNombre||st.aNombre.trim().length<2)return false;
   if(!st.aApellidos||st.aApellidos.trim().length<2)return false;
   if(!aValidDniNie(st.aDni))return false;
@@ -4058,6 +4115,8 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
      compromiso de pago aquí mismo (sin enlace externo). Capturamos IP. */
   const aceptacionIP=await o2oGetIP();
   const aceptacionTS=new Date().toISOString();
+  /* Concepto compuesto de la pro-forma: "Profesión · Recinto (Nº expediente)". */
+  const conceptoProforma=[st.profesion,st.lugarCelebracion].filter(Boolean).join(' · ')+' ('+expNum+')';
   const payload={
     tipo:'expediente_empresa',
     flujo:'C',
@@ -4072,7 +4131,9 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
     fecha_fin:st.fechaFin,
     lugar_celebracion:st.lugarCelebracion,
     descripcion_evento:st.descripcionEvento,
-    concepto_actuacion:st.conceptoActuacion==='Otro (especificar)'?(st.conceptoOtro||'').trim():st.conceptoActuacion,
+    profesion_trabajador:st.profesion,
+    concepto_actuacion:st.profesion,
+    concepto_proforma:conceptoProforma,
     cache_acordado:parseFloat(st.imp),
     seguridad_social:r.ss,
     comision_one2one:r.com,
