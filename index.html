@@ -1070,6 +1070,53 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=862116863606514&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<style>
+/* ─── Capa de animación (elegante / tech, con prefers-reduced-motion) ─────────
+   Solo anima transform y opacity. Los reveal viven bajo el pliegue (el hero
+   ocupa ~100vh), así que no hay parpadeo above-the-fold. */
+
+/* Reveal al hacer scroll (la clase .reveal la añade el JS; sin JS todo se ve) */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .62s ease-out,transform .62s ease-out;will-change:opacity,transform}
+.reveal.in{opacity:1;transform:none}
+
+/* Microinteracciones hover en tarjetas */
+.porque-col,.acomp-item{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+.porque-col:hover,.acomp-item:hover{transform:translateY(-4px);box-shadow:0 14px 32px rgba(15,45,94,.10);border-color:rgba(0,168,107,.40)}
+.proceso-step{transition:transform .22s ease}
+.proceso-step:hover{transform:translateY(-3px)}
+.proceso-step:hover .proceso-num{color:var(--azul-medio)}
+.simlibre-card{transition:box-shadow .22s ease}
+
+/* Nav: sombra/opacidad al hacer scroll */
+nav{transition:box-shadow .25s ease,background .25s ease}
+nav.nav-scrolled{box-shadow:0 6px 24px rgba(15,45,94,.30);background:rgba(15,45,94,.99)}
+
+/* Hero: entrada secuencial al cargar */
+@keyframes o2oHeroUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.hm-eyebrow,.hm-h1,.hm-sub,.hm-btns{opacity:0;animation:o2oHeroUp .7s ease-out forwards}
+.hm-eyebrow{animation-delay:.05s}
+.hm-h1{animation-delay:.16s}
+.hm-sub{animation-delay:.30s}
+.hm-btns{animation-delay:.60s}
+.hm-profiles{opacity:0;animation:o2oHeroUp .7s ease-out .42s forwards}
+.hm-prof{display:inline-block;opacity:0;animation:o2oHeroUp .5s ease-out forwards;transition:color .2s ease}
+.hm-prof + .hm-prof::before{content:'·';margin:0 9px;color:rgba(255,255,255,.32)}
+.hm-prof:nth-child(1){animation-delay:.50s}
+.hm-prof:nth-child(2){animation-delay:.57s}
+.hm-prof:nth-child(3){animation-delay:.64s}
+.hm-prof:nth-child(4){animation-delay:.71s}
+.hm-prof:nth-child(5){animation-delay:.78s}
+.hm-prof:nth-child(6){animation-delay:.85s}
+.hm-prof:hover{color:#fff}
+
+/* Accesibilidad: sin movimiento si el usuario lo pide */
+@media (prefers-reduced-motion: reduce){
+  .reveal,.reveal.in{opacity:1!important;transform:none!important;transition:none!important}
+  .hm-eyebrow,.hm-h1,.hm-sub,.hm-btns,.hm-profiles,.hm-prof{opacity:1!important;animation:none!important}
+  .porque-col,.acomp-item,.proceso-step,.simlibre-card{transition:none!important}
+  .porque-col:hover,.acomp-item:hover,.proceso-step:hover{transform:none!important}
+}
+</style>
 </head>
 <body>
 
@@ -1098,7 +1145,7 @@ src="https://www.facebook.com/tr?id=862116863606514&ev=PageView&noscript=1"
       <p class="hm-eyebrow">Régimen Especial de Artistas · España</p>
       <h1 class="hm-h1">Tu manager en cada proyecto.</h1>
       <p class="hm-sub">Damos la cara por ti: contratación, condiciones, factura al promotor, cobro y alta legal en la Seguridad Social. Tú creas, de todo lo demás nos encargamos.</p>
-      <p class="hm-profiles">Músicos · DJs · Filmmakers · Ingenieros de sonido · Fotógrafos · Productores</p>
+      <p class="hm-profiles"><span class="hm-prof">Músicos</span><span class="hm-prof">DJs</span><span class="hm-prof">Filmmakers</span><span class="hm-prof">Ingenieros de sonido</span><span class="hm-prof">Fotógrafos</span><span class="hm-prof">Productores</span></p>
       <div class="hm-btns">
         <button class="btn-verde-lg" onclick="document.getElementById('simulador').scrollIntoView({behavior:'smooth'})">Calcula lo que cobras</button>
       </div>
@@ -1725,8 +1772,8 @@ function simLibreCalc(){
         <div class="sl-row neg"><span class="sl-l">Comisión One2One (10%)</span><span class="sl-v">-${slFmt(r.com)}</span></div>
         <div class="sl-row neg"><span class="sl-l">IRPF estimado (2%)</span><span class="sl-v">-${slFmt(r.irpf)}</span></div>
         <div class="sl-sep"></div>
-        <div class="sl-row sl-neto"><span class="sl-l">Cobrarás aproximadamente</span><span class="sl-v">${slFmt(r.neto)}</span></div>
-        <div class="sl-row sl-promotor"><span class="sl-l">El promotor pagará</span><span class="sl-v">${slFmt(r.totalPromotor)}<small>IVA 21% incluido</small></span></div>
+        <div class="sl-row sl-neto"><span class="sl-l">Cobrarás aproximadamente</span><span class="sl-v"><span class="sl-num" data-count="${r.neto}">${slFmt(0)}</span></span></div>
+        <div class="sl-row sl-promotor"><span class="sl-l">El promotor pagará</span><span class="sl-v"><span class="sl-num" data-count="${r.totalPromotor}">${slFmt(0)}</span><small>IVA 21% incluido</small></span></div>
       </div>
       <p class="sl-note-gray">Cálculo orientativo basado en los tipos de cotización vigentes del Régimen Especial de Artistas 2026 (Orden PJC/297/2026). La base de cotización real y la retención de IRPF se determinan en el momento de tramitar el alta según tu situación fiscal y los tramos establecidos por la TGSS.</p>
       <p class="sl-note-green">Nuestra comisión es solo el 10% sobre el caché acordado. Y no la cobramos solo por la gestión: actuamos como tu manager y tu respaldo, damos la cara por ti ante el promotor y te acompañamos en todo momento — antes, durante y después de cada trabajo.</p>
@@ -1738,6 +1785,9 @@ function simLibreCalc(){
       <button type="button" class="sl-cta-btn" onclick="crearExpediente()">Crear mi expediente →</button>
       <p class="sl-cta-note">Gratis registrarse. Solo pagas cuando tramitas.</p>
     </div>`;
+  /* Contador animado de las cifras protagonistas (presentación; el cálculo
+     no cambia). Cuenta desde 0 hasta el valor manteniendo formato de moneda. */
+  if(typeof o2oAnimateCounts==='function')o2oAnimateCounts(out);
 }
 
 /* Memoria del simulador: persiste caché + días para pre-rellenar el
@@ -4899,5 +4949,69 @@ document.addEventListener('keydown',function(e){
 })();
 </script>
 
+<script>
+/* ─── Animaciones de la landing (sin librerías; transform/opacity) ─────────── */
+(function(){
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* Contador animado del simulador (global; lo llama simLibreCalc). */
+  window.o2oAnimateCounts=function(scope){
+    if(!scope||typeof slFmt!=='function')return;
+    var els=scope.querySelectorAll('[data-count]');
+    els.forEach(function(el){
+      var target=parseFloat(el.getAttribute('data-count'))||0;
+      if(reduce){el.textContent=slFmt(target);return;}
+      var dur=720,start=null;
+      function frame(ts){
+        if(start===null)start=ts;
+        var p=Math.min((ts-start)/dur,1);
+        var eased=1-Math.pow(1-p,3); /* easeOutCubic */
+        el.textContent=slFmt(target*eased);
+        if(p<1)requestAnimationFrame(frame);else el.textContent=slFmt(target);
+      }
+      requestAnimationFrame(frame);
+    });
+  };
+
+  /* Sombra del nav al hacer scroll (no es "movimiento", se mantiene siempre). */
+  var nav=document.querySelector('nav');
+  if(nav){
+    var onScroll=function(){nav.classList.toggle('nav-scrolled',window.scrollY>10);};
+    window.addEventListener('scroll',onScroll,{passive:true});
+    onScroll();
+  }
+
+  if(reduce)return; /* sin reveal por accesibilidad */
+
+  /* Reveal al entrar en viewport. Grupos → stagger sutil entre hermanos. */
+  var groups=['.proceso-step','.porque-col','.acomp-item','.faq2 .faq'];
+  var singles=['.simlibre-head','.simlibre-card','.simlibre-result','.proceso-head','.porque-head','.faq2-head','.acomp-head','.cta-final-inner','.contacto2-head','.contacto2-form'];
+  var targets=[];
+  groups.forEach(function(sel){
+    var els=document.querySelectorAll(sel);
+    Array.prototype.forEach.call(els,function(el,i){
+      el.classList.add('reveal');
+      el.style.transitionDelay=((i%6)*0.07)+'s';
+      targets.push(el);
+    });
+  });
+  singles.forEach(function(sel){
+    Array.prototype.forEach.call(document.querySelectorAll(sel),function(el){
+      el.classList.add('reveal');
+      targets.push(el);
+    });
+  });
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+      });
+    },{threshold:0.12,rootMargin:'0px 0px -8% 0px'});
+    targets.forEach(function(el){io.observe(el);});
+  } else {
+    targets.forEach(function(el){el.classList.add('in');});
+  }
+})();
+</script>
 </body>
 </html>
