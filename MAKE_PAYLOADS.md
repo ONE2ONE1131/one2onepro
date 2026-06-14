@@ -58,7 +58,8 @@ Se envía cuando un profesional completa/valida su perfil. **No lleva `tipo`**; 
 | `iban` | IBAN |
 | `naf` | Nº afiliación SS (opcional) |
 | `profesionArtistica` | **Profesión** (elegida del desplegable o escrita a mano) |
-| `primera_afiliacion` | Booleano (primera vez cotizando) |
+| `primera_afiliacion` | Booleano (primera vez cotizando — aviso de la cuota de 30€ de la SS) |
+| `primeraAltaHecha` | **NUEVO** — Booleano. `true` cuando el profesional ya ha completado su **primer expediente**; entonces la casilla de "primera vez cotizando" deja de mostrarse y `primera_afiliacion` deja de marcarse. En el **alta inicial** del perfil es siempre `false`/ausente (aún no hay expedientes); el flag se activa después y persiste en D1 (viaja dentro del objeto `profile` en `actualizar_perfil`). |
 | `dniAnversoURL`, `dniReversoURL` | URLs de Cloudinary del DNI |
 | `validacionIA` | Objeto con el resultado de la validación IA del DNI (o `null`) |
 | `submittedAt` | Timestamp ISO |
@@ -72,7 +73,7 @@ Se envía al guardar cambios en el editor de perfil. *(El escenario puede ignora
 | `email` | Email del usuario |
 | `accountType` | `artista` (profesional) / `empresa` |
 | `avatarUrl` | URL del avatar (Cloudinary) o vacío |
-| `profile` | Objeto perfil del profesional (incluye `profesion`) o `null` |
+| `profile` | Objeto perfil del profesional o `null`. Incluye, entre otros, `profesion`, `primera_afiliacion` y **`primeraAltaHecha`** (booleano: `true` si el profesional ya hizo su primer expediente → no se vuelve a mostrar/cobrar la primera alta) |
 | `companyProfile` | Objeto perfil fiscal de empresa o `null` |
 | `updatedAt` | Timestamp ISO |
 
