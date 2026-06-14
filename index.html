@@ -2677,10 +2677,10 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 <div class="form-field full"><label>IBAN *</label><input type="text" placeholder="ES00 0000 0000 0000 0000 0000" maxlength="29" value="${aEscape(p.iban||'')}" oninput="artistAuth.form.iban=aFormatIban(this.value);this.value=artistAuth.form.iban" onblur="aShowFieldError(this,aValidIbanES(this.value)?null:'IBAN español inválido (ES + 22 dígitos)')"><div class="field-error"></div></div>
 <div class="form-field"><label>Nº Afiliación SS / NAF (opcional)</label><input type="text" placeholder="12 dígitos" maxlength="12" value="${aEscape(p.naf||'')}" oninput="artistAuth.form.naf=this.value.replace(/\D/g,'').substring(0,12);this.value=artistAuth.form.naf"></div>
 ${profFieldHTML('reg')}
-<div class="form-field full">
+${(user.profile&&user.profile.primeraAltaHecha)?'':`<div class="form-field full">
 <label class="perfil-check"><input type="checkbox" id="art-primera-afiliacion" ${p.primeraAfiliacion?'checked':''} onchange="aTogglePrimeraAfiliacion(this)"><span>Es mi primera vez cotizando en la Seguridad Social en España</span></label>
 <div class="perfil-afiliacion-aviso ${p.primeraAfiliacion?'show':''}" id="art-afiliacion-aviso"><span class="pa-ico">⚠️</span><span>La Seguridad Social aplica una cuota de afiliación de 30€ en tu primer alta. Este importe no lo cobra One2One Pro — es un coste directo de la SS que se descontará de tu primera liquidación.</span></div>
-</div>
+</div>`}
 </div>
 </div>
 <button class="btn-verde-full" onclick="submitArtProfile()">Enviar perfil a revisión</button>`;
@@ -3148,10 +3148,10 @@ ${dniThumb('dniReverso','DNI / NIE reverso')}
 <div class="form-field full"><label>IBAN *</label><input type="text" maxlength="29" value="${aEscape(ef.iban||'')}" oninput="artistAuth.editForm.iban=aFormatIban(this.value);this.value=artistAuth.editForm.iban" onblur="aShowFieldError(this,aValidIbanES(this.value)?null:'IBAN español inválido')"><div class="field-error"></div></div>
 <div class="form-field"><label>Nº Afiliación SS / NAF</label><input type="text" maxlength="12" value="${aEscape(ef.naf||'')}" oninput="artistAuth.editForm.naf=this.value.replace(/\\D/g,'').substring(0,12);this.value=artistAuth.editForm.naf"></div>
 ${profFieldHTML('edit')}
-<div class="form-field full">
+${(user.profile&&user.profile.primeraAltaHecha)?'':`<div class="form-field full">
 <label class="perfil-check"><input type="checkbox" id="edit-primera-afiliacion" ${ef.primeraAfiliacion?'checked':''} onchange="aTogglePrimeraAfiliacionEdit(this)"><span>Es mi primera vez cotizando en la Seguridad Social en España</span></label>
 <div class="perfil-afiliacion-aviso ${ef.primeraAfiliacion?'show':''}" id="edit-afiliacion-aviso"><span class="pa-ico">⚠️</span><span>La Seguridad Social aplica una cuota de afiliación de 30€ en tu primer alta. Este importe no lo cobra One2One Pro — es un coste directo de la SS que se descontará de tu primera liquidación.</span></div>
-</div>
+</div>`}
 </div>
 </div>
 <button class="btn-verde-full" onclick="saveProfileEdits()" ${ef._uploading||ef._dniAnversoUploading||ef._dniReversoUploading?'disabled':''}>Guardar cambios</button>
@@ -3301,6 +3301,13 @@ async function saveProfileEdits(){
       cleanProfile[k]=ef[k];
     });
     cleanProfile.primera_afiliacion=!!ef.primeraAfiliacion;
+    /* Si el profesional ya hizo su primera alta, el flag manda: la casilla no se
+       muestra y la primera afiliación deja de marcarse (no es primera vez). */
+    if(u.profile&&u.profile.primeraAltaHecha){
+      cleanProfile.primeraAltaHecha=true;
+      cleanProfile.primera_afiliacion=false;
+      cleanProfile.primeraAfiliacion=false;
+    }
     aUpdateUser(u.email,{
       avatarUrl:ef.avatarUrl||u.avatarUrl||'',
       profile:cleanProfile,
@@ -3689,6 +3696,15 @@ async function enviarExpedienteProfesional(){
     if(btn){btn.disabled=false;btn.textContent='Reintentar →';}
     alert('No hemos podido enviar la solicitud. Inténtalo de nuevo en unos segundos.');
     return;
+  }
+  /* Primer expediente del profesional con éxito → marcamos primeraAltaHecha en
+     su perfil (y lo persistimos en D1). A partir de aquí la casilla de "primera
+     vez cotizando" deja de mostrarse y no se vuelve a cobrar la primera alta.
+     Si ya estaba a true, no se toca. */
+  const _cu=aGetCurrentUser();
+  if(_cu && _cu.accountType==='artista' && _cu.profile && !_cu.profile.primeraAltaHecha){
+    aUpdateUser(_cu.email,{profile:Object.assign({},_cu.profile,{primeraAltaHecha:true})});
+    aSaveProfileToServer();
   }
   artistAuth.expedienteResult={code:code,url:url,flujo:flujo,createdAt:new Date().toISOString()};
   next();
