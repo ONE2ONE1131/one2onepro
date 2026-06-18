@@ -1496,7 +1496,7 @@ let st={
   step:0,act:null,ubic:null,imp:'',dias:'',
   fechaInicio:'',fechaFin:'',
   /* Detalles de la actuación */
-  lugarCelebracion:'',descripcionEvento:'',
+  lugarCelebracion:'',descripcionEvento:'',trabajoNoPresencial:false,
   conceptoActuacion:'',conceptoOtro:'',conceptoValido:true,
   /* Profesión del profesional (formulario de empresa): profesion = valor
      resuelto; profOtro = modo "a mano". */
@@ -1518,10 +1518,22 @@ let st={
 
 function fmt(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}
 
+/* Fecha yyyy-mm-dd → dd/mm/yyyy para el concepto de la pro-forma. */
+function fmtFechaProforma(v){if(!v)return '';const p=String(v).split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:String(v);}
+
+/* Concepto compuesto de la pro-forma según presencialidad:
+   presencial    → "Profesión · Recinto · del dd/mm/yyyy al dd/mm/yyyy (Nº exp)"
+   no presencial → "Profesión · del dd/mm/yyyy al dd/mm/yyyy (Nº exp)" */
+function buildConceptoProforma(profesion,code){
+  const rango='del '+fmtFechaProforma(st.fechaInicio)+' al '+fmtFechaProforma(st.fechaFin);
+  const partes=st.trabajoNoPresencial?[profesion,rango]:[profesion,st.lugarCelebracion,rango];
+  return partes.filter(Boolean).join(' · ')+' ('+code+')';
+}
+
 function resetExpedienteState(){
   st.step=0;st.act=null;st.ubic=null;st.imp='';st.dias='';
   st.fechaInicio='';st.fechaFin='';
-  st.lugarCelebracion='';st.descripcionEvento='';
+  st.lugarCelebracion='';st.descripcionEvento='';st.trabajoNoPresencial=false;
   st.conceptoActuacion='';st.conceptoOtro='';st.conceptoValido=true;
   st.profesion='';st.profOtro=false;
   st.tieneDatosPromotor='';st.pNombre='';st.pCif='';st.pEmail='';st.pDireccion='';st.pTel='';
@@ -3462,7 +3474,8 @@ ${prog(STEPS)}<p class="sim-meta">Paso 3 de ${STEPS} — Caché, días, fechas y
 <div class="form-grid" style="margin-top:14px">
 <div class="form-field"><label>Fecha inicio *</label><input type="date" value="${aEscape(st.fechaInicio)}" oninput="st.fechaInicio=this.value;rBtn('exp-bs2',expPaso2Valido)" onblur="aShowFieldError(this,aFechaExpedienteError(this.value))"><div class="field-error"></div></div>
 <div class="form-field"><label>Fecha fin *</label><input type="date" value="${aEscape(st.fechaFin)}" oninput="st.fechaFin=this.value;rBtn('exp-bs2',expPaso2Valido)" onblur="aShowFieldError(this,aFechaFinError(st.fechaInicio,this.value))"><div class="field-error"></div></div>
-<div class="form-field full"><label>Recinto / sala *</label><input type="text" placeholder="Sala, recinto o dirección del evento" maxlength="160" value="${aEscape(st.lugarCelebracion)}" oninput="st.lugarCelebracion=this.value;rBtn('exp-bs2',expPaso2Valido)" onchange="st.lugarCelebracion=this.value;rBtn('exp-bs2',expPaso2Valido)"></div>
+<div class="form-field full"><label class="perfil-check"><input type="checkbox" ${st.trabajoNoPresencial?'checked':''} onchange="st.trabajoNoPresencial=this.checked;if(this.checked)st.lugarCelebracion='';renderSim()"><span>Trabajo no presencial / en estudio</span></label></div>
+${st.trabajoNoPresencial?'':`<div class="form-field full"><label>Recinto / sala *</label><input type="text" placeholder="Sala, recinto o dirección del evento" maxlength="160" value="${aEscape(st.lugarCelebracion)}" oninput="st.lugarCelebracion=this.value;rBtn('exp-bs2',expPaso2Valido)" onchange="st.lugarCelebracion=this.value;rBtn('exp-bs2',expPaso2Valido)"></div>`}
 </div>
 <div id="live-breakdown" style="margin-top:16px"></div>
 <button class="btn-n" id="exp-bs2" onclick="continueFromCache()" ${!expPaso2Valido()?'disabled':''}>${labels.paso3Btn}</button>`;
@@ -3471,7 +3484,8 @@ ${prog(STEPS)}<p class="sim-meta">Paso 3 de ${STEPS} — Caché, días, fechas y
 
 /* Validez del paso común 2: caché, días, fechas válidas y recinto obligatorio. */
 function expPaso2Valido(){
-  return !!(st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&st.lugarCelebracion&&st.lugarCelebracion.trim().length>=2&&!expFechasValidas());
+  const recintoOk=st.trabajoNoPresencial||(st.lugarCelebracion&&st.lugarCelebracion.trim().length>=2);
+  return !!(st.imp&&st.dias&&st.fechaInicio&&st.fechaFin&&recintoOk&&!expFechasValidas());
 }
 
 function continueFromCache(){
@@ -3480,7 +3494,7 @@ function continueFromCache(){
   if(err){artistAuth.error=err;alert(err);return;}
   if(!st.imp||parseFloat(st.imp)<=0){alert('Indica un caché válido.');return;}
   if(!st.dias||parseInt(st.dias)<=0){alert('Indica los días de trabajo.');return;}
-  if(!st.lugarCelebracion||st.lugarCelebracion.trim().length<2){alert('Indica el recinto / sala.');return;}
+  if(!st.trabajoNoPresencial&&(!st.lugarCelebracion||st.lugarCelebracion.trim().length<2)){alert('Indica el recinto / sala.');return;}
   next();
 }
 
@@ -3615,7 +3629,7 @@ async function enviarExpedienteProfesional(){
   /* Profesión del profesional (de su perfil) + concepto compuesto de la
      pro-forma: "Profesión · Recinto (Nº expediente)". */
   const profesionProf=(user.profile&&user.profile.profesion)||'';
-  const conceptoProforma=[profesionProf,st.lugarCelebracion].filter(Boolean).join(' · ')+' ('+code+')';
+  const conceptoProforma=buildConceptoProforma(profesionProf,code);
 
   const btn=document.getElementById('exp-bs3');
   if(btn){btn.disabled=true;btn.textContent='Enviando…';}
@@ -3628,7 +3642,7 @@ async function enviarExpedienteProfesional(){
     flujo:flujo,
     artista:[st.aNombre,st.aApellidos].filter(Boolean).join(' '),
     actividad:(st.act&&st.act.label)||'',
-    lugar:st.lugarCelebracion||'',
+    lugar:st.trabajoNoPresencial?'':(st.lugarCelebracion||''),
     fechaInicio:st.fechaInicio||'',
     fechaFin:st.fechaFin||'',
     baseImponible:r.cache.toFixed(2),
@@ -3656,7 +3670,8 @@ async function enviarExpedienteProfesional(){
     dias:st.dias,
     fecha_inicio:st.fechaInicio,
     fecha_fin:st.fechaFin,
-    lugar_celebracion:st.lugarCelebracion||'',
+    lugar_celebracion:st.trabajoNoPresencial?'':(st.lugarCelebracion||''),
+    trabajo_no_presencial:!!st.trabajoNoPresencial,
     profesion:profesionProf,
     concepto_proforma:conceptoProforma,
     cache_acordado:parseFloat(st.imp),
@@ -4131,8 +4146,7 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
      compromiso de pago aquí mismo (sin enlace externo). Capturamos IP. */
   const aceptacionIP=await o2oGetIP();
   const aceptacionTS=new Date().toISOString();
-  /* Concepto compuesto de la pro-forma: "Profesión · Recinto (Nº expediente)". */
-  const conceptoProforma=[st.profesion,st.lugarCelebracion].filter(Boolean).join(' · ')+' ('+expNum+')';
+  const conceptoProforma=buildConceptoProforma(st.profesion,expNum);
   const payload={
     tipo:'expediente_empresa',
     flujo:'C',
@@ -4145,7 +4159,8 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
     dias:st.dias,
     fecha_inicio:st.fechaInicio,
     fecha_fin:st.fechaFin,
-    lugar_celebracion:st.lugarCelebracion,
+    lugar_celebracion:st.trabajoNoPresencial?'':(st.lugarCelebracion||''),
+    trabajo_no_presencial:!!st.trabajoNoPresencial,
     descripcion_evento:st.descripcionEvento,
     profesion_trabajador:st.profesion,
     concepto_actuacion:st.profesion,
