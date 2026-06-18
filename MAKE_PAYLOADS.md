@@ -3,10 +3,11 @@
 Referencia de **todos los datos que la web envía a Make** (webhooks), para configurar los escenarios sin leer el código. Última actualización: cambios de profesión (desplegable), recinto obligatorio y concepto de pro-forma compuesto.
 
 > ⚠️ **Novedades de esta versión** (revísalas si ya tenías escenarios montados):
-> - **`concepto_proforma`** (NUEVO, en expediente profesional y empresa): texto ya compuesto para la pro-forma → `Profesión · Recinto (Nº expediente)`. Úsalo directamente como concepto de la pro-forma.
+> - **`concepto_proforma`** (NUEVO, en expediente profesional y empresa): texto ya compuesto para la pro-forma → presencial `Profesión · Recinto · del dd/mm/aaaa al dd/mm/aaaa (Nº expediente)`; no presencial (sin recinto) `Profesión · del dd/mm/aaaa al dd/mm/aaaa (Nº expediente)`. Úsalo directamente como concepto de la pro-forma.
 > - **`profesion`** (expediente profesional) / **`profesion_trabajador`** (expediente empresa): profesión del profesional, ahora elegida de un desplegable.
 > - **`concepto_actuacion`** (expediente **empresa**): **ha cambiado de significado** — antes era el concepto de actividad de una lista; **ahora lleva la profesión del trabajador**. Si tu plantilla lo usaba como concepto, usa mejor `concepto_proforma`.
-> - **`lugar_celebracion`** (= recinto/sala): ahora es **obligatorio** en ambos flujos (siempre llega relleno).
+> - **`lugar_celebracion`** (= recinto/sala): obligatorio en ambos flujos **salvo si el trabajo es no presencial** (ver siguiente punto).
+> - **`trabajo_no_presencial`** (NUEVO, booleano, en expediente profesional y empresa): `true` cuando el trabajo es no presencial / en estudio. En ese caso `lugar_celebracion` viaja **vacío** y `concepto_proforma` **no incluye el recinto**. Por defecto `false`.
 
 ---
 
@@ -94,9 +95,10 @@ Lo crea el profesional. **Flujo A** = el profesional tiene los datos del promoto
 | `ubicacion` | Interior / exterior / mixto |
 | `dias` | Nº de días |
 | `fecha_inicio`, `fecha_fin` | YYYY-MM-DD |
-| `lugar_celebracion` | **Recinto / sala (obligatorio)** |
+| `lugar_celebracion` | **Recinto / sala** (obligatorio salvo si `trabajo_no_presencial` es `true`, en cuyo caso llega **vacío**) |
+| `trabajo_no_presencial` | **NUEVO** (booleano) — `true` si el trabajo es no presencial / en estudio; por defecto `false`. Si `true`: `lugar_celebracion` vacío y `concepto_proforma` sin recinto |
 | `profesion` | **NUEVO** — profesión del profesional (de su perfil) |
-| `concepto_proforma` | **NUEVO** — concepto compuesto: `Profesión · Recinto (Nº exp)`. Úsalo como concepto de la pro-forma |
+| `concepto_proforma` | **NUEVO** — concepto compuesto: presencial `Profesión · Recinto · del dd/mm/aaaa al dd/mm/aaaa (Nº exp)`; no presencial `Profesión · del dd/mm/aaaa al dd/mm/aaaa (Nº exp)`. Úsalo como concepto de la pro-forma |
 | `cache_acordado` | Caché acordado (€) |
 | `seguridad_social` | Cuota SS estimada |
 | `comision_one2one` | Comisión 10% |
@@ -136,11 +138,12 @@ La empresa es el promotor y acepta el compromiso de pago en el propio formulario
 | `fecha_solicitud` | Fecha (dd/mm/aaaa) |
 | `actividad`, `regimen`, `ubicacion` | Actividad/régimen/ubicación |
 | `dias`, `fecha_inicio`, `fecha_fin` | Días y fechas |
-| `lugar_celebracion` | **Recinto / sala (obligatorio)** |
+| `lugar_celebracion` | **Recinto / sala** (obligatorio salvo si `trabajo_no_presencial` es `true`, en cuyo caso llega **vacío**) |
+| `trabajo_no_presencial` | **NUEVO** (booleano) — `true` si el trabajo es no presencial / en estudio; por defecto `false`. Si `true`: `lugar_celebracion` vacío y `concepto_proforma` sin recinto |
 | `descripcion_evento` | Descripción libre (opcional) |
 | `profesion_trabajador` | **NUEVO** — profesión del profesional contratado (desplegable) |
 | `concepto_actuacion` | **CAMBIADO** — ahora lleva **la profesión** (antes: concepto de la lista). Para el concepto de la pro-forma usa `concepto_proforma` |
-| `concepto_proforma` | **NUEVO** — `Profesión · Recinto (Nº exp)` |
+| `concepto_proforma` | **NUEVO** — presencial `Profesión · Recinto · del dd/mm/aaaa al dd/mm/aaaa (Nº exp)`; no presencial `Profesión · del dd/mm/aaaa al dd/mm/aaaa (Nº exp)` |
 | `cache_acordado`, `seguridad_social`, `comision_one2one`, `neto_artista`, `base_imponible`, `iva`, `total_factura` | Importes (igual que en el profesional) |
 | `iban_cobro` | IBAN de cobro de ONE2ONE SOLUTIONS S.L. |
 | `condiciones_aceptadas` | `true` |
