@@ -16,7 +16,7 @@ Referencia de **todos los datos que la web envía a Make** (webhooks), para conf
 | Constante | URL | Lo usan |
 |---|---|---|
 | **AUTH_WEBHOOK** | `https://hook.eu1.make.com/azu072mdlkvxarr98xp9flffxd5gipa3` | Email de verificación, reset de contraseña, envío de perfil del profesional, actualización de perfil |
-| **EMPRESA_WEBHOOK** | `https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku` | Expediente profesional (A/B), expediente empresa (C), confirmación del promotor, contacto |
+| **EMPRESA_WEBHOOK** | `https://hook.eu1.make.com/wxmxs54jo0bhbfieg7ke2fc7c9nesof7` | Expediente profesional (A/B), expediente empresa (C), confirmación del promotor, contacto |
 
 **Enrutado:** salvo el *envío de perfil* (que no lleva `tipo`), todos los payloads incluyen un campo **`tipo`** (o `flujo`) para ramificar el escenario. Las cuentas (registro/login/verificación) se crean/validan en el **Cloudflare Worker (D1)**; Make solo **envía los emails** con el `token` que le pasa la web.
 

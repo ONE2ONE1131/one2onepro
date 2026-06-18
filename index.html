@@ -1300,7 +1300,7 @@ async function enviarContacto(ev){
   if(!nombre||!email||!mensaje){status.className='contacto2-status err';status.textContent='Completa todos los campos antes de enviar.';return false;}
   btn.disabled=true;const prev=btn.textContent;btn.textContent='Enviando...';
   try{
-    await fetch('https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku',{
+    await fetch(EMPRESA_WEBHOOK,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({tipo:'contacto',nombre:nombre,email:email,asunto:asunto,mensaje:mensaje})
@@ -1427,7 +1427,7 @@ const PASOS_TRAB=[
 
 const BASES_MIN={1:1989.30,2:1649.70,3:1435.20,4:1424.40,7:1424.40,8:47.48};
 const COM=0.10;
-const EMPRESA_WEBHOOK='https://hook.eu1.make.com/9h9rjffs4t6tl2yw789d0cnihf8mqjku';
+const EMPRESA_WEBHOOK='https://hook.eu1.make.com/wxmxs54jo0bhbfieg7ke2fc7c9nesof7';
 /* AUTH_WEBHOOK soporta tipos: 'verificacion_email', 'recuperar_password' y
    también el registro de artista (con todos los campos del perfil). El
    escenario Make decide qué email enviar leyendo `tipo`. */
