@@ -1108,6 +1108,10 @@ nav.nav-scrolled{box-shadow:0 6px 24px rgba(15,45,94,.30);background:rgba(15,45,
 .hm-prof:nth-child(5){animation-delay:.78s}
 .hm-prof:nth-child(6){animation-delay:.85s}
 .hm-prof:hover{color:#fff}
+/* Rotación de profesiones: se activa por JS al terminar la entrada. Corta la
+   animación de entrada y cambia el contenido de las etiquetas con un fundido. */
+.hm-profiles.rot{animation:none;opacity:1;transition:opacity .45s ease}
+.hm-profiles.rot.out{opacity:0}
 
 /* Accesibilidad: sin movimiento si el usuario lo pide */
 @media (prefers-reduced-motion: reduce){
@@ -1145,7 +1149,7 @@ nav.nav-scrolled{box-shadow:0 6px 24px rgba(15,45,94,.30);background:rgba(15,45,
       <p class="hm-eyebrow">Régimen Especial de Artistas · España</p>
       <h1 class="hm-h1">Tu manager en cada proyecto.</h1>
       <p class="hm-sub">Damos la cara por ti: contratación, condiciones, factura al promotor, cobro y alta legal en la Seguridad Social. Tú creas, de todo lo demás nos encargamos.</p>
-      <p class="hm-profiles"><span class="hm-prof">Músicos</span><span class="hm-prof">DJs</span><span class="hm-prof">Filmmakers</span><span class="hm-prof">Ingenieros de sonido</span><span class="hm-prof">Fotógrafos</span><span class="hm-prof">Productores</span></p>
+      <p class="hm-profiles"><span class="hm-prof">Intérprete</span><span class="hm-prof">Cantante</span><span class="hm-prof">Músico</span><span class="hm-prof">DJ</span><span class="hm-prof">Bailarín/a</span><span class="hm-prof">Coreógrafo/a</span></p>
       <div class="hm-btns">
         <button class="btn-verde-lg" onclick="document.getElementById('simulador').scrollIntoView({behavior:'smooth'})">Calcula lo que cobras</button>
       </div>
@@ -5074,6 +5078,30 @@ document.addEventListener('keydown',function(e){
   }
 
   if(reduce)return; /* sin reveal por accesibilidad */
+
+  /* Rotación de las etiquetas de profesión del hero: todas cambian a la vez,
+     con fundido, recorriendo en bucle la lista del desplegable (PROFESIONES,
+     misma fuente que el <select>). Sin repetir profesión dentro de una tanda. */
+  (function(){
+    var p=document.querySelector('.hm-profiles');
+    if(!p||typeof PROFESIONES==='undefined')return;
+    var chips=p.querySelectorAll('.hm-prof');
+    var n=chips.length;
+    var all=PROFESIONES.reduce(function(a,g){return a.concat(g.items);},[]);
+    if(!n||all.length<n)return;
+    var idx=n%all.length; /* las n primeras ya están pintadas en el HTML */
+    setTimeout(function(){
+      p.classList.add('rot'); /* corta la entrada y habilita el fundido */
+      setInterval(function(){
+        p.classList.add('out'); /* fundido de salida */
+        setTimeout(function(){
+          for(var i=0;i<n;i++)chips[i].textContent=all[(idx+i)%all.length];
+          idx=(idx+n)%all.length;
+          p.classList.remove('out'); /* fundido de entrada */
+        },450); /* = duración de la transición de opacidad */
+      },3400); /* ~3,4 s por tanda */
+    },1600); /* espera a que acabe la entrada secuencial del hero */
+  })();
 
   /* Reveal al entrar en viewport. Grupos → stagger sutil entre hermanos. */
   var groups=['.proceso-step','.porque-col','.acomp-item','.faq2 .faq'];
