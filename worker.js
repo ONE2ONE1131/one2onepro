@@ -33,7 +33,7 @@ Responde siempre en español. Sé conciso, claro y profesional. Solo respondes p
 
 Si alguien pregunta algo fuera de este ámbito, diles amablemente que solo puedes ayudar con temas relacionados con One2One Pro y el sector artístico.
 
-One2One Pro cobra una comisión del 7% sobre el caché acordado. Opera exclusivamente bajo el RD 1435/1985. No gestiona hostelería ni otros sectores. El promotor paga el caché más IVA 21%. Los costes de SS se descuentan del caché junto con la comisión.`;
+One2One Pro cobra una comisión del 7% sobre el caché acordado, con un mínimo de 15€ para cachés inferiores a 200€. Opera exclusivamente bajo el RD 1435/1985. No gestiona hostelería ni otros sectores. El promotor paga el caché más IVA 21%. Los costes de SS se descuentan del caché junto con la comisión.`;
 
 /* ─── HTTP entry point ──────────────────────────────────────────────────── */
 
