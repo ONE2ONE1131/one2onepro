@@ -1244,7 +1244,7 @@ nav.nav-scrolled{box-shadow:0 6px 24px rgba(15,45,94,.30);background:rgba(15,45,
       <h2 class="section-title">Todo lo que necesitas saber.</h2>
     </div>
     <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Qué es exactamente One2One Pro? <span class="faq-arr">↓</span></div><div class="faq-a">One2One Pro actúa como tu manager y empresario bajo el Real Decreto 1435/1985. Gestionamos el alta en la Seguridad Social, el contrato laboral, la factura al promotor y tu cobro. Tú solo actúas.</div></div>
-    <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Cuánto cuesta el servicio? <span class="faq-arr">↓</span></div><div class="faq-a">Nuestra comisión es el 10% sobre el caché acordado. Sin cuotas mensuales, sin permanencia. Solo pagas cuando tramitas.</div></div>
+    <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Cuánto cuesta el servicio? <span class="faq-arr">↓</span></div><div class="faq-a">Nuestra comisión es el 7% sobre el caché acordado. Sin cuotas mensuales, sin permanencia. Solo pagas cuando tramitas.</div></div>
     <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Puedo usar el servicio si estoy cobrando el paro? <span class="faq-arr">↓</span></div><div class="faq-a">Sí, pero debes comunicarlo al SEPE antes de empezar a trabajar. El SEPE suspende la prestación los días exactos que trabajas y la reanuda automáticamente. Si no lo comunicas previamente, el SEPE puede reclamarte las prestaciones cobradas.</div></div>
     <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Para quién es One2One Pro? <span class="faq-arr">↓</span></div><div class="faq-a">Para músicos, DJs, filmmakers, videógrafos, fotógrafos, ingenieros y técnicos de sonido, iluminadores, productores, actores, bailarines, presentadores y cualquier profesional creativo o técnico de la industria musical, audiovisual y del entretenimiento que realice trabajos puntuales.</div></div>
     <div class="faq" onclick="toggleFaq(this)"><div class="faq-q">¿Cómo funciona el pago? <span class="faq-arr">↓</span></div><div class="faq-a">El promotor recibe un enlace donde revisa el encargo y confirma la gestión sin registrarse. El pago se realiza por transferencia bancaria a ONE2ONE SOLUTIONS S.L. en un plazo máximo de 7 días. One2One Pro tramita el alta en cuanto el promotor confirma. Sin riesgo para ninguna de las dos partes.</div></div>
@@ -1426,7 +1426,7 @@ const PASOS_TRAB=[
 ];
 
 const BASES_MIN={1:1989.30,2:1649.70,3:1435.20,4:1424.40,7:1424.40,8:47.48};
-const COM=0.10;
+const COM=0.07;
 const EMPRESA_WEBHOOK='https://hook.eu1.make.com/wxmxs54jo0bhbfieg7ke2fc7c9nesof7';
 /* AUTH_WEBHOOK soporta tipos: 'verificacion_email', 'recuperar_password' y
    también el registro de artista (con todos los campos del perfil). El
@@ -1771,7 +1771,7 @@ function renderPasos(){
 
 function calcular(){
   /* MODELO: el caché acordado con el promotor es la base imponible.
-     Del caché se descuentan SS (cuotas obligatorias) y la comisión 10% de
+     Del caché se descuentan SS (cuotas obligatorias) y la comisión 7% de
      One2One Pro. El resultado es lo que recibe el artista APROXIMADAMENTE.
      El IRPF se calcula caso a caso según situación fiscal y NO se incluye
      en este desglose orientativo.
@@ -1795,7 +1795,7 @@ function calcular(){
    SIMULADOR LIBRE (público, sin login)
    Autocontenido: NO depende de st.act/st.ubic ni del flujo de expediente.
    Tipos vigentes del Régimen Especial de Artistas 2026 (Orden PJC/297/2026):
-   SS 6,50% (cuota trabajador), comisión One2One 10%, IRPF medio orientativo 2%.
+   SS 6,50% (cuota trabajador), comisión One2One 7%, IRPF medio orientativo 2%.
    Caché mínimo: 150€.
    ────────────────────────────────────────────────────────────────── */
 const SL_CACHE_MIN=150;
@@ -1805,7 +1805,7 @@ function calcSimple(cache,dias){
   dias=parseInt(dias)||1;
   if(dias<1)dias=1;
   const ss=cache*0.065;        // 6,50% cuota trabajador 2026
-  const com=cache*0.10;        // 10% comisión One2One
+  const com=cache*0.07;        // 7% comisión One2One
   const irpf=cache*0.02;       // 2% retención media orientativa (trabajos puntuales)
   const neto=cache-ss-com-irpf;
   const iva=cache*0.21;
@@ -1833,14 +1833,14 @@ function simLibreCalc(){
         <div class="sl-row sl-cache"><span class="sl-l">Caché acordado</span><span class="sl-v">${slFmt(r.cache)}</span></div>
         <div class="sl-sep"></div>
         <div class="sl-row neg"><span class="sl-l">SS (cuota trabajador 6,50%)</span><span class="sl-v">-${slFmt(r.ss)}</span></div>
-        <div class="sl-row neg"><span class="sl-l">Comisión One2One (10%)</span><span class="sl-v">-${slFmt(r.com)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">Comisión One2One (7%)</span><span class="sl-v">-${slFmt(r.com)}</span></div>
         <div class="sl-row neg"><span class="sl-l">IRPF estimado (2%)</span><span class="sl-v">-${slFmt(r.irpf)}</span></div>
         <div class="sl-sep"></div>
         <div class="sl-row sl-neto"><span class="sl-l">Cobrarás aproximadamente</span><span class="sl-v"><span class="sl-num" data-count="${r.neto}">${slFmt(0)}</span></span></div>
         <div class="sl-row sl-promotor"><span class="sl-l">El promotor pagará</span><span class="sl-v"><span class="sl-num" data-count="${r.totalPromotor}">${slFmt(0)}</span><small>IVA 21% incluido</small></span></div>
       </div>
       <p class="sl-note-gray">Cálculo orientativo basado en los tipos de cotización vigentes del Régimen Especial de Artistas 2026 (Orden PJC/297/2026). La base de cotización real y la retención de IRPF se determinan en el momento de tramitar el alta según tu situación fiscal y los tramos establecidos por la TGSS.</p>
-      <p class="sl-note-green">Nuestra comisión es solo el 10% sobre el caché acordado. Y no la cobramos solo por la gestión: actuamos como tu manager y tu respaldo, damos la cara por ti ante el promotor y te acompañamos en todo momento — antes, durante y después de cada trabajo.</p>
+      <p class="sl-note-green">Nuestra comisión es solo el 7% sobre el caché acordado. Y no la cobramos solo por la gestión: actuamos como tu manager y tu respaldo, damos la cara por ti ante el promotor y te acompañamos en todo momento — antes, durante y después de cada trabajo.</p>
       <p class="sl-note-amber"><span class="sl-note-amber-ico">⚠️</span><span>Si es tu primera vez cotizando en España, la Seguridad Social aplica una cuota de afiliación de 30€. Este coste no es de One2One Pro — es un pago directo a la Seguridad Social que se descontará de tu primera liquidación.</span></p>
     </div>
     <div class="sl-cta">
@@ -1888,7 +1888,7 @@ function oGrid(items,key){
 
 function resumenArtista(r){
   /* Desglose orientativo para la cuenta artista. Sin IRPF.
-     Líneas exactas: Caché, Seguridad Social, Comisión 10%, Recibirás aprox. + nota. */
+     Líneas exactas: Caché, Seguridad Social, Comisión 7%, Recibirás aprox. + nota. */
   return`
     <div class="res-tags"><span class="res-tag">${aEscapeText(st.act.label)}</span><span class="res-tag">${aEscapeText(st.ubic.label)}</span><span class="res-tag">${r.dias} día${r.dias>1?'s':''}</span></div>
     <span class="regimen-badge">Régimen Especial de Artistas — cálculo orientativo</span>
@@ -1896,7 +1896,7 @@ function resumenArtista(r){
     <div class="res-trab-info">
       <div class="rti-row"><span class="rti-l">Caché acordado</span><span class="rti-v">${fmt(r.cache)}</span></div>
       <div class="rti-row"><span class="rti-l">Seguridad Social</span><span class="rti-v">-${fmt(r.ss)}</span></div>
-      <div class="rti-row"><span class="rti-l">Comisión One2One (10%)</span><span class="rti-v">-${fmt(r.com)}</span></div>
+      <div class="rti-row"><span class="rti-l">Comisión One2One (7%)</span><span class="rti-v">-${fmt(r.com)}</span></div>
       <div class="rti-row"><span class="rti-l" style="font-weight:600">Recibirás aprox.</span><span class="rti-v verde" style="font-size:16px">${fmt(r.neto)}</span></div>
     </div>
     <div class="res-trab-aviso">El IRPF depende de tu situación fiscal. Este cálculo es orientativo — recibirás el importe exacto una vez estudiemos qué retención te corresponde.</div>
@@ -1920,7 +1920,7 @@ function resumenEmpresa(r){
         <div class="d-row dtot"><span class="dl">Total que pagas</span><span class="dv">${fmt(r.totalPromotor)}</span></div>
       </div>
     </div>
-    <div class="res-trab-aviso">Sobre el caché, One2One Pro asume las cuotas de Seguridad Social y aplica el 10% de comisión. Tú cobras en limpio.</div>`;
+    <div class="res-trab-aviso">Sobre el caché, One2One Pro asume las cuotas de Seguridad Social y aplica el 7% de comisión. Tú cobras en limpio.</div>`;
 }
 
 function aEscapeText(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
@@ -4741,7 +4741,7 @@ function renderSim(){
 <li>Disponer de la documentación necesaria para el alta (documento de identidad, NAF e IBAN, en el caso del profesional).</li>
 </ul>
 <h3>4. Precio, comisión e impuestos</h3>
-<p>One2One Pro percibe una <strong>comisión del 10% sobre el caché acordado</strong>. El promotor abona el caché más el IVA (21%). Sobre el caché se aplican las cuotas de Seguridad Social a cargo del trabajador y la retención de IRPF que corresponda según la situación fiscal de cada profesional. Las cantidades del simulador son <strong>orientativas</strong>; el importe definitivo se determina al tramitar el alta.</p>
+<p>One2One Pro percibe una <strong>comisión del 7% sobre el caché acordado</strong>. El promotor abona el caché más el IVA (21%). Sobre el caché se aplican las cuotas de Seguridad Social a cargo del trabajador y la retención de IRPF que corresponda según la situación fiscal de cada profesional. Las cantidades del simulador son <strong>orientativas</strong>; el importe definitivo se determina al tramitar el alta.</p>
 <h3>5. Contratación y pago</h3>
 <p>La contratación se realiza mediante un enlace de aceptación en el que el promotor confirma la gestión. El pago se efectúa por transferencia bancaria a ONE2ONE SOLUTIONS S.L. en un plazo máximo de 7 días naturales. El alta en la Seguridad Social se tramita una vez el promotor confirma la gestión y siempre que se solicite con antelación suficiente a la fecha de la actuación.</p>
 <h3>6. Desistimiento y cancelaciones</h3>
