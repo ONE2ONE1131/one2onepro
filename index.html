@@ -4135,22 +4135,24 @@ function conceptoActuacionValido(){
 }
 
 function artistaDatosValidos(){
-  if(!st.profesion||st.profesion.trim().length<2)return false;
-  if(!st.aNombre||st.aNombre.trim().length<2)return false;
-  if(!st.aApellidos||st.aApellidos.trim().length<2)return false;
-  if(!aValidDniNie(st.aDni))return false;
-  if(aFechaNacError(st.aFechaNac))return false;
-  if(!st.aNacionalidad||st.aNacionalidad.trim().length<2)return false;
-  if(!aValidTelES(st.aTel))return false;
-  if(!aValidEmail(st.aEmail))return false;
-  if(!st.trabajoNoPresencial&&(!st.lugarCelebracion||st.lugarCelebracion.trim().length<2))return false;
-  if(!st.aCalle||st.aCalle.trim().length<3)return false;
-  if(!/^\d{5}$/.test(st.aCp||''))return false;
-  if(!st.aMunicipio||st.aMunicipio.trim().length<2)return false;
-  if(!st.aProvincia||st.aProvincia.trim().length<2)return false;
-  if(!aValidIbanES(st.aIban))return false;
-  if(!st.aDniAnverso||!st.aDniAnverso.data)return false;
-  if(!st.aDniReverso||!st.aDniReverso.data)return false;
+  const log=(...a)=>console.log('[artistaDatosValidos]',...a);
+  if(!st.profesion||st.profesion.trim().length<2){log('FALLA: profesion',st.profesion);return false;}
+  if(!st.aNombre||st.aNombre.trim().length<2){log('FALLA: aNombre',st.aNombre);return false;}
+  if(!st.aApellidos||st.aApellidos.trim().length<2){log('FALLA: aApellidos',st.aApellidos);return false;}
+  if(!aValidDniNie(st.aDni)){log('FALLA: aDni',st.aDni);return false;}
+  if(aFechaNacError(st.aFechaNac)){log('FALLA: aFechaNac',st.aFechaNac,aFechaNacError(st.aFechaNac));return false;}
+  if(!st.aNacionalidad||st.aNacionalidad.trim().length<2){log('FALLA: aNacionalidad →',JSON.stringify(st.aNacionalidad));return false;}
+  if(!aValidTelES(st.aTel)){log('FALLA: aTel',st.aTel);return false;}
+  if(!aValidEmail(st.aEmail)){log('FALLA: aEmail',st.aEmail);return false;}
+  if(!st.trabajoNoPresencial&&(!st.lugarCelebracion||st.lugarCelebracion.trim().length<2)){log('FALLA: lugarCelebracion',st.lugarCelebracion,'presencial');return false;}
+  if(!st.aCalle||st.aCalle.trim().length<3){log('FALLA: aCalle',st.aCalle);return false;}
+  if(!/^\d{5}$/.test(st.aCp||'')){log('FALLA: aCp',st.aCp);return false;}
+  if(!st.aMunicipio||st.aMunicipio.trim().length<2){log('FALLA: aMunicipio',st.aMunicipio);return false;}
+  if(!st.aProvincia||st.aProvincia.trim().length<2){log('FALLA: aProvincia',st.aProvincia);return false;}
+  if(!aValidIbanES(st.aIban)){log('FALLA: aIban',st.aIban);return false;}
+  if(!st.aDniAnverso||!st.aDniAnverso.data){log('FALLA: aDniAnverso no subido');return false;}
+  if(!st.aDniReverso||!st.aDniReverso.data){log('FALLA: aDniReverso no subido');return false;}
+  log('OK — todos los campos válidos');
   return true;
 }
 
