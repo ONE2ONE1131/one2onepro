@@ -68,7 +68,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;ali
 .nav-user-wrap{position:relative;display:inline-flex;align-items:center}
 .nav-user-trigger{display:inline-flex;align-items:center;gap:10px;background:none;border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:5px 8px 5px 14px;cursor:pointer;font-family:inherit;color:#fff;font-size:12px;font-weight:500;line-height:1;transition:border-color .15s,background .15s}
 .nav-user-trigger:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.04)}
-.nav-user-name{white-space:nowrap}
+.nav-user-name{white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis}
 .nav-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,.25);display:block}
 .nav-user-trigger:hover .nav-avatar{border-color:var(--verde)}
 .nav-gear{color:rgba(255,255,255,.55);transition:color .15s}
@@ -570,6 +570,33 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 
   /* Form-grid genérico: 1 columna en mobile (cubre formularios largos) */
   .form-grid{grid-template-columns:1fr!important}
+
+  /* Expedientes: valores no se cortan, etiquetas no desbordan */
+  .exp-val{word-break:break-word;text-align:left}
+  .exp-row{flex-wrap:wrap;gap:4px}
+  .exp-lbl{min-width:0}
+
+  /* d-row (desglose simulador): puede necesitar wrapping en pantallas muy estrechas */
+  .d-row{flex-wrap:wrap;gap:2px}
+  .d-row .dv{text-align:left;margin-left:auto}
+
+  /* IBAN box: las filas no desbordan */
+  .iban-box-row{flex-wrap:wrap;gap:4px}
+  .iban-box-row strong{word-break:break-all}
+
+  /* Mobile menu: nombre de empresa largo no desborda */
+  .mobile-menu-user strong{word-break:break-word;line-height:1.3}
+  .mobile-menu-user span{word-break:break-all}
+
+  /* Clearance para el chatbot FAB — evita que tape el último botón del form */
+  .hero-r{padding-bottom:90px}
+
+  /* Perfil: la sección de tipo de vía + nombre no se aprietan */
+  .via-row{flex-wrap:wrap;gap:8px}
+
+  /* Modales: si hay mucho contenido, el box hace scroll interno */
+  .auth-modal{padding:16px 12px 24px}
+  .auth-modal-box{max-height:calc(100dvh - 40px);overflow-y:auto}
 }
 
 /* Móviles muy estrechos: ajustes finos */
@@ -589,6 +616,11 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
   .como-inner,.dif-inner,.faq-inner,.cont-inner{grid-template-columns:1fr;gap:40px}
   .como-l,.faq-l{position:static}
   .sec-grid{grid-template-columns:1fr 1fr}
+  /* sec-grid 2 columnas: resetear reglas de 3 columnas y aplicar 2 columnas */
+  .sec-item:nth-child(3n){border-right:1px solid var(--gris-borde)}
+  .sec-item:nth-child(2n){border-right:none}
+  .sec-item:nth-last-child(-n+3){border-bottom:1px solid var(--gris-borde)}
+  .sec-item:nth-last-child(-n+2){border-bottom:none}
   .nav-links{display:none}
   .cf-row{grid-template-columns:1fr}
   .galeria{grid-template-columns:1fr 1fr;height:320px}
@@ -601,6 +633,10 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 @media(max-width:500px){
   .opts-grid,.form-grid,.inp-row{grid-template-columns:1fr}
   .sec-grid{grid-template-columns:1fr}
+  /* sec-grid 1 columna: sin borde derecho, solo último ítem sin borde inferior */
+  .sec-item{border-right:none!important}
+  .sec-item:nth-last-child(-n+2){border-bottom:1px solid var(--gris-borde)!important}
+  .sec-item:last-child{border-bottom:none!important}
   .hero-stats{gap:20px;flex-wrap:wrap}
   .galeria{grid-template-columns:1fr 1fr}
 }
@@ -1745,6 +1781,7 @@ function renderMobileMenu(){
     const avatar=user.avatarUrl?'<img class="mobile-menu-avatar" src="'+aEscape(user.avatarUrl)+'" alt="" />':'';
     html+='<div class="mobile-menu-user">'+avatar+'<div><strong>'+aEscape(abbrevName(user))+'</strong><span>'+aEscape(user.email)+'</span></div></div>';
     html+='<button class="mobile-menu-item" type="button" onclick="closeMobileMenu();openProfileEditor()">Mi perfil</button>';
+    html+='<a class="mobile-menu-item" href="#" onclick="event.preventDefault();closeMobileMenu();aShowExpedientes()">Mis expedientes</a>';
     html+='<a class="mobile-menu-item" href="#" onclick="event.preventDefault();closeMobileMenu();openChatPanel()">Asistente</a>';
     html+='<a class="mobile-menu-item" href="#contacto" onclick="closeMobileMenu()">Contacto</a>';
     html+='<a class="mobile-menu-item" href="#faq" onclick="closeMobileMenu()">Preguntas frecuentes</a>';
