@@ -1436,7 +1436,10 @@ function nacSelectHtml(val,storeExpr,uid,extraChange){
   const isOtra=!!(val&&!NACIONALIDADES.includes(val));
   const opts=NACIONALIDADES.map(n=>`<option value="${n}" ${val===n?'selected':''}>${n}</option>`).join('');
   const ec=extraChange?extraChange+';':'';
-  return `<select onchange="var _v=this.value;if(_v==='__otra__'){document.getElementById('nac-otra-${uid}').style.display='block';${storeExpr}='';}else{document.getElementById('nac-otra-${uid}').style.display='none';${storeExpr}=_v;}${ec}"><option value="">Seleccionar nacionalidad...</option>${opts}<option value="__otra__" ${isOtra?'selected':''}>Otra (escribir)</option></select><input type="text" id="nac-otra-${uid}" placeholder="Escribe la nacionalidad" maxlength="50" style="display:${isOtra?'block':'none'};margin-top:6px" value="${isOtra?val:''}" oninput="${storeExpr}=this.value;${ec}">`;
+  const onChange=`var _v=this.value,_el=document.getElementById('nac-otra-${uid}');`
+    +`if(_v==='__otra__'){if(_el)_el.style.display='block';${storeExpr}='';}else{if(_el)_el.style.display='none';${storeExpr}=_v;}${ec}`;
+  return `<select onchange="${onChange}"><option value="">Seleccionar nacionalidad...</option>${opts}<option value="__otra__" ${isOtra?'selected':''}>Otra (escribir)</option></select>`
+    +`<input type="text" id="nac-otra-${uid}" placeholder="Escribe la nacionalidad" maxlength="50" style="display:${isOtra?'block':'none'};margin-top:6px" value="${isOtra?val:''}" oninput="${storeExpr}=this.value;${ec}">`;
 }
 function aPassValida(v){return v.length>=8&&/[0-9]/.test(v)&&/[^A-Za-z0-9]/.test(v);}
 const BASES_MIN={1:1989.30,2:1649.70,3:1435.20,4:1424.40,7:1424.40,8:47.48};
@@ -1746,10 +1749,13 @@ function renderMobileMenu(){
   menu.innerHTML=html;
 }
 
-/* "Juan García López" → "Juan G." · prioriza profile.nombre/apellidos para
-   cuentas artista (datos reales del perfil), cae a user.nombre. */
+/* Header: empresa → razón social; artista → "Nombre A."; fallback → email */
 function abbrevName(user){
   if(!user)return '';
+  if(user.accountType==='empresa'){
+    const razon=(user.companyProfile&&user.companyProfile.razon||'').trim();
+    if(razon)return razon;
+  }
   let firstName='', firstLast='';
   if(user.accountType==='artista' && user.profile){
     firstName=(user.profile.nombre||user.nombre||'').trim().split(/\s+/)[0]||'';
