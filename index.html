@@ -1976,30 +1976,28 @@ function simLibreCalc(){
     return;
   }
   const r=calcSimple(cache,dias);
-  /* Guardamos en memoria para pre-rellenar el expediente tras el login/registro */
   slSavePrefill(cache,dias);
-  /* Neto del simulador: solo SS trabajador + comisión + IRPF (la SS empresa es coste interno de One2One) */
-  const simSsTrab=r.costeSsTrabajador;
-  const simNeto=cache-simSsTrab-r.com-r.irpfImporte;
+  const neto=Math.max(0,r.neto);
   const irpfPct=Math.round(r.irpfRate*100);
   out.innerHTML=`
     <div class="sl-breakdown">
-      <div class="sl-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-muted,#888);margin-bottom:6px">EL PROMOTOR paga</div>
+      <div class="sl-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-muted,#888);margin-bottom:6px">EL PROMOTOR PAGA</div>
       <div class="sl-rows">
         <div class="sl-row sl-cache"><span class="sl-l">Caché acordado</span><span class="sl-v">${slFmt(cache)}</span></div>
         <div class="sl-row"><span class="sl-l">IVA (21%) — deducible</span><span class="sl-v">${slFmt(r.iva)}</span></div>
         <div class="sl-sep"></div>
         <div class="sl-row sl-promotor"><span class="sl-l">Total que paga el promotor</span><span class="sl-v"><span class="sl-num" data-count="${r.totalPromotor}">${slFmt(0)}</span></span></div>
       </div>
-      <div class="sl-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-muted,#888);margin:14px 0 6px">TÚ cobras</div>
+      <div class="sl-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-muted,#888);margin:14px 0 6px">EL TRABAJADOR COBRA</div>
       <div class="sl-rows">
         <div class="sl-row sl-cache"><span class="sl-l">Caché acordado</span><span class="sl-v">${slFmt(cache)}</span></div>
         <div class="sl-sep"></div>
-        <div class="sl-row neg"><span class="sl-l">Seguridad Social (tu cuota)</span><span class="sl-v">-${slFmt(simSsTrab)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">SS — cuota empresa (margen 3%)</span><span class="sl-v">-${slFmt(r.costeSsEmpresa)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">SS — cuota trabajador</span><span class="sl-v">-${slFmt(r.costeSsTrabajador)}</span></div>
         <div class="sl-row neg"><span class="sl-l">Comisión One2One ${cache<200?'(mínimo 15€)':'(7%)'}</span><span class="sl-v">-${slFmt(r.com)}</span></div>
-        <div class="sl-row neg"><span class="sl-l">IRPF estimado (${irpfPct}%) <span style="font-size:10px;opacity:.7">— orientativo</span></span><span class="sl-v">-${slFmt(r.irpfImporte)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">IRPF estimado (${irpfPct}%) <span style="font-size:10px;opacity:.7">orientativo</span></span><span class="sl-v">-${slFmt(r.irpfImporte)}</span></div>
         <div class="sl-sep"></div>
-        <div class="sl-row sl-neto"><span class="sl-l">Cobrarás aproximadamente</span><span class="sl-v"><span class="sl-num" data-count="${simNeto}">${slFmt(0)}</span></span></div>
+        <div class="sl-row sl-neto"><span class="sl-l">Cobrarás aproximadamente</span><span class="sl-v"><span class="sl-num" data-count="${neto}">${slFmt(0)}</span></span></div>
       </div>
       <p class="sl-note-gray">${O2OCalc.MSGS.calculoOrientativo}</p>
       <p class="sl-note-green">Nuestra comisión es el 7% sobre el caché acordado, con un mínimo de 15€ para cachés inferiores a 200€. Y no la cobramos solo por la gestión: actuamos como tu manager y tu respaldo, damos la cara por ti ante el promotor y te acompañamos en todo momento — antes, durante y después de cada trabajo.</p>
