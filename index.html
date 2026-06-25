@@ -1834,49 +1834,41 @@ function renderPasos(){
 
 /* ═══════════════════════════════════════════════════════════════════
    window.O2OCalc — Motor de cálculo Régimen Especial de Artistas 2026
-   Verificado contra nómina real One2One Pro.
-   BASE = caché real (tramos solo como tope máximo diario, no mínimo).
+   Fórmula definitiva verificada contra nóminas reales One2One Pro.
+   El caché acordado incluye la comisión de One2One.
    ═══════════════════════════════════════════════════════════════════ */
 ;(function(global){'use strict';
   const YEAR=2026;
+  /* Tipos verificados contra nómina real — NO cambiar sin nueva nómina */
+  const SS_EMPRESA   = 0.3335; // CC 23.60 + MEI 0.75 + AT/EP 1.50 + Des 6.70 + Form 0.60 + FOGASA 0.20
+  const SS_TRABAJADOR= 0.0655; // CC 4.70 + MEI 0.15 + Form 0.10 + Des 1.60
+  const IRPF         = 0.02;   // 2% orientativo — trabajos puntuales régimen artistas
+  const IVA          = 0.21;
+  const DIV          = 1+SS_EMPRESA; // 1.3335 — divisor para obtener bruto desde restoParaAlta
 
-  /* Tope máximo de base de cotización por día (último tramo oficial).
-     Solo se aplica si el caché/día lo supera; en caso contrario base = caché. */
-  const BASE_DIARIA_MAX=678.60;
+  function r2(n){return Math.round(n*100)/100;}
 
-  /* Tipos SS verificados contra nómina real — NO modificar sin nómina actualizada */
-  const SS_EMPRESA_RATE=0.3335;  // CC 23.60 + MEI 0.75 + AT/EP 1.50 + Des 6.70 + Form 0.60 + FOGASA 0.20
-  const SS_TRABAJADOR_RATE=0.0655; // CC 4.70 + MEI 0.15 + Form 0.10 + Des 1.60
-  const IRPF_RATE=0.02;           // 2% orientativo, trabajos puntuales régimen artistas
-  const IVA_RATE=0.21;
+  function calculateArtistCosts({cache,dias}){
+    const days=Math.max(Math.round(dias)||1,1);
+    /* 1. Comisión One2One (incluida en el caché) */
+    const comision=r2(cache<200?15:cache*0.07);
+    /* 2. Resto que va al alta de SS */
+    const restoParaAlta=r2(cache-comision);
+    /* 3. Bruto del artista: resto / 1.3335 */
+    const bruto=r2(restoParaAlta/DIV);
+    /* 4. Cuotas SS */
+    const ssEmpresa=r2(bruto*SS_EMPRESA);
+    const ssTrabajador=r2(bruto*SS_TRABAJADOR);
+    const irpf=r2(bruto*IRPF);
+    /* 5. Neto artista */
+    const netoArtista=r2(bruto-ssTrabajador-irpf);
+    /* 6. Promotor: solo caché + IVA */
+    const ivaPromotor=r2(cache*IVA);
+    const totalPromotor=r2(cache+ivaPromotor);
 
-  function roundCents(n){return Math.round(n*100)/100;}
-
-  function calculateArtistCosts({grossSalary,workedDays,commissionFn}){
-    const days=Math.max(Math.round(workedDays)||1,1);
-    /* Base de cotización: caché real, con tope máximo diario */
-    const dailySalary=grossSalary/days;
-    const baseDia=Math.min(dailySalary,BASE_DIARIA_MAX);
-    const base=roundCents(baseDia*days);
-
-    const ssEmpresa=roundCents(base*SS_EMPRESA_RATE);
-    const ssTrabajador=roundCents(base*SS_TRABAJADOR_RATE);
-    const commission=typeof commissionFn==='function'?commissionFn(grossSalary):(grossSalary<200?15:grossSalary*0.07);
-    const irpf=roundCents(base*IRPF_RATE);
-
-    /* Promotor: solo caché + IVA */
-    const iva=roundCents(grossSalary*IVA_RATE);
-    const totalPromotor=roundCents(grossSalary+iva);
-
-    /* Artista soporta todos los costes del caché */
-    const salarioNeto=roundCents(grossSalary-ssEmpresa-ssTrabajador-commission-irpf);
-
-    return{
-      year:YEAR,grossSalary,workedDays:days,base,
-      ssEmpresa,ssTrabajador,commission,irpf,
-      iva,totalPromotor,salarioNeto,
-      isEstimate:true
-    };
+    return{cache,dias:days,comision,restoParaAlta,bruto,
+      ssEmpresa,ssTrabajador,irpf,netoArtista,
+      ivaPromotor,totalPromotor,isEstimate:true};
   }
 
   const MSGS={
@@ -1885,15 +1877,14 @@ function renderPasos(){
     primeraAfiliacion:'⚠️ Si es tu primera vez cotizando en España, la Seguridad Social aplica una cuota de afiliación de 30 €. Este coste es directo de la TGSS, no de One2One Pro, y se descontará de tu primera liquidación.'
   };
 
-  global.O2OCalc={YEAR,BASE_DIARIA_MAX,SS_EMPRESA_RATE,SS_TRABAJADOR_RATE,IRPF_RATE,IVA_RATE,MSGS,calculateArtistCosts};
+  global.O2OCalc={YEAR,SS_EMPRESA,SS_TRABAJADOR,IRPF,IVA,DIV,MSGS,calculateArtistCosts};
 }(window));
 
 function calcular(){
   const cache=parseFloat(st.imp)||0,dias=parseInt(st.dias)||1;
-  const r=O2OCalc.calculateArtistCosts({grossSalary:cache,workedDays:dias,commissionFn:calcCom});
-  /* Aliases legacy para los payloads Make (mismos nombres, nuevos valores) */
-  r.cache=r.grossSalary; r.dias=r.workedDays; r.ss=r.ssEmpresa;
-  r.com=r.commission; r.neto=r.salarioNeto;
+  const r=O2OCalc.calculateArtistCosts({cache,dias});
+  /* Aliases para payload Make — mismos nombres de campo, nuevos valores */
+  r.iva=r.ivaPromotor; r.ss=r.ssEmpresa; r.com=r.comision; r.neto=r.netoArtista;
   return r;
 }
 
@@ -1907,8 +1898,9 @@ const SL_CACHE_MIN=150;
 function slFmt(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'}
 function calcSimple(cache,dias){
   cache=parseFloat(cache)||0;dias=parseInt(dias)||1;if(dias<1)dias=1;
-  const r=O2OCalc.calculateArtistCosts({grossSalary:cache,workedDays:dias,commissionFn:calcCom});
-  r.cache=r.grossSalary; r.dias=r.workedDays; r.com=r.commission; r.neto=r.salarioNeto;
+  const r=O2OCalc.calculateArtistCosts({cache,dias});
+  /* Aliases para render functions */
+  r.iva=r.ivaPromotor; r.com=r.comision; r.neto=r.netoArtista;
   return r;
 }
 function simLibreCalc(){
