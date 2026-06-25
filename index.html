@@ -1978,6 +1978,11 @@ function simLibreCalc(){
   const r=calcSimple(cache,dias);
   /* Guardamos en memoria para pre-rellenar el expediente tras el login/registro */
   slSavePrefill(cache,dias);
+  if(r.neto<0){
+    const minCache=Math.ceil((r.costeSsEmpresa+r.costeSsTrabajador+r.com)*1.05);
+    out.innerHTML=`<div class="sl-empty">Con un caché de ${slFmt(cache)} para ${dias} día${dias>1?'s':''}, los costes obligatorios de Seguridad Social superan el importe acordado. Para que el alta sea viable, el caché mínimo recomendado es de <strong>${slFmt(minCache)}</strong>.</div>`;
+    return;
+  }
   const irpfPct=Math.round(r.irpfRate*100);
   out.innerHTML=`
     <div class="sl-breakdown">
