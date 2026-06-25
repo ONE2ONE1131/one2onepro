@@ -1908,16 +1908,17 @@ function renderPasos(){
     const commission=typeof commissionFn==='function'?commissionFn(grossSalary):(grossSalary<200?15:grossSalary*0.07);
     const irpf=estimateIRPF(grossSalary);
 
+    // El promotor SOLO paga: caché + IVA. El trabajador soporta todos los demás costes.
     const iva=grossSalary*IVA_RATE;
-    const costeTotalSinIva=ceilCents(grossSalary+costeSsEmpresa+commission);
-    const costeTotalConIva=ceilCents(costeTotalSinIva+iva);
-    const salarioNeto=grossSalary-costeSsTrabajador-commission-irpf.importe;
+    const totalPromotor=ceilCents(grossSalary+iva);   // caché + 21% — nada más
+    // Del caché del trabajador se descuentan: SS empresa + SS trabajador + comisión + IRPF
+    const salarioNeto=grossSalary-costeSsEmpresa-costeSsTrabajador-commission-irpf.importe;
 
     return{
       year:YEAR,grossSalary,workedDays:days,dailySalary,
       contributionBase,baseTotal,
       desgloseEmpresa,ssEmpresaBruto,costeSsEmpresa,
-      commission,iva,costeTotalSinIva,costeTotalConIva,
+      commission,iva,totalPromotor,
       desgloseTrabajador,costeSsTrabajador,
       irpf,salarioNeto,
       margenAplicado:MARGEN_SEGURIDAD,isEstimate:true
@@ -1942,7 +1943,7 @@ function calcular(){
   const atEpRate=(a.atep*u.factor)/100;
   const r=O2OCalc.calculateArtistCosts({grossSalary:cache,workedDays:dias,atEpRate:atEpRate,commissionFn:calcCom});
   r.cache=r.grossSalary; r.dias=r.workedDays; r.ss=r.costeSsEmpresa;
-  r.com=r.commission; r.neto=r.salarioNeto; r.totalPromotor=r.costeTotalConIva;
+  r.com=r.commission; r.neto=r.salarioNeto; // totalPromotor ya está en r.totalPromotor
   return r;
 }
 
@@ -1957,9 +1958,9 @@ function slFmt(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maxim
 function calcSimple(cache,dias){
   cache=parseFloat(cache)||0;dias=parseInt(dias)||1;if(dias<1)dias=1;
   const r=O2OCalc.calculateArtistCosts({grossSalary:cache,workedDays:dias,commissionFn:calcCom});
-  r.cache=r.grossSalary; r.dias=r.workedDays; r.ss=r.costeSsTrabajador;
+  r.cache=r.grossSalary; r.dias=r.workedDays;
   r.com=r.commission; r.irpfImporte=r.irpf.importe; r.irpfRate=r.irpf.rate;
-  r.neto=r.salarioNeto; r.totalPromotor=r.costeTotalConIva;
+  r.neto=r.salarioNeto; // r.totalPromotor ya está en r.totalPromotor
   return r;
 }
 function simLibreCalc(){
@@ -1980,24 +1981,23 @@ function simLibreCalc(){
   const irpfPct=Math.round(r.irpfRate*100);
   out.innerHTML=`
     <div class="sl-breakdown">
-      <div class="sl-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-muted,#888);margin-bottom:6px">TÚ cobras</div>
+      <div class="sl-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-muted,#888);margin-bottom:6px">EL PROMOTOR paga</div>
+      <div class="sl-rows">
+        <div class="sl-row sl-cache"><span class="sl-l">Caché acordado</span><span class="sl-v">${slFmt(r.cache)}</span></div>
+        <div class="sl-row"><span class="sl-l">IVA (21%) — deducible</span><span class="sl-v">${slFmt(r.iva)}</span></div>
+        <div class="sl-sep"></div>
+        <div class="sl-row sl-promotor"><span class="sl-l">Total que paga el promotor</span><span class="sl-v"><span class="sl-num" data-count="${r.totalPromotor}">${slFmt(0)}</span></span></div>
+      </div>
+      <div class="sl-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-muted,#888);margin:14px 0 6px">TÚ cobras (del caché)</div>
       <div class="sl-rows">
         <div class="sl-row sl-cache"><span class="sl-l">Caché acordado</span><span class="sl-v">${slFmt(r.cache)}</span></div>
         <div class="sl-sep"></div>
-        <div class="sl-row neg"><span class="sl-l">SS — tu cuota (trabajador)</span><span class="sl-v">-${slFmt(r.ss)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">SS — cuota empresa (con margen 3%)</span><span class="sl-v">-${slFmt(r.costeSsEmpresa)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">SS — cuota trabajador</span><span class="sl-v">-${slFmt(r.costeSsTrabajador)}</span></div>
         <div class="sl-row neg"><span class="sl-l">Comisión One2One ${r.cache<200?'(mínimo 15€)':'(7%)'}</span><span class="sl-v">-${slFmt(r.com)}</span></div>
         <div class="sl-row neg"><span class="sl-l">IRPF estimado (${irpfPct}%) <span style="font-size:10px;opacity:.7">— orientativo</span></span><span class="sl-v">-${slFmt(r.irpfImporte)}</span></div>
         <div class="sl-sep"></div>
         <div class="sl-row sl-neto"><span class="sl-l">Cobrarás aproximadamente</span><span class="sl-v"><span class="sl-num" data-count="${r.neto}">${slFmt(0)}</span></span></div>
-      </div>
-      <div class="sl-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-muted,#888);margin:14px 0 6px">EL PROMOTOR paga</div>
-      <div class="sl-rows">
-        <div class="sl-row"><span class="sl-l">Caché acordado</span><span class="sl-v">${slFmt(r.cache)}</span></div>
-        <div class="sl-row"><span class="sl-l">SS — cuota empleador (con margen 3%)</span><span class="sl-v">${slFmt(r.costeSsEmpresa)}</span></div>
-        <div class="sl-row"><span class="sl-l">Comisión One2One ${r.cache<200?'(mínimo 15€)':'(7%)'}</span><span class="sl-v">${slFmt(r.com)}</span></div>
-        <div class="sl-row"><span class="sl-l">IVA (21%) — deducible</span><span class="sl-v">${slFmt(r.iva)}</span></div>
-        <div class="sl-sep"></div>
-        <div class="sl-row sl-promotor"><span class="sl-l">Total que paga el promotor</span><span class="sl-v"><span class="sl-num" data-count="${r.totalPromotor}">${slFmt(0)}</span></span></div>
       </div>
       <p class="sl-note-gray">${O2OCalc.MSGS.calculoOrientativo}</p>
       <p class="sl-note-green">Nuestra comisión es el 7% sobre el caché acordado, con un mínimo de 15€ para cachés inferiores a 200€. Y no la cobramos solo por la gestión: actuamos como tu manager y tu respaldo, damos la cara por ti ante el promotor y te acompañamos en todo momento — antes, durante y después de cada trabajo.</p>
@@ -2054,7 +2054,8 @@ function resumenArtista(r){
     <div class="res-trab-cobras"><div class="rtc-label">Recibirás aproximadamente</div><div class="rtc-val">${fmt(r.neto)}</div><div class="rtc-sub">${r.dias} día${r.dias>1?'s':''} · sobre caché de ${fmt(r.cache)}</div></div>
     <div class="res-trab-info">
       <div class="rti-row"><span class="rti-l">Caché acordado</span><span class="rti-v">${fmt(r.cache)}</span></div>
-      <div class="rti-row"><span class="rti-l">SS — tu cuota (trabajador)</span><span class="rti-v">-${fmt(r.costeSsTrabajador)}</span></div>
+      <div class="rti-row"><span class="rti-l">SS — cuota empresa (margen 3%)</span><span class="rti-v">-${fmt(r.costeSsEmpresa)}</span></div>
+      <div class="rti-row"><span class="rti-l">SS — cuota trabajador</span><span class="rti-v">-${fmt(r.costeSsTrabajador)}</span></div>
       <div class="rti-row"><span class="rti-l">Comisión One2One ${r.cache<200?'(mínimo 15€)':'(7%)'}</span><span class="rti-v">-${fmt(r.com)}</span></div>
       <div class="rti-row"><span class="rti-l">IRPF estimado (${irpfPct}%) <small style="opacity:.65">orientativo</small></span><span class="rti-v">-${fmt(r.irpf.importe)}</span></div>
       <div class="rti-row" style="margin-top:4px"><span class="rti-l" style="font-weight:600">Recibirás aprox.</span><span class="rti-v verde" style="font-size:16px">${fmt(r.neto)}</span></div>
@@ -2068,15 +2069,13 @@ function resumenEmpresa(r){
     <div class="res-tags"><span class="res-tag">${aEscapeText(st.act.label)}</span><span class="res-tag">${aEscapeText(st.ubic.label)}</span><span class="res-tag">${r.dias} día${r.dias>1?'s':''}</span></div>
     <span class="regimen-badge">Régimen Especial de Artistas</span>
     <div class="res-total">
-      <div><div class="rt-label">Pagarás en total</div><div class="rt-val">${fmt(r.totalPromotor)}</div><div class="rt-iva">IVA incluido · deducible en tu declaración</div></div>
+      <div><div class="rt-label">Pagarás en total</div><div class="rt-val">${fmt(r.totalPromotor)}</div><div class="rt-iva">Caché + IVA (21%) — deducible en tu declaración</div></div>
       <div class="rt-neto"><div class="rt-neto-label">Caché</div><div class="rt-neto-val">${fmt(r.cache)}</div><div class="rt-neto-sub">base imponible</div></div>
     </div>
     <div class="desglose-wrap">
       <div class="desglose-head" onclick="toggleDesglose(this)"><span>Ver desglose</span><span class="desglose-arrow">↓</span></div>
       <div class="desglose-body">
         <div class="d-row"><span class="dl">Caché acordado con el profesional</span><span class="dv">${fmt(r.cache)}</span></div>
-        <div class="d-row"><span class="dl">SS — cuota empleador (con margen 3%)</span><span class="dv">${fmt(r.costeSsEmpresa)}</span></div>
-        <div class="d-row"><span class="dl">Comisión One2One ${r.cache<200?'(mínimo 15€)':'(7%)'}</span><span class="dv">${fmt(r.com)}</span></div>
         <div class="d-row diva"><span class="dl">IVA (21%) — deducible al 100%</span><span class="dv">${fmt(r.iva)}</span></div>
         <div class="d-row dtot"><span class="dl">Total que pagas</span><span class="dv">${fmt(r.totalPromotor)}</span></div>
       </div>
