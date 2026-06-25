@@ -614,6 +614,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 @keyframes concepto-spin{to{transform:rotate(360deg)}}
 .field-error.show{display:block}
 input.campo-error,select.campo-error{border-bottom-color:#dc2626!important;background:#fff5f5!important}
+label.campo-error{border-color:#dc2626!important;background:#fff5f5!important;color:#dc2626!important}
 .campo-error-msg{font-size:11px;color:#dc2626;margin-top:10px;font-weight:500;padding:8px 10px;background:#fff5f5;border-left:3px solid #dc2626;border-radius:0 4px 4px 0;display:none}
 .campo-error-msg.show{display:block}
 
@@ -3002,35 +3003,29 @@ function empresaPerfilCompleto(u){
   return !!(cp.contacto&&cp.contacto.trim().length>=2&&cp.razon&&cp.razon.trim().length>=2&&cp.cif&&aValidCifDniNie(cp.cif)&&aValidEmail(cp.emailFact||'')&&cp.calle&&cp.calle.trim().length>=2&&cp.numero&&/^\d{5}$/.test((cp.cp||'').trim())&&cp.municipio&&cp.provincia&&cp.tel&&aValidTelES(cp.tel));
 }
 function aHighlightErrorsArtista(){
-  const fields=[
-    {id:'exp-h-profesion',check:()=>st.profesion&&st.profesion.trim().length>=2},
-    {id:'exp-h-nombre',check:()=>st.aNombre&&st.aNombre.trim().length>=2},
-    {id:'exp-h-apellidos',check:()=>st.aApellidos&&st.aApellidos.trim().length>=2},
-    {id:'exp-h-dni',check:()=>aValidDniNie(st.aDni)},
-    {id:'exp-h-fechanac',check:()=>!aFechaNacError(st.aFechaNac)},
-    {id:'exp-h-nacionalidad',check:()=>st.aNacionalidad&&st.aNacionalidad.trim().length>=2},
-    {id:'exp-h-tel',check:()=>aValidTelES(st.aTel)},
-    {id:'exp-h-email',check:()=>aValidEmail(st.aEmail)},
-    {id:'exp-h-calle',check:()=>st.aCalle&&st.aCalle.trim().length>=3},
-    {id:'exp-h-cp',check:()=>/^\d{5}$/.test(st.aCp||'')},
-    {id:'exp-h-municipio',check:()=>st.aMunicipio&&st.aMunicipio.trim().length>=2},
-    {id:'exp-h-provincia',check:()=>!!st.aProvincia},
-    {id:'exp-h-iban',check:()=>aValidIbanES(st.aIban)},
-    {id:'exp-h-dnianverso',check:()=>!!(st.aDniAnverso&&st.aDniAnverso.data)},
-    {id:'exp-h-dnireverso',check:()=>!!(st.aDniReverso&&st.aDniReverso.data)}
-  ];
-  let firstErr=null;
   const c=document.getElementById('sim-c');if(!c)return;
-  c.querySelectorAll('input,select').forEach(el=>{el.classList.remove('campo-error');});
-  const msgEl=c.querySelector('.campo-error-msg');
-  fields.forEach(f=>{
-    const el=document.getElementById(f.id)||c.querySelector('[data-err="'+f.id+'"]');
-    if(el&&!f.check()){el.classList.add('campo-error');if(!firstErr)firstErr=el;}
-  });
-  if(!firstErr){
-    /* Sin IDs individuales: resaltar todos los inputs vacíos/inválidos */
-    c.querySelectorAll('input[required],select[required]').forEach(el=>{if(!el.value.trim()){el.classList.add('campo-error');if(!firstErr)firstErr=el;}});
+  c.querySelectorAll('input,select,label').forEach(el=>{el.classList.remove('campo-error');});
+  let firstErr=null;
+  function mark(selector,check){
+    const el=c.querySelector(selector);
+    if(el&&!check()){el.classList.add('campo-error');if(!firstErr)firstErr=el;}
   }
+  mark('select[onchange*="aProfSelect"]',()=>st.profesion&&st.profesion.trim().length>=2);
+  mark('input[oninput*="aNombre"]',()=>st.aNombre&&st.aNombre.trim().length>=2);
+  mark('input[oninput*="aApellidos"]',()=>st.aApellidos&&st.aApellidos.trim().length>=2);
+  mark('input[oninput*="aDni"]',()=>aValidDniNie(st.aDni));
+  mark('input[type="date"][oninput*="aFechaNac"]',()=>!aFechaNacError(st.aFechaNac));
+  mark('select[onchange*="aNacionalidad"]',()=>st.aNacionalidad&&st.aNacionalidad.trim().length>=2);
+  mark('input[oninput*="aTel"]',()=>aValidTelES(st.aTel));
+  mark('input[oninput*="aEmail"]',()=>aValidEmail(st.aEmail));
+  mark('input[oninput*="aCalle"]',()=>st.aCalle&&st.aCalle.trim().length>=3);
+  mark('input[oninput*="aCp"]',()=>/^\d{5}$/.test(st.aCp||''));
+  mark('input[oninput*="aMunicipio"]',()=>st.aMunicipio&&st.aMunicipio.trim().length>=2);
+  mark('select[onchange*="aProvincia"]',()=>!!st.aProvincia);
+  mark('input[oninput*="aIban"]',()=>aValidIbanES(st.aIban));
+  mark('label[for="emp-dni-anverso"]',()=>!!(st.aDniAnverso&&st.aDniAnverso.data));
+  mark('label[for="emp-dni-reverso"]',()=>!!(st.aDniReverso&&st.aDniReverso.data));
+  const msgEl=c.querySelector('.campo-error-msg');
   if(msgEl){msgEl.classList.add('show');msgEl.textContent='Revisa los campos marcados en rojo antes de continuar.';}
   if(firstErr)firstErr.scrollIntoView({behavior:'smooth',block:'center'});
 }
@@ -4142,7 +4137,7 @@ function artistaDatosValidos(){
   if(!st.aNacionalidad||st.aNacionalidad.trim().length<2)return false;
   if(!aValidTelES(st.aTel))return false;
   if(!aValidEmail(st.aEmail))return false;
-  if(!st.lugarCelebracion||st.lugarCelebracion.trim().length<2)return false;
+  if(!st.trabajoNoPresencial&&(!st.lugarCelebracion||st.lugarCelebracion.trim().length<2))return false;
   if(!st.aCalle||st.aCalle.trim().length<3)return false;
   if(!/^\d{5}$/.test(st.aCp||''))return false;
   if(!st.aMunicipio||st.aMunicipio.trim().length<2)return false;
