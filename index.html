@@ -125,6 +125,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;ali
 .password-strength{display:block;font-size:11px;font-weight:300;margin-top:6px;color:var(--gris-suave)}
 .password-strength.ok{color:var(--verde)}
 .password-strength.weak{color:#b45309}
+.password-strength.medium{color:#d97706}
 .password-strength.mismatch{color:#e53935}
 .pass-wrap{position:relative;display:block}
 .pass-wrap input{padding-right:42px!important;width:100%}
@@ -612,6 +613,9 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 .concepto-valida .concepto-spinner{width:13px;height:13px;border:2px solid var(--gris-borde);border-top-color:var(--verde);border-radius:50%;animation:concepto-spin .6s linear infinite;flex-shrink:0}
 @keyframes concepto-spin{to{transform:rotate(360deg)}}
 .field-error.show{display:block}
+input.campo-error,select.campo-error{border-bottom-color:#dc2626!important;background:#fff5f5!important}
+.campo-error-msg{font-size:11px;color:#dc2626;margin-top:10px;font-weight:500;padding:8px 10px;background:#fff5f5;border-left:3px solid #dc2626;border-radius:0 4px 4px 0;display:none}
+.campo-error-msg.show{display:block}
 
 /* Mis expedientes (dashboard) */
 .exp-loading{display:flex;align-items:center;gap:10px;color:var(--gris-suave);font-size:13px;font-weight:300;padding:8px 0}
@@ -654,6 +658,7 @@ footer{background:#091d3d;padding:40px 6%;display:grid;grid-template-columns:1fr
 .btn-verde-full:disabled{background:var(--gris-borde);color:var(--gris-suave);cursor:not-allowed;opacity:1}
 .password-strength{font-size:10px;margin-top:4px;font-weight:500;letter-spacing:0.3px;display:block}
 .password-strength.weak{color:#dc2626}
+.password-strength.medium{color:#d97706}
 .password-strength.ok{color:var(--verde)}
 .file-upload{display:flex;flex-direction:column;gap:6px}
 .file-upload-btn{padding:18px 14px;border:2px dashed var(--gris-borde);border-radius:6px;background:#fff;cursor:pointer;text-align:center;font-size:12px;color:var(--gris-texto);transition:all .15s;font-family:'DM Sans',sans-serif}
@@ -1425,6 +1430,14 @@ const PASOS_TRAB=[
   {n:'06',t:'Trabaja y cobra',d:'Haz tu trabajo y recibe tu liquidación en tu cuenta bancaria.'},
 ];
 
+const NACIONALIDADES=['Española','Alemana','Argentina','Belga','Boliviana','Brasileña','Búlgara','Chilena','China','Colombiana','Costarricense','Cubana','Dominicana','Ecuatoriana','Estadounidense','Filipina','Francesa','Griega','Guatemalteca','Hondureña','India','Inglesa','Italiana','Japonesa','Marroquí','Mexicana','Neerlandesa','Nicaragüense','Nigeriana','Panameña','Paraguaya','Peruana','Polaca','Portuguesa','Puertorriqueña','Rumana','Rusa','Salvadoreña','Senegalesa','Sueca','Suiza','Turca','Ucraniana','Uruguaya','Venezolana'];
+function nacSelectHtml(val,storeExpr,uid,extraChange){
+  const isOtra=!!(val&&!NACIONALIDADES.includes(val));
+  const opts=NACIONALIDADES.map(n=>`<option value="${n}" ${val===n?'selected':''}>${n}</option>`).join('');
+  const ec=extraChange?extraChange+';':'';
+  return `<select onchange="var _v=this.value;if(_v==='__otra__'){document.getElementById('nac-otra-${uid}').style.display='block';${storeExpr}='';}else{document.getElementById('nac-otra-${uid}').style.display='none';${storeExpr}=_v;}${ec}"><option value="">Seleccionar nacionalidad...</option>${opts}<option value="__otra__" ${isOtra?'selected':''}>Otra (escribir)</option></select><input type="text" id="nac-otra-${uid}" placeholder="Escribe la nacionalidad" maxlength="50" style="display:${isOtra?'block':'none'};margin-top:6px" value="${isOtra?val:''}" oninput="${storeExpr}=this.value;${ec}">`;
+}
+function aPassValida(v){return v.length>=8&&/[0-9]/.test(v)&&/[^A-Za-z0-9]/.test(v);}
 const BASES_MIN={1:1989.30,2:1649.70,3:1435.20,4:1424.40,7:1424.40,8:47.48};
 function calcCom(cache){ return cache < 200 ? 15 : cache * 0.07; }
 const EMPRESA_WEBHOOK='https://hook.eu1.make.com/wxmxs54jo0bhbfieg7ke2fc7c9nesof7';
@@ -2125,7 +2138,9 @@ function aUpdatePassStrength(val){
   const el=document.getElementById('art-pass-strength');
   if(!el)return;
   if(!val){el.className='password-strength';el.textContent='';return;}
-  if(val.length>=8){el.className='password-strength ok';el.textContent='✓ Contraseña válida';}
+  const hasLen=val.length>=8,hasNum=/[0-9]/.test(val),hasSym=/[^A-Za-z0-9]/.test(val);
+  if(hasLen&&hasNum&&hasSym){el.className='password-strength ok';el.textContent='✓ Contraseña segura';}
+  else if(hasLen){el.className='password-strength medium';el.textContent='Contraseña media — añade un número y un símbolo (ej. @, !, #)';}
   else{el.className='password-strength weak';el.textContent='Mínimo 8 caracteres ('+val.length+'/8)';}
 }
 
@@ -2144,7 +2159,7 @@ function aUpdatePassMatch(){
     else if(v1===v2){span.className='password-strength ok';span.textContent='✓ Las contraseñas coinciden';}
     else{span.className='password-strength mismatch';span.textContent='Las contraseñas no coinciden';}
   }
-  if(btn){btn.disabled=!(v1.length>0 && v1===v2);}
+  if(btn){btn.disabled=!(v1.length>0 && v1===v2 && aPassValida(v1));}
 }
 
 /* ─── Icono de ojo: mostrar/ocultar contraseña ─── */
@@ -2307,7 +2322,7 @@ ${err}
   const fields=perfil?`<div class="form-grid">
 <div class="form-field full"><label>Nombre</label><input type="text" placeholder="${isArt?'Tu nombre':'Nombre de contacto'}" autocomplete="given-name" maxlength="80" value="${aEscape(f.nombre||'')}" oninput="artistAuth.form.nombre=this.value"></div>
 <div class="form-field full"><label>Email</label><input type="email" placeholder="tu@email.com" autocomplete="email" value="${aEscape(f.email||'')}" oninput="artistAuth.form.email=this.value.trim().toLowerCase()"></div>
-<div class="form-field full"><label>Contraseña</label><div class="pass-wrap"><input type="password" id="art-reg-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value);aUpdatePassMatch()" onkeydown="if(event.key==='Enter')doRegister()">${eyeBtn()}</div><span id="art-pass-strength" class="password-strength"></span></div>
+<div class="form-field full"><label>Contraseña</label><div class="pass-wrap"><input type="password" id="art-reg-pass" placeholder="Mín. 8 caracteres, un número y un símbolo" autocomplete="new-password" value="${aEscape(f.pass||'')}" oninput="artistAuth.form.pass=this.value;aUpdatePassStrength(this.value);aUpdatePassMatch()" onkeydown="if(event.key==='Enter')doRegister()">${eyeBtn()}</div><span id="art-pass-strength" class="password-strength"></span></div>
 <div class="form-field full"><label>Confirmar contraseña</label><div class="pass-wrap"><input type="password" id="art-reg-pass2" placeholder="Repite la contraseña" autocomplete="new-password" value="${aEscape(f.pass2||'')}" oninput="artistAuth.form.pass2=this.value;aUpdatePassMatch()" onkeydown="if(event.key==='Enter')doRegister()">${eyeBtn()}</div><span id="art-pass-match" class="password-strength"></span></div>
 </div>
 <button class="btn-verde-full" id="art-reg-submit" onclick="doRegister()" ${(f.pass&&f.pass===f.pass2)?'':'disabled'}>Crear cuenta ${isArt?'como profesional':'de empresa'}</button>`:`<p class="auth-hint">Elige arriba si eres <strong>profesional/técnico</strong> o <strong>promotor/empresa</strong> para continuar.</p>`;
@@ -2422,7 +2437,7 @@ async function doRegister(){
   if(!perfil){artistAuth.error='Elige si eres artista/técnico o promotor/empresa.';renderAuthModal();return;}
   if(nombre.length<2){artistAuth.error='Indica tu nombre.';renderAuthModal();return;}
   if(!aValidEmail(email)){artistAuth.error='Introduce un email válido.';renderAuthModal();return;}
-  if(pass.length<8){artistAuth.error='La contraseña debe tener al menos 8 caracteres.';renderAuthModal();return;}
+  if(!aPassValida(pass)){artistAuth.error='La contraseña debe tener al menos 8 caracteres, un número y un carácter especial (ej. @, !, #).';renderAuthModal();return;}
   if(pass!==pass2){artistAuth.error='Las contraseñas no coinciden.';renderAuthModal();return;}
   /* Anti doble submit (botón + Enter): un registro = un solo /register y un
      solo email de verificación. */
@@ -2659,7 +2674,7 @@ ${artistAuth.error?`<div class="auth-msg error">${aEscape(artistAuth.error)}</di
 <div class="form-field"><label>Teléfono *</label><input type="tel" placeholder="+34 600 000 000" maxlength="16" value="${aEscape(p.telefono||'')}" oninput="artistAuth.form.telefono=this.value" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido (ej: +34 6XXXXXXXX)')"><div class="field-error"></div></div>
 <div class="form-field"><label>Fecha de nacimiento *</label><input type="date" value="${aEscape(p.fechaNac||'')}" oninput="artistAuth.form.fechaNac=this.value" onblur="aShowFieldError(this,aFechaNacError(this.value))"><div class="field-error"></div></div>
 <div class="form-field"><label>Sexo *</label><select onchange="artistAuth.form.sexo=this.value"><option value="">Seleccionar...</option><option value="M" ${p.sexo==='M'?'selected':''}>Hombre</option><option value="F" ${p.sexo==='F'?'selected':''}>Mujer</option><option value="X" ${p.sexo==='X'?'selected':''}>No binario / Otro</option></select></div>
-<div class="form-field"><label>Nacionalidad *</label><input type="text" placeholder="Española" maxlength="50" value="${aEscape(p.nacionalidad||'')}" oninput="artistAuth.form.nacionalidad=this.value"></div>
+<div class="form-field"><label>Nacionalidad *</label>${nacSelectHtml(p.nacionalidad||'','artistAuth.form.nacionalidad','prof-nac','')}</div>
 </div>
 </div>
 <div class="form-section">
@@ -2978,6 +2993,71 @@ function renderArtDashboard(user){
 </div>`;
 }
 
+function empresaPerfilCompleto(u){
+  const cp=u&&u.companyProfile;
+  if(!cp)return false;
+  return !!(cp.contacto&&cp.contacto.trim().length>=2&&cp.razon&&cp.razon.trim().length>=2&&cp.cif&&aValidCifDniNie(cp.cif)&&aValidEmail(cp.emailFact||'')&&cp.calle&&cp.calle.trim().length>=2&&cp.numero&&/^\d{5}$/.test((cp.cp||'').trim())&&cp.municipio&&cp.provincia&&cp.tel&&aValidTelES(cp.tel));
+}
+function aHighlightErrorsArtista(){
+  const fields=[
+    {id:'exp-h-profesion',check:()=>st.profesion&&st.profesion.trim().length>=2},
+    {id:'exp-h-nombre',check:()=>st.aNombre&&st.aNombre.trim().length>=2},
+    {id:'exp-h-apellidos',check:()=>st.aApellidos&&st.aApellidos.trim().length>=2},
+    {id:'exp-h-dni',check:()=>aValidDniNie(st.aDni)},
+    {id:'exp-h-fechanac',check:()=>!aFechaNacError(st.aFechaNac)},
+    {id:'exp-h-nacionalidad',check:()=>st.aNacionalidad&&st.aNacionalidad.trim().length>=2},
+    {id:'exp-h-tel',check:()=>aValidTelES(st.aTel)},
+    {id:'exp-h-email',check:()=>aValidEmail(st.aEmail)},
+    {id:'exp-h-calle',check:()=>st.aCalle&&st.aCalle.trim().length>=3},
+    {id:'exp-h-cp',check:()=>/^\d{5}$/.test(st.aCp||'')},
+    {id:'exp-h-municipio',check:()=>st.aMunicipio&&st.aMunicipio.trim().length>=2},
+    {id:'exp-h-provincia',check:()=>!!st.aProvincia},
+    {id:'exp-h-iban',check:()=>aValidIbanES(st.aIban)},
+    {id:'exp-h-dnianverso',check:()=>!!(st.aDniAnverso&&st.aDniAnverso.data)},
+    {id:'exp-h-dnireverso',check:()=>!!(st.aDniReverso&&st.aDniReverso.data)}
+  ];
+  let firstErr=null;
+  const c=document.getElementById('sim-c');if(!c)return;
+  c.querySelectorAll('input,select').forEach(el=>{el.classList.remove('campo-error');});
+  const msgEl=c.querySelector('.campo-error-msg');
+  fields.forEach(f=>{
+    const el=document.getElementById(f.id)||c.querySelector('[data-err="'+f.id+'"]');
+    if(el&&!f.check()){el.classList.add('campo-error');if(!firstErr)firstErr=el;}
+  });
+  if(!firstErr){
+    /* Sin IDs individuales: resaltar todos los inputs vacíos/inválidos */
+    c.querySelectorAll('input[required],select[required]').forEach(el=>{if(!el.value.trim()){el.classList.add('campo-error');if(!firstErr)firstErr=el;}});
+  }
+  if(msgEl){msgEl.classList.add('show');msgEl.textContent='Revisa los campos marcados en rojo antes de continuar.';}
+  if(firstErr)firstErr.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function aHighlightErrorsEmpresa(){
+  aSyncEmpresaDatosFromDOM();
+  const c=document.getElementById('sim-c');if(!c)return;
+  c.querySelectorAll('input,select').forEach(el=>{el.classList.remove('campo-error');});
+  let firstErr=null;
+  function mark(selector,check){
+    const el=c.querySelector(selector);
+    if(el&&!check()){el.classList.add('campo-error');if(!firstErr)firstErr=el;}
+  }
+  mark('input[oninput*="eContacto"]',()=>st.eContacto&&st.eContacto.trim().length>=2);
+  mark('input[oninput*="eTel"]',()=>aValidTelES(st.eTel));
+  mark('input[oninput*="eRazon"]',()=>st.eRazon&&st.eRazon.trim().length>=2);
+  mark('input[oninput*="eCif"],input[onchange*="eCif"]',()=>aValidCifDniNie(st.eCif));
+  mark('input[oninput*="eEmailFact"]',()=>aValidEmail(st.eEmailFact));
+  mark('input[oninput*="eCalle"],input[onchange*="eCalle"]',()=>st.eCalle&&st.eCalle.trim().length>=2);
+  mark('input[oninput*="eNumero"],input[onchange*="eNumero"]',()=>!!st.eNumero);
+  mark('input[oninput*="eCp"],input[onchange*="eCp"]',()=>/^\d{5}$/.test((st.eCp||'').trim()));
+  mark('input[oninput*="eMunicipio"],input[onchange*="eMunicipio"]',()=>st.eMunicipio&&st.eMunicipio.trim().length>=2);
+  mark('select[onchange*="eProvincia"]',()=>!!st.eProvincia);
+  if(!st.condAceptadas||!st.compromisoPago){
+    const checks=c.querySelectorAll('input[type="checkbox"]');
+    checks.forEach(ch=>{if(!ch.checked){ch.classList.add('campo-error');if(!firstErr)firstErr=ch;}});
+  }
+  const msgEl=c.querySelector('.campo-error-msg');
+  if(msgEl){msgEl.classList.add('show');msgEl.textContent='Revisa los campos marcados en rojo antes de continuar.';}
+  if(firstErr)firstErr.scrollIntoView({behavior:'smooth',block:'center'});
+}
 function renderEmpresaDashboard(user){
   const c=document.getElementById('sim-c');
   c.innerHTML=`${renderDashboardHeader(user)}
@@ -2986,11 +3066,17 @@ function renderEmpresaDashboard(user){
 <div class="dashboard-user-email">${aEscape(user.email)}</div>
 <span class="status-badge validado">Cuenta activa</span>
 </div>
+${empresaPerfilCompleto(user)?`
 <div class="dashboard-card">
 <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris-suave);margin-bottom:10px">Crea un nuevo expediente</div>
-<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Contrata a un profesional para un trabajo puntual. Introducirás los datos fiscales de tu empresa (razón social, CIF, dirección fiscal, email de facturación) al crear el expediente.</p>
+<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Contrata a un profesional para un trabajo puntual. Los datos de tu empresa se rellenarán automáticamente desde tu perfil.</p>
 <button class="btn-verde-full" style="margin-top:0" onclick="iniciarExpediente()">+ Nuevo expediente</button>
-</div>`;
+</div>`:`
+<div class="dashboard-card" style="border-left:3px solid #d97706">
+<div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#d97706;margin-bottom:10px">⚠ Completa tu perfil para empezar</div>
+<p style="font-size:13px;color:var(--gris-texto);font-weight:300;line-height:1.6;margin-bottom:14px">Antes de crear expedientes necesitas completar los datos de tu empresa (razón social, CIF, dirección fiscal, persona de contacto y teléfono). Solo se hace una vez.</p>
+<button class="btn-verde-full" style="margin-top:0" onclick="openProfileEditor()">Completar perfil →</button>
+</div>`}`;
 }
 
 /* ─── EDITOR DE PERFIL ─────────────────────────────────────────────────
@@ -3009,7 +3095,7 @@ function openProfileEditor(){
   } else {
     const cp=u.companyProfile||{};
     artistAuth.editForm={
-      contacto:cp.contacto||u.nombre||'',
+      contacto:cp.contacto||'',
       tel:cp.tel||'',
       razon:cp.razon||'',
       cif:cp.cif||'',
@@ -3130,7 +3216,7 @@ ${avatarBlock}
 <div class="form-field"><label>Teléfono *</label><input type="tel" maxlength="16" value="${aEscape(ef.telefono||'')}" oninput="artistAuth.editForm.telefono=this.value" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido')"><div class="field-error"></div></div>
 <div class="form-field"><label>Fecha de nacimiento *</label><input type="date" value="${aEscape(ef.fechaNac||'')}" oninput="artistAuth.editForm.fechaNac=this.value" onblur="aShowFieldError(this,aFechaNacError(this.value))"><div class="field-error"></div></div>
 <div class="form-field"><label>Sexo *</label><select onchange="artistAuth.editForm.sexo=this.value"><option value="">Seleccionar...</option><option value="M" ${ef.sexo==='M'?'selected':''}>Hombre</option><option value="F" ${ef.sexo==='F'?'selected':''}>Mujer</option><option value="X" ${ef.sexo==='X'?'selected':''}>No binario / Otro</option></select></div>
-<div class="form-field"><label>Nacionalidad *</label><input type="text" maxlength="50" value="${aEscape(ef.nacionalidad||'')}" oninput="artistAuth.editForm.nacionalidad=this.value"></div>
+<div class="form-field"><label>Nacionalidad *</label>${nacSelectHtml(ef.nacionalidad||'','artistAuth.editForm.nacionalidad','edit-nac','')}</div>
 </div>
 </div>
 <div class="form-section">
@@ -3378,6 +3464,10 @@ function showFlash(msg,type){
 }
 
 function iniciarExpediente(){
+  const _u=aGetCurrentUser();
+  if(_u&&_u.accountType==='empresa'&&!empresaPerfilCompleto(_u)){
+    openProfileEditor();return;
+  }
   artistAuth.expedienteOpen=true;
   artistAuth.expedienteResult=null;
   resetExpedienteState();
@@ -3412,7 +3502,7 @@ function iniciarExpediente(){
   }
   if(u && u.accountType==='empresa' && u.companyProfile){
     const cp=u.companyProfile;
-    st.eContacto=cp.contacto||u.nombre||'';
+    st.eContacto=cp.contacto||'';
     st.eTel=cp.tel||'';
     st.eRazon=cp.razon||'';
     st.eCif=cp.cif||'';
@@ -3773,7 +3863,7 @@ ${profFieldHTML('emp')}
 <div class="form-field"><label>Apellidos *</label><input type="text" placeholder="Apellidos" maxlength="80" value="${aEscape(st.aApellidos)}" oninput="st.aApellidos=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
 <div class="form-field"><label>DNI / NIE *</label><input type="text" placeholder="12345678A" maxlength="9" value="${aEscape(st.aDni)}" oninput="st.aDni=this.value.toUpperCase();this.value=st.aDni;rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aValidDniNie(this.value)?null:'DNI o NIE inválido')"><div class="field-error"></div></div>
 <div class="form-field"><label>Fecha de nacimiento *</label><input type="date" value="${aEscape(st.aFechaNac)}" oninput="st.aFechaNac=this.value;rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aFechaNacError(this.value))"><div class="field-error"></div></div>
-<div class="form-field"><label>Nacionalidad *</label><input type="text" placeholder="Española" maxlength="50" value="${aEscape(st.aNacionalidad)}" oninput="st.aNacionalidad=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
+<div class="form-field"><label>Nacionalidad *</label>${nacSelectHtml(st.aNacionalidad,'st.aNacionalidad','exp-nac',"rBtn('exp-bs3',artistaDatosValidos)")}</div>
 <div class="form-field"><label>Teléfono *</label><input type="tel" placeholder="+34 600 000 000" maxlength="16" value="${aEscape(st.aTel)}" oninput="st.aTel=this.value;rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aValidTelES(this.value)?null:'Teléfono español inválido')"><div class="field-error"></div></div>
 <div class="form-field full"><label>Email *</label><input type="email" placeholder="trabajador@email.com" autocomplete="email" value="${aEscape(st.aEmail)}" oninput="st.aEmail=this.value.trim().toLowerCase();rBtn('exp-bs3',artistaDatosValidos)" onblur="aShowFieldError(this,aValidEmail(this.value)?null:'Email inválido')"><div class="field-error"></div></div>
 <div class="form-field full"><label>Dirección (vía y número) *</label><input type="text" placeholder="Gran Vía 42, 3ºB" maxlength="160" value="${aEscape(st.aCalle)}" oninput="st.aCalle=this.value;rBtn('exp-bs3',artistaDatosValidos)" onchange="st.aCalle=this.value;rBtn('exp-bs3',artistaDatosValidos)"></div>
@@ -3790,7 +3880,7 @@ ${profFieldHTML('emp')}
 <div class="file-upload"><label class="file-upload-btn ${st.aDniAnverso?'has-file':''}" for="emp-dni-anverso">${st.aDniAnverso?'<span class="fu-title">✓ '+aEscape(st.aDniAnverso.name)+'</span><span class="fu-sub">'+(st.aDniAnverso.size/1024).toFixed(0)+' KB · cambiar archivo</span>':'<span class="fu-title">📄 Foto DNI / NIE anverso *</span><span class="fu-sub">JPG o PNG · máx 5MB</span>'}</label><input type="file" id="emp-dni-anverso" accept="image/jpeg,image/png" onchange="aHandleEmpFile(event,'aDniAnverso')"></div>
 <div class="file-upload"><label class="file-upload-btn ${st.aDniReverso?'has-file':''}" for="emp-dni-reverso">${st.aDniReverso?'<span class="fu-title">✓ '+aEscape(st.aDniReverso.name)+'</span><span class="fu-sub">'+(st.aDniReverso.size/1024).toFixed(0)+' KB · cambiar archivo</span>':'<span class="fu-title">📄 Foto DNI / NIE reverso *</span><span class="fu-sub">JPG o PNG · máx 5MB</span>'}</label><input type="file" id="emp-dni-reverso" accept="image/jpeg,image/png" onchange="aHandleEmpFile(event,'aDniReverso')"></div>
 </div>
-<button class="btn-n" id="exp-bs3" onclick="continueEmpresaPaso3()" ${!artistaDatosValidos()?'disabled':''}>Continuar a confirmación →</button>`;
+<div class="campo-error-msg"></div><button class="btn-n" id="exp-bs3" onclick="artistaDatosValidos()?continueEmpresaPaso3():aHighlightErrorsArtista()">Continuar a confirmación →</button>`;
   } else if(st.step===4){
     /* Pre-rellenado de los datos fiscales:
        - Si existe companyProfile (guardado tras el primer expediente),
@@ -3804,7 +3894,7 @@ ${profFieldHTML('emp')}
        (empresaDatosValidos lee st.eX) y en el payload — sin datos cacheados. */
     const _cpR=user.companyProfile;
     if(_cpR && _cpR.razon){
-      st.eContacto=_cpR.contacto||user.nombre||'';
+      st.eContacto=_cpR.contacto||'';
       st.eTel=_cpR.tel||'';
       st.eRazon=_cpR.razon||'';
       st.eCif=_cpR.cif||'';
@@ -3818,7 +3908,7 @@ ${profFieldHTML('emp')}
       st.eProvincia=_cpR.provincia||'';
       st.ePais=_cpR.pais||'España';
     }
-    if(!st.eContacto)st.eContacto=user.nombre||'';
+    if(!st.eContacto)st.eContacto='';
     if(!st.eEmailFact)st.eEmailFact=user.email||'';
     if(!st.eTipoVia)st.eTipoVia='Calle';
     if(!st.ePais)st.ePais='España';
@@ -3909,7 +3999,7 @@ One2One Pro tramita el alta y emite la factura. El pago es condición previa imp
 <input type="checkbox" ${st.compromisoPago?'checked':''} onchange="st.compromisoPago=this.checked;rBtn('exp-bs4',empresaDatosValidos)">
 <span class="contrato-check-text">Me comprometo a efectuar el pago en un plazo máximo de <strong>${O2O_PLAZO_PAGO_DIAS} días naturales</strong> desde la recepción de este documento.</span>
 </label>
-<button class="btn-n" id="exp-bs4" onclick="finalizarExpedienteEmpresa()" ${!empresaDatosValidos()?'disabled':''}>Confirmo la gestión →</button>
+<div class="campo-error-msg"></div><button class="btn-n" id="exp-bs4" onclick="empresaDatosValidos()?finalizarExpedienteEmpresa():aHighlightErrorsEmpresa()">Confirmo la gestión →</button>
 <p class="legal">Al confirmar, tramitamos el alta del profesional y te enviamos la pro-forma con los datos para la transferencia. La aceptación queda registrada con tu nombre, email, IP, fecha y hora.</p>`;
   }
 }
@@ -4070,7 +4160,7 @@ async function finalizarExpedienteEmpresa(){
      hubiera podido manipular. */
   const _cp=user.companyProfile;
   if(_cp && _cp.razon){
-    st.eContacto=_cp.contacto||user.nombre||'';
+    st.eContacto=_cp.contacto||'';
     st.eTel=_cp.tel||'';
     st.eRazon=_cp.razon||'';
     st.eCif=_cp.cif||'';
@@ -4193,7 +4283,7 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
     empresa_direccion:empresaDir,
     empresa_pais:st.ePais||'España',
     empresa_telefono:st.eTel,
-    empresa_contacto:st.eContacto||user.nombre||'',
+    empresa_contacto:st.eContacto,
     empresa_usuario_email:user.email,
     /* Profesional (del expediente). Las fotos del DNI viajan como URL pública
        de Google Drive — el base64 NO se envía a Make (HTTP 413 garantizado).
