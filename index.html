@@ -1834,116 +1834,66 @@ function renderPasos(){
 
 /* ═══════════════════════════════════════════════════════════════════
    window.O2OCalc — Motor de cálculo Régimen Especial de Artistas 2026
-   Una sola función calculateArtistCosts() para simulador y expediente.
-   IRPF marcado siempre como estimación orientativa.
-   Actualizar: solo tocar las constantes del año, nunca la lógica.
+   Verificado contra nómina real One2One Pro.
+   BASE = caché real (tramos solo como tope máximo diario, no mínimo).
    ═══════════════════════════════════════════════════════════════════ */
 ;(function(global){'use strict';
   const YEAR=2026;
-  const ARTIST_BASES_2026=[
-    {maxDailySalary:577,   contributionBase:340},
-    {maxDailySalary:1038,  contributionBase:428},
-    {maxDailySalary:1737,  contributionBase:511},
-    {maxDailySalary:Infinity,contributionBase:678.60}
-  ];
-  const EMPLOYER_RATES_2026={
-    CONTINGENCIAS_COMUNES:0.2360,
-    DESEMPLEO:0.0670,
-    FOGASA:0.0020,
-    FORMACION:0.0060,
-    MEI:0.0075,
-    AT_EP:0.0150
-  };
-  const WORKER_RATES_2026={
-    CONTINGENCIAS_COMUNES:0.0470,
-    DESEMPLEO:0.0160,
-    FORMACION:0.0010,
-    MEI:0.0015
-  };
-  const MARGEN_SEGURIDAD=1.03;
+
+  /* Tope máximo de base de cotización por día (último tramo oficial).
+     Solo se aplica si el caché/día lo supera; en caso contrario base = caché. */
+  const BASE_DIARIA_MAX=678.60;
+
+  /* Tipos SS verificados contra nómina real — NO modificar sin nómina actualizada */
+  const SS_EMPRESA_RATE=0.3335;  // CC 23.60 + MEI 0.75 + AT/EP 1.50 + Des 6.70 + Form 0.60 + FOGASA 0.20
+  const SS_TRABAJADOR_RATE=0.0655; // CC 4.70 + MEI 0.15 + Form 0.10 + Des 1.60
+  const IRPF_RATE=0.02;           // 2% orientativo, trabajos puntuales régimen artistas
   const IVA_RATE=0.21;
 
-  function ceilCents(n){return Math.ceil(n*100)/100;}
-  function applyRates(base,rates){
-    const d={};let t=0;
-    for(const[k,v]of Object.entries(rates)){d[k]=base*v;t+=d[k];}
-    return{total:t,desglose:d};
-  }
-  function getContributionBase(dailySalary,bases){
-    for(const tr of bases){if(dailySalary<=tr.maxDailySalary)return tr.contributionBase;}
-    return bases[bases.length-1].contributionBase;
-  }
+  function roundCents(n){return Math.round(n*100)/100;}
 
-  /* IRPF orientativo para contratos puntuales del Régimen de Artistas.
-     Tipo bajo (2-7%), muy distinto de los tramos generales del IRPF (19-45%).
-     Marcado siempre como ESTIMACIÓN — el tipo real depende de la situación fiscal. */
-  function estimateIRPF(grossSalary){
-    const tramos=[
-      {maxIncome:300,    rate:0.02},
-      {maxIncome:800,    rate:0.03},
-      {maxIncome:2000,   rate:0.05},
-      {maxIncome:Infinity,rate:0.07}
-    ];
-    for(const tr of tramos){
-      if(grossSalary<=tr.maxIncome)return{rate:tr.rate,importe:grossSalary*tr.rate,isEstimate:true};
-    }
-    const last=tramos[tramos.length-1];
-    return{rate:last.rate,importe:grossSalary*last.rate,isEstimate:true};
-  }
-
-  function calculateArtistCosts({grossSalary,workedDays,atEpRate,commissionFn}){
+  function calculateArtistCosts({grossSalary,workedDays,commissionFn}){
     const days=Math.max(Math.round(workedDays)||1,1);
+    /* Base de cotización: caché real, con tope máximo diario */
     const dailySalary=grossSalary/days;
-    const contributionBase=getContributionBase(dailySalary,ARTIST_BASES_2026);
-    const baseTotal=contributionBase*days;
+    const baseDia=Math.min(dailySalary,BASE_DIARIA_MAX);
+    const base=roundCents(baseDia*days);
 
-    const empRates=Object.assign({},EMPLOYER_RATES_2026);
-    if(typeof atEpRate==='number')empRates.AT_EP=atEpRate;
-    const{total:ssEmpresaBruto,desglose:desgloseEmpresa}=applyRates(baseTotal,empRates);
-    const costeSsEmpresa=ceilCents(ssEmpresaBruto*MARGEN_SEGURIDAD);
-
-    const{total:ssTrabajadorBruto,desglose:desgloseTrabajador}=applyRates(baseTotal,WORKER_RATES_2026);
-    const costeSsTrabajador=ceilCents(ssTrabajadorBruto);
-
+    const ssEmpresa=roundCents(base*SS_EMPRESA_RATE);
+    const ssTrabajador=roundCents(base*SS_TRABAJADOR_RATE);
     const commission=typeof commissionFn==='function'?commissionFn(grossSalary):(grossSalary<200?15:grossSalary*0.07);
-    const irpf=estimateIRPF(grossSalary);
+    const irpf=roundCents(base*IRPF_RATE);
 
-    // El promotor SOLO paga: caché + IVA. El trabajador soporta todos los demás costes.
-    const iva=grossSalary*IVA_RATE;
-    const totalPromotor=ceilCents(grossSalary+iva);   // caché + 21% — nada más
-    // Del caché del trabajador se descuentan: SS empresa + SS trabajador + comisión + IRPF
-    const salarioNeto=grossSalary-costeSsEmpresa-costeSsTrabajador-commission-irpf.importe;
+    /* Promotor: solo caché + IVA */
+    const iva=roundCents(grossSalary*IVA_RATE);
+    const totalPromotor=roundCents(grossSalary+iva);
+
+    /* Artista soporta todos los costes del caché */
+    const salarioNeto=roundCents(grossSalary-ssEmpresa-ssTrabajador-commission-irpf);
 
     return{
-      year:YEAR,grossSalary,workedDays:days,dailySalary,
-      contributionBase,baseTotal,
-      desgloseEmpresa,ssEmpresaBruto,costeSsEmpresa,
-      commission,iva,totalPromotor,
-      desgloseTrabajador,costeSsTrabajador,
-      irpf,salarioNeto,
-      margenAplicado:MARGEN_SEGURIDAD,isEstimate:true
+      year:YEAR,grossSalary,workedDays:days,base,
+      ssEmpresa,ssTrabajador,commission,irpf,
+      iva,totalPromotor,salarioNeto,
+      isEstimate:true
     };
   }
 
   const MSGS={
-    calculoOrientativo:'⚠️ Cálculo orientativo. El coste definitivo se determina al tramitar el alta en la Seguridad Social, una vez confirmada la base de cotización real. One2One Pro nunca cobra de menos: si existiera alguna diferencia, se ajusta después.',
+    calculoOrientativo:'⚠️ Cálculo orientativo basado en los tipos del Régimen Especial de Artistas 2026. El IRPF definitivo depende de la situación fiscal de cada profesional.',
     proforma:'DOCUMENTO PRO-FORMA — ORIENTATIVO, NO VINCULANTE. Este documento es una pro-forma basada en los datos facilitados y en los tipos de cotización vigentes. No constituye ni una factura ni un presupuesto definitivo. Los importes son estimaciones; el coste real puede variar una vez tramitada el alta en la Seguridad Social y confirmadas las bases de cotización aplicables. La factura definitiva se emitirá con los importes reales una vez gestionado el alta.',
     primeraAfiliacion:'⚠️ Si es tu primera vez cotizando en España, la Seguridad Social aplica una cuota de afiliación de 30 €. Este coste es directo de la TGSS, no de One2One Pro, y se descontará de tu primera liquidación.'
   };
 
-  global.O2OCalc={
-    YEAR,ARTIST_BASES_2026,EMPLOYER_RATES_2026,WORKER_RATES_2026,MARGEN_SEGURIDAD,IVA_RATE,MSGS,
-    calculateArtistCosts,estimateIRPF,getContributionBase,
-    _ceilCents:ceilCents,_applyRates:applyRates
-  };
+  global.O2OCalc={YEAR,BASE_DIARIA_MAX,SS_EMPRESA_RATE,SS_TRABAJADOR_RATE,IRPF_RATE,IVA_RATE,MSGS,calculateArtistCosts};
 }(window));
 
 function calcular(){
-  const a=st.act,u=st.ubic,cache=parseFloat(st.imp)||0,dias=parseInt(st.dias)||1;
-  const atEpRate=(a.atep*u.factor)/100;
-  const r=O2OCalc.calculateArtistCosts({grossSalary:cache,workedDays:dias,atEpRate:atEpRate,commissionFn:calcCom});
-  r.cache=r.grossSalary; r.dias=r.workedDays; r.ss=r.costeSsEmpresa;
-  r.com=r.commission; r.neto=r.salarioNeto; // totalPromotor ya está en r.totalPromotor
+  const cache=parseFloat(st.imp)||0,dias=parseInt(st.dias)||1;
+  const r=O2OCalc.calculateArtistCosts({grossSalary:cache,workedDays:dias,commissionFn:calcCom});
+  /* Aliases legacy para los payloads Make (mismos nombres, nuevos valores) */
+  r.cache=r.grossSalary; r.dias=r.workedDays; r.ss=r.ssEmpresa;
+  r.com=r.commission; r.neto=r.salarioNeto;
   return r;
 }
 
@@ -1958,9 +1908,7 @@ function slFmt(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maxim
 function calcSimple(cache,dias){
   cache=parseFloat(cache)||0;dias=parseInt(dias)||1;if(dias<1)dias=1;
   const r=O2OCalc.calculateArtistCosts({grossSalary:cache,workedDays:dias,commissionFn:calcCom});
-  r.cache=r.grossSalary; r.dias=r.workedDays;
-  r.com=r.commission; r.irpfImporte=r.irpf.importe; r.irpfRate=r.irpf.rate;
-  r.neto=r.salarioNeto; // r.totalPromotor ya está en r.totalPromotor
+  r.cache=r.grossSalary; r.dias=r.workedDays; r.com=r.commission; r.neto=r.salarioNeto;
   return r;
 }
 function simLibreCalc(){
@@ -1978,7 +1926,6 @@ function simLibreCalc(){
   const r=calcSimple(cache,dias);
   slSavePrefill(cache,dias);
   const neto=Math.max(0,r.neto);
-  const irpfPct=Math.round(r.irpfRate*100);
   out.innerHTML=`
     <div class="sl-breakdown">
       <div class="sl-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-muted,#888);margin-bottom:6px">EL PROMOTOR PAGA</div>
@@ -1988,14 +1935,14 @@ function simLibreCalc(){
         <div class="sl-sep"></div>
         <div class="sl-row sl-promotor"><span class="sl-l">Total que paga el promotor</span><span class="sl-v"><span class="sl-num" data-count="${r.totalPromotor}">${slFmt(0)}</span></span></div>
       </div>
-      <div class="sl-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-muted,#888);margin:14px 0 6px">EL TRABAJADOR COBRA</div>
+      <div class="sl-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--c-muted,#888);margin:14px 0 6px">EL ARTISTA COBRA</div>
       <div class="sl-rows">
         <div class="sl-row sl-cache"><span class="sl-l">Caché acordado</span><span class="sl-v">${slFmt(cache)}</span></div>
         <div class="sl-sep"></div>
-        <div class="sl-row neg"><span class="sl-l">SS — cuota empresa (margen 3%)</span><span class="sl-v">-${slFmt(r.costeSsEmpresa)}</span></div>
-        <div class="sl-row neg"><span class="sl-l">SS — cuota trabajador</span><span class="sl-v">-${slFmt(r.costeSsTrabajador)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">SS — cuota empresa (33,35%)</span><span class="sl-v">-${slFmt(r.ssEmpresa)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">SS — cuota trabajador (6,55%)</span><span class="sl-v">-${slFmt(r.ssTrabajador)}</span></div>
         <div class="sl-row neg"><span class="sl-l">Comisión One2One ${cache<200?'(mínimo 15€)':'(7%)'}</span><span class="sl-v">-${slFmt(r.com)}</span></div>
-        <div class="sl-row neg"><span class="sl-l">IRPF estimado (${irpfPct}%) <span style="font-size:10px;opacity:.7">orientativo</span></span><span class="sl-v">-${slFmt(r.irpfImporte)}</span></div>
+        <div class="sl-row neg"><span class="sl-l">IRPF estimado (2%) <span style="font-size:10px;opacity:.7">orientativo</span></span><span class="sl-v">-${slFmt(r.irpf)}</span></div>
         <div class="sl-sep"></div>
         <div class="sl-row sl-neto"><span class="sl-l">Cobrarás aproximadamente</span><span class="sl-v"><span class="sl-num" data-count="${neto}">${slFmt(0)}</span></span></div>
       </div>
@@ -2047,18 +1994,17 @@ function oGrid(items,key){
 }
 
 function resumenArtista(r){
-  const irpfPct=Math.round(r.irpf.rate*100);
   return`
     <div class="res-tags"><span class="res-tag">${aEscapeText(st.act.label)}</span><span class="res-tag">${aEscapeText(st.ubic.label)}</span><span class="res-tag">${r.dias} día${r.dias>1?'s':''}</span></div>
     <span class="regimen-badge">Régimen Especial de Artistas — cálculo orientativo</span>
-    <div class="res-trab-cobras"><div class="rtc-label">Recibirás aproximadamente</div><div class="rtc-val">${fmt(r.neto)}</div><div class="rtc-sub">${r.dias} día${r.dias>1?'s':''} · sobre caché de ${fmt(r.cache)}</div></div>
+    <div class="res-trab-cobras"><div class="rtc-label">Recibirás aproximadamente</div><div class="rtc-val">${fmt(Math.max(0,r.neto))}</div><div class="rtc-sub">${r.dias} día${r.dias>1?'s':''} · sobre caché de ${fmt(r.cache)}</div></div>
     <div class="res-trab-info">
       <div class="rti-row"><span class="rti-l">Caché acordado</span><span class="rti-v">${fmt(r.cache)}</span></div>
-      <div class="rti-row"><span class="rti-l">SS — cuota empresa (margen 3%)</span><span class="rti-v">-${fmt(r.costeSsEmpresa)}</span></div>
-      <div class="rti-row"><span class="rti-l">SS — cuota trabajador</span><span class="rti-v">-${fmt(r.costeSsTrabajador)}</span></div>
+      <div class="rti-row"><span class="rti-l">SS — cuota empresa (33,35%)</span><span class="rti-v">-${fmt(r.ssEmpresa)}</span></div>
+      <div class="rti-row"><span class="rti-l">SS — cuota trabajador (6,55%)</span><span class="rti-v">-${fmt(r.ssTrabajador)}</span></div>
       <div class="rti-row"><span class="rti-l">Comisión One2One ${r.cache<200?'(mínimo 15€)':'(7%)'}</span><span class="rti-v">-${fmt(r.com)}</span></div>
-      <div class="rti-row"><span class="rti-l">IRPF estimado (${irpfPct}%) <small style="opacity:.65">orientativo</small></span><span class="rti-v">-${fmt(r.irpf.importe)}</span></div>
-      <div class="rti-row" style="margin-top:4px"><span class="rti-l" style="font-weight:600">Recibirás aprox.</span><span class="rti-v verde" style="font-size:16px">${fmt(r.neto)}</span></div>
+      <div class="rti-row"><span class="rti-l">IRPF estimado (2%) <small style="opacity:.65">orientativo</small></span><span class="rti-v">-${fmt(r.irpf)}</span></div>
+      <div class="rti-row" style="margin-top:4px"><span class="rti-l" style="font-weight:600">Recibirás aprox.</span><span class="rti-v verde" style="font-size:16px">${fmt(Math.max(0,r.neto))}</span></div>
     </div>
     <div class="res-trab-aviso">${O2OCalc.MSGS.calculoOrientativo}</div>
     <p class="sl-note-amber"><span class="sl-note-amber-ico">⚠️</span><span>${O2OCalc.MSGS.primeraAfiliacion}</span></p>`;
@@ -3913,8 +3859,8 @@ async function enviarExpedienteProfesional(){
     profesion:profesionProf,
     concepto_proforma:conceptoProforma,
     cache_acordado:parseFloat(st.imp),
-    seguridad_social_empresa:r.costeSsEmpresa,
-    seguridad_social_trabajador:r.costeSsTrabajador,
+    seguridad_social_empresa:r.ssEmpresa,
+    seguridad_social_trabajador:r.ssTrabajador,
     comision_one2one:r.com,
     neto_artista:r.neto,
     base_imponible:r.cache,
@@ -4406,8 +4352,8 @@ ${(validacionIA.discrepancias&&validacionIA.discrepancias.length)?'<ul style="te
     concepto_actuacion:st.profesion,
     concepto_proforma:conceptoProforma,
     cache_acordado:parseFloat(st.imp),
-    seguridad_social_empresa:r.costeSsEmpresa,
-    seguridad_social_trabajador:r.costeSsTrabajador,
+    seguridad_social_empresa:r.ssEmpresa,
+    seguridad_social_trabajador:r.ssTrabajador,
     comision_one2one:r.com,
     neto_artista:r.neto,
     base_imponible:r.cache,
