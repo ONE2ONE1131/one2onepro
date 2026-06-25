@@ -2016,8 +2016,8 @@ async function aLoadProfileFromServer(){
     avatarUrl:d.avatarUrl||'',
     profileStatus:d.profileStatus||null
   };
-  if(d.profile)patch.profile=d.profile;
-  if(d.companyProfile)patch.companyProfile=d.companyProfile;
+  patch.profile=d.profile||null;
+  patch.companyProfile=d.companyProfile||null;
   const users=aGetUsers();
   users[email]=Object.assign({},users[email]||{},patch);
   delete users[email].password; /* nunca guardamos contraseña */
@@ -2633,6 +2633,9 @@ async function aResendVerification(){
 function doLogout(){
   const u=aGetCurrentUser();
   if(u)perfil=u.accountType;
+  /* Limpia los datos de perfil del usuario saliente para que no contaminen
+     otra cuenta que se registre después en el mismo navegador. */
+  if(u&&u.email){const _us=aGetUsers();if(_us[u.email]){delete _us[u.email].profile;delete _us[u.email].companyProfile;aSaveUsers(_us);}}
   /* Cierra la sesión también en el servidor (fire-and-forget). */
   const token=aGetToken();
   if(token){apiAuth('/logout',{token:token}).catch(function(){});}
