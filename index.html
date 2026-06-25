@@ -1432,12 +1432,18 @@ const PASOS_TRAB=[
 ];
 
 const NACIONALIDADES=['Española','Alemana','Argentina','Belga','Boliviana','Brasileña','Búlgara','Chilena','China','Colombiana','Costarricense','Cubana','Dominicana','Ecuatoriana','Estadounidense','Filipina','Francesa','Griega','Guatemalteca','Hondureña','India','Inglesa','Italiana','Japonesa','Marroquí','Mexicana','Neerlandesa','Nicaragüense','Nigeriana','Panameña','Paraguaya','Peruana','Polaca','Portuguesa','Puertorriqueña','Rumana','Rusa','Salvadoreña','Senegalesa','Sueca','Suiza','Turca','Ucraniana','Uruguaya','Venezolana'];
+/* Gestiona show/hide del input de texto y devuelve el valor a guardar */
+function nacChange(uid,v){
+  var el=document.getElementById('nac-otra-'+uid);
+  if(el)el.style.display=v==='__otra__'?'block':'none';
+  return v==='__otra__'?'':v;
+}
 function nacSelectHtml(val,storeExpr,uid,extraChange){
   const isOtra=!!(val&&!NACIONALIDADES.includes(val));
   const opts=NACIONALIDADES.map(n=>`<option value="${n}" ${val===n?'selected':''}>${n}</option>`).join('');
   const ec=extraChange?extraChange+';':'';
-  const onChange=`var _v=this.value,_el=document.getElementById('nac-otra-${uid}');`
-    +`if(_v==='__otra__'){if(_el)_el.style.display='block';${storeExpr}='';}else{if(_el)_el.style.display='none';${storeExpr}=_v;}${ec}`;
+  /* Asignación directa idéntica al oninput del input de texto, sin if/else inline */
+  const onChange=`${storeExpr}=nacChange('${uid}',this.value);${ec}`;
   return `<select onchange="${onChange}"><option value="">Seleccionar nacionalidad...</option>${opts}<option value="__otra__" ${isOtra?'selected':''}>Otra (escribir)</option></select>`
     +`<input type="text" id="nac-otra-${uid}" placeholder="Escribe la nacionalidad" maxlength="50" style="display:${isOtra?'block':'none'};margin-top:6px" value="${isOtra?val:''}" oninput="${storeExpr}=this.value;${ec}">`;
 }
@@ -4135,24 +4141,22 @@ function conceptoActuacionValido(){
 }
 
 function artistaDatosValidos(){
-  const log=(...a)=>console.log('[artistaDatosValidos]',...a);
-  if(!st.profesion||st.profesion.trim().length<2){log('FALLA: profesion',st.profesion);return false;}
-  if(!st.aNombre||st.aNombre.trim().length<2){log('FALLA: aNombre',st.aNombre);return false;}
-  if(!st.aApellidos||st.aApellidos.trim().length<2){log('FALLA: aApellidos',st.aApellidos);return false;}
-  if(!aValidDniNie(st.aDni)){log('FALLA: aDni',st.aDni);return false;}
-  if(aFechaNacError(st.aFechaNac)){log('FALLA: aFechaNac',st.aFechaNac,aFechaNacError(st.aFechaNac));return false;}
-  if(!st.aNacionalidad||st.aNacionalidad.trim().length<2){log('FALLA: aNacionalidad →',JSON.stringify(st.aNacionalidad));return false;}
-  if(!aValidTelES(st.aTel)){log('FALLA: aTel',st.aTel);return false;}
-  if(!aValidEmail(st.aEmail)){log('FALLA: aEmail',st.aEmail);return false;}
-  if(!st.trabajoNoPresencial&&(!st.lugarCelebracion||st.lugarCelebracion.trim().length<2)){log('FALLA: lugarCelebracion',st.lugarCelebracion,'presencial');return false;}
-  if(!st.aCalle||st.aCalle.trim().length<3){log('FALLA: aCalle',st.aCalle);return false;}
-  if(!/^\d{5}$/.test(st.aCp||'')){log('FALLA: aCp',st.aCp);return false;}
-  if(!st.aMunicipio||st.aMunicipio.trim().length<2){log('FALLA: aMunicipio',st.aMunicipio);return false;}
-  if(!st.aProvincia||st.aProvincia.trim().length<2){log('FALLA: aProvincia',st.aProvincia);return false;}
-  if(!aValidIbanES(st.aIban)){log('FALLA: aIban',st.aIban);return false;}
-  if(!st.aDniAnverso||!st.aDniAnverso.data){log('FALLA: aDniAnverso no subido');return false;}
-  if(!st.aDniReverso||!st.aDniReverso.data){log('FALLA: aDniReverso no subido');return false;}
-  log('OK — todos los campos válidos');
+  if(!st.profesion||st.profesion.trim().length<2)return false;
+  if(!st.aNombre||st.aNombre.trim().length<2)return false;
+  if(!st.aApellidos||st.aApellidos.trim().length<2)return false;
+  if(!aValidDniNie(st.aDni))return false;
+  if(aFechaNacError(st.aFechaNac))return false;
+  if(!st.aNacionalidad||st.aNacionalidad.trim().length<2)return false;
+  if(!aValidTelES(st.aTel))return false;
+  if(!aValidEmail(st.aEmail))return false;
+  if(!st.trabajoNoPresencial&&(!st.lugarCelebracion||st.lugarCelebracion.trim().length<2))return false;
+  if(!st.aCalle||st.aCalle.trim().length<3)return false;
+  if(!/^\d{5}$/.test(st.aCp||''))return false;
+  if(!st.aMunicipio||st.aMunicipio.trim().length<2)return false;
+  if(!st.aProvincia||st.aProvincia.trim().length<2)return false;
+  if(!aValidIbanES(st.aIban))return false;
+  if(!st.aDniAnverso||!st.aDniAnverso.data)return false;
+  if(!st.aDniReverso||!st.aDniReverso.data)return false;
   return true;
 }
 
