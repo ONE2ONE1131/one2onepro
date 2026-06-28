@@ -666,6 +666,31 @@ label.campo-error{border-color:#dc2626!important;background:#fff5f5!important;co
 .exp-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:4px 0;border-top:1px solid var(--fondo)}
 .exp-lbl{color:var(--gris-suave);font-weight:300;flex-shrink:0}
 .exp-val{color:var(--gris-texto);font-weight:500;text-align:right}
+/* Barra de progreso de expediente */
+.epb{margin-top:14px;border-top:1px solid var(--fondo);padding-top:12px}
+/* DESKTOP: horizontal */
+.epb-track{display:flex;align-items:flex-start;gap:0}
+.epb-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+.epb-step:not(:last-child)::after{content:'';position:absolute;top:13px;left:calc(50% + 13px);right:calc(-50% + 13px);height:2px;background:#e5e7eb;z-index:0}
+.epb-step.epb-done:not(:last-child)::after{background:#16a34a}
+.epb-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;position:relative;z-index:1;flex-shrink:0;box-sizing:border-box}
+.epb-step.epb-done .epb-dot{background:#16a34a;color:#fff}
+.epb-step.epb-active .epb-dot{background:#ecfdf5;border:2px solid #00a86b;color:#00a86b}
+.epb-step.epb-pending .epb-dot{background:#f3f4f6;border:1.5px solid #d1d5db;color:#9ca3af}
+.epb-lbl{font-size:9.5px;text-align:center;margin-top:5px;line-height:1.3;max-width:68px;color:#9ca3af}
+.epb-step.epb-done .epb-lbl{color:#15803d}
+.epb-step.epb-active .epb-lbl{color:#00a86b;font-weight:600}
+/* MÓVIL: vertical */
+@media(max-width:600px){
+  .epb-track{flex-direction:column;align-items:flex-start;gap:0}
+  .epb-step{flex-direction:row;align-items:center;gap:10px;flex:none;width:100%;padding:2px 0;position:relative}
+  .epb-step::after{content:'';position:absolute;left:12px;top:28px;width:2px;height:calc(100% - 2px);background:#e5e7eb;z-index:0;display:block}
+  .epb-step:last-child::after{display:none}
+  .epb-step.epb-done::after{background:#16a34a}
+  .epb-step.epb-active::after{background:#e5e7eb}
+  .epb-dot{flex-shrink:0}
+  .epb-lbl{max-width:none;text-align:left;margin-top:0;font-size:12px;padding:6px 0}
+}
 
 /* AUTH / PROFILE / DASHBOARD — flujo artista o técnico */
 .auth-hero{margin-bottom:24px}
@@ -2968,6 +2993,22 @@ function renderDashboardHeader(user){
    consulta el Worker (/expedientes) y rellena la lista. El profesional ve al
    promotor; la empresa ve al profesional contratado.
    ──────────────────────────────────────────────────────────────────── */
+const EPB_PASOS=['Creado','Pro-forma enviada','Promotor aceptó','Contrato enviado','Contrato firmado','Alta tramitada','Pago recibido','Completado'];
+function aExpProgressBar(estado){
+  const estadoActual=estado||'Creado';
+  const idx=EPB_PASOS.indexOf(estadoActual);
+  const current=idx>=0?idx:0;
+  const checkSvg='<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const steps=EPB_PASOS.map((paso,i)=>{
+    let cls,dot;
+    if(i<current){cls='epb-done';dot=checkSvg;}
+    else if(i===current){cls='epb-active';dot=i+1;}
+    else{cls='epb-pending';dot=i+1;}
+    return`<div class="epb-step ${cls}"><div class="epb-dot">${dot}</div><div class="epb-lbl">${paso}</div></div>`;
+  }).join('');
+  return`<div class="epb"><div class="epb-track" role="list" aria-label="Estado del expediente">${steps}</div></div>`;
+}
+
 function aExpEstadoColor(estado){
   /* Estados oficiales del nuevo flujo (sin Stripe). El color se aplica al
      punto y al texto del badge; bg es el tinte de fondo. */
@@ -3018,6 +3059,7 @@ function aExpedienteCard(rec,tipo){
 <div class="exp-row"><span class="exp-lbl">Fechas</span><span class="exp-val">${aExpFechas(f)}</span></div>
 <div class="exp-row"><span class="exp-lbl">Caché</span><span class="exp-val">${aExpCache(f['Importe trabajador'])}</span></div>
 <div class="exp-row"><span class="exp-lbl">${contraLbl}</span><span class="exp-val">${aEscape(contraVal)}</span></div>
+${aExpProgressBar(estado)}
 </div>`;
 }
 
